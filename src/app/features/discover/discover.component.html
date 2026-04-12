@@ -1,1 +1,88 @@
-<p>discover works!</p>
+<div class="discover">
+
+  <!-- Header -->
+  <header class="discover-header">
+    <div class="header-left">
+      <h1 class="header-title">Discover</h1>
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC800" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+        <path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/>
+      </svg>
+    </div>
+    <div class="header-right">
+      <a routerLink="/notifications" class="bell-btn" id="btn-notifications">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+          <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+        </svg>
+        @if (unreadCount() > 0) {
+          <span class="bell-dot"></span>
+        }
+      </a>
+    </div>
+  </header>
+
+  <!-- Categories -->
+  <div class="categories-wrapper">
+    <div class="categories">
+      @for (cat of categories; track cat.id) {
+        <button class="category-item" [class.active]="activeCategory === cat.id" (click)="setCategory(cat.id)" [id]="'cat-' + cat.id">
+          <span>{{ cat.label }}</span>
+          @if (activeCategory === cat.id) {
+            <div class="category-dot"></div>
+          }
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Pinterest-style Masonry Grid -->
+  <div class="masonry">
+    <!-- Left Column -->
+    <div class="masonry-col">
+      @for (pin of leftPins; track pin.id) {
+        <div class="pin-card" [routerLink]="pin.tripId ? ['/trip', pin.tripId] : null" [id]="'pin-' + pin.id">
+          <div class="pin-img-wrapper" [style.height.px]="pin.height">
+            <img [src]="pin.image" [alt]="pin.title" class="pin-img" loading="lazy" />
+            <div class="pin-gradient"></div>
+          </div>
+          <div class="pin-meta">
+            <p class="pin-title">{{ pin.title }}</p>
+            @if (pin.location) {
+              <div class="pin-location">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#78716C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+                </svg>
+                <span>{{ pin.location }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Right Column (staggered 40px down) -->
+    <div class="masonry-col masonry-col--offset">
+      @for (pin of rightPins; track pin.id) {
+        <div class="pin-card" [routerLink]="pin.tripId ? ['/trip', pin.tripId] : null" [id]="'pin-r-' + pin.id">
+          <div class="pin-img-wrapper" [style.height.px]="pin.height">
+            <img [src]="pin.image" [alt]="pin.title" class="pin-img" loading="lazy" />
+            <div class="pin-gradient"></div>
+          </div>
+          <div class="pin-meta">
+            <p class="pin-title">{{ pin.title }}</p>
+            @if (pin.location) {
+              <div class="pin-location">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#78716C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+                </svg>
+                <span>{{ pin.location }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+</div>

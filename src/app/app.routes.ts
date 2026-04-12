@@ -4,7 +4,7 @@ import { authGuard, guestGuard } from './core/guards/auth.guard';
 export const routes: Routes = [
   { path: '', redirectTo: 'discover', pathMatch: 'full' },
 
-  // Guest-only routes (redirect to /discover if already logged in)
+  // Guest-only routes
   {
     path: 'auth',
     canActivate: [guestGuard],
@@ -15,31 +15,33 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/auth-callback.component').then(m => m.AuthCallbackComponent)
   },
 
-  // Protected routes (redirect to /auth if not logged in)
+  // Protected routes - wrapped in Shell layout (bottom nav)
   {
-    path: 'discover',
+    path: '',
     canActivate: [authGuard],
-    loadComponent: () => import('./features/discover/discover.component').then(m => m.DiscoverComponent)
-  },
-  {
-    path: 'trips',
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/trips/trips.component').then(m => m.TripsComponent)
-  },
-  {
-    path: 'trip/:id',
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/trip-detail/trip-detail.component').then(m => m.TripDetailComponent)
-  },
-  {
-    path: 'profile',
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent)
-  },
-  {
-    path: 'notifications',
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/notifications/notifications.component').then(m => m.NotificationsComponent)
+    loadComponent: () => import('./layout/shell.component').then(m => m.ShellComponent),
+    children: [
+      {
+        path: 'discover',
+        loadComponent: () => import('./features/discover/discover.component').then(m => m.DiscoverComponent)
+      },
+      {
+        path: 'trips',
+        loadComponent: () => import('./features/trips/trips.component').then(m => m.TripsComponent)
+      },
+      {
+        path: 'trip/:id',
+        loadComponent: () => import('./features/trip-detail/trip-detail.component').then(m => m.TripDetailComponent)
+      },
+      {
+        path: 'profile',
+        loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent)
+      },
+      {
+        path: 'notifications',
+        loadComponent: () => import('./features/notifications/notifications.component').then(m => m.NotificationsComponent)
+      },
+    ]
   },
 
   // Fallback
