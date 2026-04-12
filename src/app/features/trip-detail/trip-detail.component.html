@@ -1,1 +1,394 @@
-<p>trip-detail works!</p>
+<div class="trip-detail">
+
+  @if (!trip()) {
+    <div class="loading-page">
+      <div class="spinner"></div>
+    </div>
+  } @else {
+
+    <!-- Cover Image -->
+    <div class="cover-area">
+      <img [src]="trip()!.coverImage || defaultCover" [alt]="trip()!.title" class="cover-img" />
+      <div class="cover-overlay"></div>
+      <button class="btn-back" (click)="goBack()" id="btn-back">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>
+        </svg>
+      </button>
+      @if (isOwner()) {
+        <button class="btn-edit-cover" (click)="editTripModal = true" id="btn-edit-trip">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+          </svg>
+        </button>
+      }
+    </div>
+
+    <!-- White Card Sheet -->
+    <div class="sheet">
+
+      <!-- Trip Info -->
+      <div class="trip-info">
+        @if (trip()!.isPrivate) {
+          <div class="private-badge">PRIVATE</div>
+        }
+        <h1 class="trip-title">{{ trip()!.title }}</h1>
+        <div class="trip-meta">
+          <div class="meta-item">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A8A29E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <span>{{ formatDate(trip()!.startDate) }} – {{ formatDate(trip()!.endDate) }}</span>
+          </div>
+          <div class="meta-item">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A8A29E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <span>{{ trip()!.members?.length || 0 }} members</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs-scroll">
+        <div class="tabs">
+          @for (tab of tabs; track tab) {
+            <button class="tab-btn" [class.active]="activeTab === tab" (click)="setTab(tab)" [id]="'tab-' + tab.toLowerCase()">
+              {{ tab }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Tab Content -->
+      <div class="tab-content">
+
+        <!-- ═══ MOMENTS ═══ -->
+        @if (activeTab === 'MOMENTS') {
+          <div class="moments-empty">
+            <div class="moments-icon">📅</div>
+            <p>Tap the <strong>SOCIAL</strong> tab to add photos &amp; moments during your trip.</p>
+          </div>
+        }
+
+        <!-- ═══ SOCIAL ═══ -->
+        @if (activeTab === 'SOCIAL') {
+          <div class="section-header">
+            <h2 class="section-title">Trip Diary</h2>
+            <button class="btn-action" (click)="quickPostMode = true" id="btn-add-post">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+                <circle cx="12" cy="13" r="3"/>
+              </svg>
+              Chụp Ảnh
+            </button>
+          </div>
+
+          @if (tripPosts().length === 0) {
+            <div class="empty-card">No posts yet. Be the first to share a moment!</div>
+          }
+
+          @for (post of tripPosts(); track post.id) {
+            <div class="post-card" [id]="'post-' + post.id">
+              <!-- Post header -->
+              <div class="post-header">
+                <div class="post-avatar">{{ (post.authorName || '?').charAt(0).toUpperCase() }}</div>
+                <div class="post-author-info">
+                  <span class="post-author">{{ post.authorName }}</span>
+                  <span class="post-time">{{ formatRelative(post.timestamp) }}</span>
+                </div>
+              </div>
+              <!-- Post images -->
+              @if ((post.images ?? []).length > 0) {
+                <div class="post-images" [class.dual]="post.isDual">
+                  @for (img of post.images.slice(0, post.isDual ? 2 : 1); track img) {
+                    <img [src]="img" [alt]="post.content" class="post-img" loading="lazy" />
+                  }
+                </div>
+              }
+              <!-- Post content -->
+              @if (post.content) {
+                <p class="post-content">{{ post.content }}</p>
+              }
+              <!-- Post actions -->
+              <div class="post-actions">
+                <button class="post-action-btn" [class.liked]="post.hasLiked" (click)="toggleLike(post.id)">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" [attr.stroke]="post.hasLiked ? '#EF4444' : '#78716C'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                  </svg>
+                  <span>{{ post.likes }}</span>
+                </button>
+                <button class="post-action-btn" (click)="openComments(post)">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#78716C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                  <span>{{ post.comments?.length || 0 }}</span>
+                </button>
+                @if (isOwner() || post.authorId === currentUserId()) {
+                  <button class="post-action-btn post-action-delete" (click)="deletePost(post.id)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6"/><path d="m19 6-.867 12.142A2 2 0 0 1 16.138 20H7.862a2 2 0 0 1-1.995-1.858L5 6m5 0V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/>
+                    </svg>
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        }
+
+        <!-- ═══ EXPENSES ═══ -->
+        @if (activeTab === 'EXPENSES') {
+          <!-- Summary Cards -->
+          <div class="summary-row">
+            <div class="summary-black">
+              <span class="summary-label">TOTAL TRIP</span>
+              <span class="summary-value-white">{{ formatCurrency(totalTripCost()) }}</span>
+            </div>
+            <div class="summary-white">
+              <span class="summary-label">YOUR SHARE</span>
+              <span class="summary-value-dark">{{ formatCurrency(yourShare()) }}</span>
+            </div>
+          </div>
+
+          <div class="section-header">
+            <h2 class="section-title">Transactions</h2>
+            <button class="btn-action btn-action--primary" (click)="openExpenseModal()" id="btn-log-expense">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14"/><path d="M12 5v14"/>
+              </svg>
+              Log Expense
+            </button>
+          </div>
+
+          @if (tripExpenses().length === 0) {
+            <div class="empty-card">No expenses logged yet.</div>
+          }
+
+          <div class="expense-list">
+            @for (exp of tripExpenses(); track exp.id) {
+              <div class="expense-item" (click)="openExpenseDetail(exp)" [id]="'expense-' + exp.id">
+                <div class="expense-left">
+                  <div class="expense-icon" [style.background]="getCategoryBg(exp.category || 'OTHER')">
+                    <span>{{ getCategoryEmoji(exp.category || 'OTHER') }}</span>
+                  </div>
+                  <div class="expense-info">
+                    <p class="expense-desc">{{ exp.desc }}</p>
+                    <p class="expense-meta">{{ exp.date }} • Paid by {{ getPayerName(exp.payerId) }}</p>
+                  </div>
+                </div>
+                <span class="expense-amount">₫{{ formatNumber(exp.amount) }}</span>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- ═══ BALANCES ═══ -->
+        @if (activeTab === 'BALANCES') {
+          @if (totalTripCost() > 0) {
+            <div class="chart-card">
+              <h3 class="chart-title">SPENDING BREAKDOWN</h3>
+              <div class="chart-bar">
+                @for (seg of chartData(); track seg.category; let i = $index) {
+                  <div class="chart-segment"
+                    [style.width.%]="seg.percent"
+                    [style.background]="seg.color"
+                    [class.first]="i === 0"
+                    [class.last]="i === chartData().length - 1">
+                  </div>
+                }
+              </div>
+              <div class="chart-legend">
+                @for (seg of chartData(); track seg.category) {
+                  <div class="legend-item">
+                    <div class="legend-dot" [style.background]="seg.color"></div>
+                    <div>
+                      <p class="legend-cat">{{ seg.category }}</p>
+                      <p class="legend-amt">₫{{ formatNumber(seg.amount) }}</p>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <div class="section-header">
+            <h2 class="section-title">Balances &amp; Debts</h2>
+            <button class="btn-export" (click)="exportCSV()" id="btn-export">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Export CSV
+            </button>
+          </div>
+
+          @if (debts().length === 0) {
+            <div class="empty-card">Everyone is fully settled up! 🎉</div>
+          }
+
+          <div class="expense-list">
+            @for (debt of debts(); track debt.fromId + debt.toId) {
+              <div class="expense-item">
+                <div class="expense-left">
+                  <div class="expense-icon" [class.debt-me]="debt.fromId === currentUserId()" [class.debt-owed]="debt.toId === currentUserId()">
+                    @if (debt.fromId === currentUserId()) {
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    } @else if (debt.toId === currentUserId()) {
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC800" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+                    } @else {
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>
+                    }
+                  </div>
+                  <div class="expense-info">
+                    <p class="expense-desc">{{ debt.fromId === currentUserId() ? 'You owe' : debt.fromName + ' owes' }}</p>
+                    <p class="expense-meta">{{ debt.fromId === currentUserId() ? debt.toName : (debt.toId === currentUserId() ? 'you' : debt.toName) }}</p>
+                  </div>
+                </div>
+                <span class="expense-amount"
+                  [class.amount-red]="debt.fromId === currentUserId()"
+                  [class.amount-yellow]="debt.toId === currentUserId()">
+                  ₫{{ formatNumber(debt.amount) }}
+                </span>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- ═══ MEMBERS ═══ -->
+        @if (activeTab === 'MEMBERS') {
+          <div class="section-header">
+            <h2 class="section-title">Trip Members</h2>
+            @if (isOwner()) {
+              <button class="btn-action btn-action--primary" (click)="openAddMemberModal()" id="btn-add-member">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12h14"/><path d="M12 5v14"/>
+                </svg>
+                Add Member
+              </button>
+            }
+          </div>
+
+          <div class="expense-list">
+            @for (member of trip()!.members; track member.id) {
+              <div class="expense-item">
+                <div class="expense-left">
+                  <div class="expense-icon member-avatar">
+                    <span>{{ member.name.charAt(0).toUpperCase() }}</span>
+                  </div>
+                  <div class="expense-info">
+                    <div class="member-name-row">
+                      <p class="expense-desc">{{ member.name }}</p>
+                      @if (member.id === trip()!.ownerId) {
+                        <span class="host-badge">HOST</span>
+                      }
+                    </div>
+                    <p class="expense-meta">{{ member.id === currentUserId() ? 'You' : (member.email || 'Member') }}</p>
+                  </div>
+                </div>
+                @if (isOwner() && member.id !== trip()!.ownerId) {
+                  <button class="btn-remove-member" (click)="removeMember(member.id)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6"/><path d="m19 6-.867 12.142A2 2 0 0 1 16.138 20H7.862a2 2 0 0 1-1.995-1.858L5 6m5 0V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/>
+                    </svg>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        }
+
+      </div>
+
+      <!-- Owner Actions -->
+      @if (isOwner()) {
+        <div class="owner-actions">
+          <button class="btn-publish" (click)="publishTrip()" id="btn-publish">🌍 Publish Trip</button>
+          <button class="btn-delete" (click)="confirmDelete()" id="btn-delete-trip">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/><path d="m19 6-.867 12.142A2 2 0 0 1 16.138 20H7.862a2 2 0 0 1-1.995-1.858L5 6m5 0V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/>
+            </svg>
+            Delete Trip
+          </button>
+        </div>
+      }
+
+    </div>
+  }
+
+  <!-- ═══ EXPENSE LOG MODAL ═══ -->
+  @if (expenseModalOpen()) {
+    <div class="modal-overlay" (click)="expenseModalOpen.set(false)">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ editingExpense ? 'Edit Expense' : 'Log Expense' }}</h3>
+          <button class="btn-close" (click)="expenseModalOpen.set(false)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+
+        <!-- Category picker -->
+        <div class="cat-grid">
+          @for (cat of categories; track cat.id) {
+            <button class="cat-btn" [class.active]="expForm.category === cat.id" (click)="expForm.category = cat.id" [id]="'cat-' + cat.id">
+              <span>{{ cat.emoji }}</span>
+              <span class="cat-label">{{ cat.label }}</span>
+            </button>
+          }
+        </div>
+
+        <div class="form-field">
+          <label>Description</label>
+          <input type="text" [(ngModel)]="expForm.desc" placeholder="e.g. Lunch at beachside" class="form-input" id="exp-desc" />
+        </div>
+        <div class="form-field">
+          <label>Amount (VND)</label>
+          <input type="number" [(ngModel)]="expForm.amount" placeholder="0" class="form-input" id="exp-amount" />
+        </div>
+        <div class="form-field">
+          <label>Paid by</label>
+          <select [(ngModel)]="expForm.payerId" class="form-input" id="exp-payer">
+            @for (member of trip()?.members ?? []; track member.id) {
+              <option [value]="member.id">{{ member.name }}{{ member.id === currentUserId() ? ' (You)' : '' }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Date</label>
+          <input type="date" [(ngModel)]="expForm.date" class="form-input" id="exp-date" />
+        </div>
+
+        <button class="btn-primary" (click)="saveExpense()" [disabled]="isSavingExpense()">
+          {{ isSavingExpense() ? 'Saving...' : (editingExpense ? 'Update' : 'Log Expense') }}
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- ═══ EXPENSE DETAIL MODAL ═══ -->
+  @if (selectedExpense) {
+    <div class="modal-overlay" (click)="selectedExpense = null">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Expense Detail</h3>
+          <button class="btn-close" (click)="selectedExpense = null">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        <div class="detail-icon">{{ getCategoryEmoji(selectedExpense.category || 'OTHER') }}</div>
+        <h2 class="detail-desc">{{ selectedExpense.desc }}</h2>
+        <p class="detail-amount">₫{{ formatNumber(selectedExpense.amount) }}</p>
+        <div class="detail-meta">
+          <span>{{ selectedExpense.date }}</span>
+          <span>Paid by {{ getPayerName(selectedExpense.payerId) }}</span>
+          <span>{{ getCategoryLabel(selectedExpense.category || 'OTHER') }}</span>
+        </div>
+        @if (isOwner() || selectedExpense.payerId === currentUserId()) {
+          <div class="detail-actions">
+            <button class="btn-detail-edit" (click)="editExpense(selectedExpense)">Edit</button>
+            <button class="btn-detail-delete" (click)="deleteExpenseConfirm(selectedExpense.id)">Delete</button>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+</div>

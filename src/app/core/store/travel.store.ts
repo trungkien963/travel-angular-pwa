@@ -87,6 +87,12 @@ export class TravelStore {
     this.posts.update(list => list.filter(p => p.tripId !== id));
   }
 
+  removeTrip(id: string) {
+    this.trips.update(list => list.filter(t => t.id !== id));
+    this.expenses.update(list => list.filter(e => e.tripId !== id));
+    this.posts.update(list => list.filter(p => p.tripId !== id));
+  }
+
   // ─── Actions: Expenses ────────────────────────────────────────────────────
   addExpense(expense: Expense) {
     this.expenses.update(list => [expense, ...list]);
@@ -98,6 +104,15 @@ export class TravelStore {
 
   deleteExpense(id: string) {
     this.expenses.update(list => list.filter(e => e.id !== id));
+  }
+
+  removeExpense(id: string) { this.deleteExpense(id); }
+
+  upsertExpense(expense: Expense) {
+    this.expenses.update(list => {
+      const idx = list.findIndex(e => e.id === expense.id);
+      return idx >= 0 ? list.map(e => e.id === expense.id ? expense : e) : [expense, ...list];
+    });
   }
 
   // ─── Actions: Posts ───────────────────────────────────────────────────────
@@ -112,6 +127,8 @@ export class TravelStore {
   deletePost(id: string) {
     this.posts.update(list => list.filter(p => p.id !== id));
   }
+
+  removePost(id: string) { this.deletePost(id); }
 
   // ─── Actions: Notifications ───────────────────────────────────────────────
   addNotification(notification: AppNotification) {
