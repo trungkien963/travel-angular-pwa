@@ -1,1 +1,221 @@
-<p>trips works!</p>
+<div class="trips-page">
+
+  <!-- Header -->
+  <header class="trips-header">
+    <div class="trips-header__text">
+      <h1 class="trips-header__title">My Trips</h1>
+      <p class="trips-header__sub">Your upcoming and past adventures.</p>
+    </div>
+    <button class="btn-add" (click)="openModal()" id="btn-add-trip">
+      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12h14"/><path d="M12 5v14"/>
+      </svg>
+    </button>
+  </header>
+
+  <!-- Trip List -->
+  <main class="trips-content">
+    @if (isLoading()) {
+      <div class="loading-state">
+        <div class="spinner-lg"></div>
+      </div>
+    } @else if (trips().length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">🗺️</div>
+        <p class="empty-title">No trips yet</p>
+        <p class="empty-sub">Start planning your next adventure!</p>
+        <button class="btn-empty-cta" (click)="openModal()">Create a Trip</button>
+      </div>
+    } @else {
+      <div class="trip-list">
+        @for (trip of trips(); track trip.id) {
+          <div class="trip-card" (click)="goToTrip(trip.id)" [id]="'trip-' + trip.id">
+            <!-- bg image -->
+            <img
+              [src]="trip.coverImage || defaultCover"
+              [alt]="trip.title"
+              class="trip-card__img"
+              loading="lazy"
+            />
+            <!-- status badge -->
+            <div class="trip-card__badge">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              <span>{{ isUpcoming(trip.startDate) ? 'UPCOMING' : 'ONGOING' }}</span>
+            </div>
+            <!-- glass info panel -->
+            <div class="trip-card__glass">
+              <div class="trip-card__info">
+                <h2 class="trip-card__title">{{ trip.title }}</h2>
+                <div class="trip-card__dates">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#78716C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/>
+                  </svg>
+                  <span>{{ formatDate(trip.startDate) }} – {{ formatDate(trip.endDate) }}</span>
+                </div>
+              </div>
+              <!-- member avatars -->
+              <div class="trip-card__avatars">
+                @for (member of trip.members.slice(0, 3); track member.id; let i = $index) {
+                  <div class="avatar-circle" [style.z-index]="10 - i" [style.margin-left]="i > 0 ? '-12px' : '0'">
+                    @if (member.avatar) {
+                      <img [src]="member.avatar" [alt]="member.name" />
+                    } @else {
+                      <div class="avatar-initial">{{ (member.name || '?').charAt(0).toUpperCase() }}</div>
+                    }
+                  </div>
+                }
+                @if (!trip.members || trip.members.length === 0) {
+                  <div class="avatar-circle">
+                    <div class="avatar-me">ME</div>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </main>
+
+  <!-- New Trip Modal Overlay -->
+  @if (modalOpen()) {
+    <div class="modal-overlay" (click)="closeModal()" id="modal-overlay">
+      <div class="modal" (click)="$event.stopPropagation()">
+
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <div class="modal-header__left">
+            @if (step() === 2) {
+              <button class="btn-back" (click)="setStep(1)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>
+                </svg>
+              </button>
+            }
+            <h3 class="modal-title">{{ step() === 1 ? 'New Adventure' : 'Invite Crew' }}</h3>
+          </div>
+          <button class="btn-close" (click)="closeModal()" id="btn-close-modal">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- STEP 1: Trip Details -->
+        @if (step() === 1) {
+          <!-- Cover Image -->
+          <div class="cover-picker" (click)="triggerImageInput()" id="btn-pick-cover">
+            @if (coverImagePreview()) {
+              <img [src]="coverImagePreview()!" class="cover-img" alt="Cover" />
+              <div class="cover-retake">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+                  <circle cx="12" cy="13" r="3"/>
+                </svg>
+                <span>Retake</span>
+              </div>
+            } @else {
+              <div class="cover-placeholder">
+                <div class="cover-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FFC800" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+                    <circle cx="12" cy="13" r="3"/>
+                  </svg>
+                </div>
+                <p class="cover-label">Add a Vibe Check</p>
+                <p class="cover-sub">Tap to set trip cover</p>
+              </div>
+            }
+            <input #fileInput type="file" accept="image/*" style="display:none" (change)="onImageSelected($event)" />
+          </div>
+
+          <!-- Trip Title -->
+          <div class="title-field">
+            <input
+              type="text"
+              [(ngModel)]="tripTitle"
+              placeholder="Where to next?"
+              class="title-input"
+              id="input-trip-title"
+            />
+          </div>
+
+          <!-- Dates -->
+          <div class="date-row">
+            <label class="date-field" for="input-start-date">
+              <span class="date-label">FROM</span>
+              <input type="date" [(ngModel)]="startDate" class="date-input" id="input-start-date" />
+            </label>
+            <label class="date-field" for="input-end-date">
+              <span class="date-label">TO</span>
+              <input type="date" [(ngModel)]="endDate" class="date-input" id="input-end-date" />
+            </label>
+          </div>
+
+          <button class="btn-primary" (click)="goToStep2()" id="btn-next-step">
+            Next: Add Members →
+          </button>
+        }
+
+        <!-- STEP 2: Invite Members -->
+        @if (step() === 2) {
+          <p class="invite-desc">Invite travel companions via email to share expenses and memories.</p>
+
+          <!-- Email Input -->
+          <div class="email-input-row" [class.has-error]="emailError()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A8A29E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+            </svg>
+            <input
+              type="email"
+              [(ngModel)]="emailInput"
+              placeholder="friend@email.com"
+              class="email-input"
+              id="input-member-email"
+              (keyup.enter)="addMember()"
+            />
+            <button class="btn-add-member" (click)="addMember()" id="btn-add-member">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFC800" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14"/><path d="M12 5v14"/>
+              </svg>
+            </button>
+          </div>
+          @if (emailError()) {
+            <p class="email-error">{{ emailError() }}</p>
+          }
+
+          <!-- Member Tags -->
+          <div class="member-list">
+            <!-- Owner -->
+            <div class="member-tag member-tag--owner">
+              <div class="member-tag__avatar member-tag__avatar--me">ME</div>
+              <span>You (Owner)</span>
+            </div>
+            @if (members().length === 0) {
+              <span class="member-empty">No other members added.</span>
+            }
+            @for (email of members(); track email) {
+              <div class="member-tag">
+                <div class="member-tag__avatar">{{ email.charAt(0).toUpperCase() }}</div>
+                <span>{{ email }}</span>
+                <button class="btn-remove-member" (click)="removeMember(email)">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+                  </svg>
+                </button>
+              </div>
+            }
+          </div>
+
+          <button class="btn-primary" [disabled]="isCreating()" (click)="createTrip()" id="btn-create-trip">
+            @if (isCreating()) { Creating... } @else { 🚀 Create Adventure }
+          </button>
+        }
+
+      </div>
+    </div>
+  }
+
+</div>

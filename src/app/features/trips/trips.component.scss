@@ -1,1 +1,599 @@
-// Trips styles - to be implemented
+@use 'sass:color';
+
+$primary: #FFC800;
+$text-dark: #1C1917;
+$text-muted: #78716C;
+$text-inactive: #A8A29E;
+$bg: #FFFFFF;
+$bg-surface: #FAFAFA;
+$border-light: #F0F0F0;
+$border: #E5E5E5;
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+.trips-page {
+  background: $bg;
+  min-height: 100%;
+  font-family: 'Inter', -apple-system, sans-serif;
+  padding-top: 56px;
+}
+
+// ─── Header ──────────────────────────────────────────────────────────────────
+.trips-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: $bg;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.trips-header__title {
+  font-size: 32px;
+  font-weight: 900;
+  color: $text-dark;
+  margin: 0 0 4px;
+  letter-spacing: -0.5px;
+}
+
+.trips-header__sub {
+  font-size: 14px;
+  font-weight: 500;
+  color: $text-muted;
+  margin: 0;
+}
+
+.btn-add {
+  width: 56px;
+  height: 56px;
+  border-radius: 28px;
+  background: $primary;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(255, 200, 0, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  flex-shrink: 0;
+
+  &:hover { transform: scale(1.05); }
+  &:active { transform: scale(0.95); }
+}
+
+// ─── Content ──────────────────────────────────────────────────────────────────
+.trips-content {
+  padding: 16px 24px 120px;
+}
+
+.loading-state {
+  display: flex;
+  justify-content: center;
+  padding: 60px 0;
+}
+
+.spinner-lg {
+  width: 36px;
+  height: 36px;
+  border: 3px solid $primary;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+// ─── Empty State ──────────────────────────────────────────────────────────────
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 0;
+  gap: 8px;
+}
+
+.empty-icon { font-size: 48px; margin-bottom: 8px; }
+.empty-title { font-size: 18px; font-weight: 700; color: $text-dark; margin: 0; }
+.empty-sub { font-size: 14px; color: $text-muted; margin: 0; }
+.btn-empty-cta {
+  margin-top: 16px;
+  background: $primary;
+  border: none;
+  border-radius: 16px;
+  padding: 14px 28px;
+  font-size: 15px;
+  font-weight: 700;
+  color: $text-dark;
+  cursor: pointer;
+  font-family: inherit;
+  transition: transform 0.15s ease;
+  &:hover { transform: scale(1.02); }
+}
+
+// ─── Trip List ────────────────────────────────────────────────────────────────
+.trip-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+// ─── Trip Card ────────────────────────────────────────────────────────────────
+.trip-card {
+  width: 100%;
+  height: 220px;
+  border-radius: 24px;
+  background: #F5F5F5;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(28, 25, 23, 0.1);
+  animation: fadeIn 0.3s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 32px rgba(28, 25, 23, 0.15);
+  }
+
+  &:active { transform: scale(0.99); }
+}
+
+.trip-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+
+  .trip-card:hover & { transform: scale(1.04); }
+}
+
+.trip-card__badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 200, 0, 0.95);
+  padding: 6px 12px;
+  border-radius: 100px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+
+  span {
+    font-size: 10px;
+    font-weight: 900;
+    color: $text-dark;
+    letter-spacing: 1px;
+  }
+}
+
+.trip-card__glass {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  padding: 14px 16px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+}
+
+.trip-card__info { flex: 1; padding-right: 12px; }
+
+.trip-card__title {
+  font-size: 18px;
+  font-weight: 900;
+  color: $text-dark;
+  margin: 0 0 4px;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trip-card__dates {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  span {
+    font-size: 12px;
+    font-weight: 700;
+    color: $text-muted;
+  }
+}
+
+.trip-card__avatars {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+}
+
+.avatar-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 18px;
+  border: 2px solid #FFFFFF;
+  overflow: hidden;
+  background: #F0F0F0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img { width: 100%; height: 100%; object-fit: cover; }
+}
+
+.avatar-initial {
+  width: 100%;
+  height: 100%;
+  background: $primary;
+  color: $text-dark;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.avatar-me {
+  width: 100%;
+  height: 100%;
+  background: #F0F0F0;
+  color: $text-inactive;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+// ─── Modal Overlay ────────────────────────────────────────────────────────────
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 200;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease;
+}
+
+.modal {
+  background: $bg;
+  border-radius: 32px;
+  padding: 28px 24px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.25s ease;
+
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+}
+
+.modal-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: $text-dark;
+  margin: 0;
+}
+
+.btn-back, .btn-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: $bg-surface;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+  &:hover { background: $border-light; }
+}
+
+// ─── Cover Picker ─────────────────────────────────────────────────────────────
+.cover-picker {
+  width: 100%;
+  height: 180px;
+  background: #F5F5F5;
+  border-radius: 20px;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+
+  &:hover { background: #EEEEEE; }
+}
+
+.cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cover-retake {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 8px 12px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  span {
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+  }
+}
+
+.cover-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.cover-icon {
+  width: 56px;
+  height: 56px;
+  background: rgba(255,255,255,0.85);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  margin-bottom: 4px;
+}
+
+.cover-label { font-size: 15px; font-weight: 700; color: $text-dark; margin: 0; }
+.cover-sub { font-size: 13px; color: $text-muted; margin: 0; }
+
+// ─── Title Field ──────────────────────────────────────────────────────────────
+.title-field {
+  border-bottom: 1px solid $border-light;
+  margin-bottom: 20px;
+  padding-bottom: 8px;
+}
+
+.title-input {
+  width: 100%;
+  font-size: 34px;
+  font-weight: 900;
+  color: $text-dark;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  letter-spacing: -0.5px;
+  box-sizing: border-box;
+
+  &::placeholder { color: #D4D4D4; }
+}
+
+// ─── Date Pickers ─────────────────────────────────────────────────────────────
+.date-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.date-field {
+  flex: 1;
+  background: #F9F9F9;
+  border-radius: 16px;
+  padding: 14px 16px;
+  border: 1px solid $border-light;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.date-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: $text-muted;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.date-input {
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  font-weight: 900;
+  color: $text-dark;
+  font-family: inherit;
+  outline: none;
+  text-align: center;
+  cursor: pointer;
+  width: 100%;
+}
+
+// ─── Primary Button ───────────────────────────────────────────────────────────
+.btn-primary {
+  width: 100%;
+  padding: 18px;
+  background: $primary;
+  border: none;
+  border-radius: 16px;
+  font-size: 15px;
+  font-weight: 700;
+  color: $text-dark;
+  cursor: pointer;
+  font-family: inherit;
+  transition: transform 0.15s ease, opacity 0.2s ease;
+
+  &:hover:not(:disabled) { transform: scale(1.02); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+// ─── Invite Step ──────────────────────────────────────────────────────────────
+.invite-desc {
+  font-size: 14px;
+  font-weight: 500;
+  color: $text-muted;
+  margin: 0 0 16px;
+}
+
+.email-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: $bg-surface;
+  border-radius: 16px;
+  padding: 10px 14px;
+  border: 1.5px solid $border-light;
+  margin-bottom: 4px;
+  transition: border-color 0.2s ease;
+
+  &:focus-within { border-color: $primary; }
+  &.has-error { border-color: #F87171; }
+}
+
+.email-input {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 500;
+  color: $text-dark;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  height: 36px;
+
+  &::placeholder { color: $text-inactive; }
+}
+
+.btn-add-member {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: rgba(255, 200, 0, 0.15);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+
+  &:hover { background: rgba(255, 200, 0, 0.3); }
+}
+
+.email-error {
+  font-size: 12px;
+  font-weight: 600;
+  color: #EF4444;
+  margin: 4px 0 12px;
+}
+
+.member-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 60px;
+  max-height: 120px;
+  overflow-y: auto;
+  margin: 12px 0 24px;
+  padding: 4px;
+}
+
+.member-empty {
+  font-size: 14px;
+  color: $text-inactive;
+  font-style: italic;
+  padding: 4px 0;
+}
+
+.member-tag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: $bg-surface;
+  border: 1px solid $border;
+  border-radius: 999px;
+  padding: 6px 12px;
+
+  &--owner { border-color: color.scale($primary, $alpha: -20%); }
+
+  &__avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(255, 200, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 900;
+    color: $primary;
+
+    &--me {
+      background: $primary;
+      color: $text-dark;
+    }
+  }
+
+  span { font-size: 13px; font-weight: 600; color: $text-dark; }
+}
+
+.btn-remove-member {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: $border-light;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+  &:hover { background: $border; }
+}
