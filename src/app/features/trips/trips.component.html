@@ -3,8 +3,8 @@
   <!-- Header -->
   <header class="trips-header">
     <div class="trips-header__text">
-      <h1 class="trips-header__title">My Trips</h1>
-      <p class="trips-header__sub">Your upcoming and past adventures.</p>
+      <h1 class="trips-header__title">{{ 'trips.title' | translate }}</h1>
+      <p class="trips-header__sub">{{ 'trips.sub' | translate }}</p>
     </div>
     <button class="btn-add" (click)="openModal()" id="btn-add-trip">
       <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -58,7 +58,7 @@
               <!-- member avatars -->
               <div class="trip-card__avatars">
                 @for (member of trip.members.slice(0, 3); track member.id; let i = $index) {
-                  <div class="avatar-circle" [style.z-index]="10 - i" [style.margin-left]="i > 0 ? '-12px' : '0'">
+                  <div class="avatar-circle" [style.z-index]="10 - i" [style.margin-left]="i > 0 ? '-16px' : '0'">
                     @if (member.avatar) {
                       <img [src]="member.avatar" [alt]="member.name" />
                     } @else {
