@@ -191,7 +191,7 @@ export class TripDetailComponent implements OnInit {
   }
 
   private async loadExpenses() {
-    const db = this.travelStore['supabase'].client;
+    const db = this.supabaseService.client;
     const { data } = await db.from('expenses').select('*').eq('trip_id', this.tripId()).order('created_at', { ascending: false });
     if (data) {
       data.forEach((row: any) => {
@@ -324,9 +324,34 @@ export class TripDetailComponent implements OnInit {
 
   async deletePost(postId: string) {
     if (!confirm('Delete this post?')) return;
-    const db = this.travelStore['supabase'].client;
-    const { error } = await db.from('posts').delete().eq('id', postId);
-    if (!error) this.travelStore.removePost(postId);
+    const db = this.supabaseService.client;
+    const post = this.tripPosts().find(p => p.id === postId);
+
+    try {
+      // 1. Collect Storage paths before deletion
+      const pathsToDelete = (post?.images || [])
+        .filter(url => url && url.includes('/nomadsync-media/'))
+        .map(url => url.split('/nomadsync-media/')[1]);
+
+      // 2. Clear image_urls first to bypass Postgres storage triggers
+      if (pathsToDelete.length > 0) {
+        await db.from('posts').update({ image_urls: null }).eq('id', postId);
+      }
+
+      // 3. Delete the post row
+      const { error } = await db.from('posts').delete().eq('id', postId);
+      if (error) throw error;
+
+      // 4. Remove orphaned files from Storage bucket
+      if (pathsToDelete.length > 0) {
+        await db.storage.from('nomadsync-media').remove(pathsToDelete);
+      }
+
+      // 5. Update local store
+      this.travelStore.removePost(postId);
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete post.');
+    }
   }
 
   // ─── Expenses ──────────────────────────────────────────────────────────────
@@ -349,7 +374,7 @@ export class TripDetailComponent implements OnInit {
     if (!this.expForm.desc || !this.expForm.amount) return;
     this.isSavingExpense.set(true);
 
-    const db = this.travelStore['supabase'].client;
+    const db = this.supabaseService.client;
     const members = this.trip()?.members || [];
     const share = Math.round(this.expForm.amount / members.length);
     const splits: Record<string, number> = {};
@@ -392,7 +417,7 @@ export class TripDetailComponent implements OnInit {
 
   async deleteExpenseConfirm(expId: string) {
     if (!confirm('Delete this expense?')) return;
-    const db = this.travelStore['supabase'].client;
+    const db = this.supabaseService.client;
     const { error } = await db.from('expenses').delete().eq('id', expId);
     if (!error) {
       this.travelStore.removeExpense(expId);
@@ -501,7 +526,7 @@ export class TripDetailComponent implements OnInit {
     if (!confirm('Remove this member?')) return;
     const trip = this.trip();
     if (!trip) return;
-    const db = this.travelStore['supabase'].client;
+    const db = this.supabaseService.client;
     const updated = trip.members.filter(m => m.id !== memberId);
     await db.from('trips').update({ members: updated }).eq('id', trip.id);
     this.travelStore.updateTrip(trip.id, { members: updated });
@@ -510,11 +535,17 @@ export class TripDetailComponent implements OnInit {
   // ─── Delete Trip ───────────────────────────────────────────────────────────
   async confirmDelete() {
     if (!confirm('Delete this adventure permanently? This cannot be undone.')) return;
-    const db = this.travelStore['supabase'].client;
-    const { error } = await db.from('trips').delete().eq('id', this.tripId());
-    if (!error) {
-      this.travelStore.removeTrip(this.tripId());
+    try {
+      // Delegates to TravelStore.deleteTrip() which handles full Storage GC:
+      // 1. Collect all media URLs (cover + expense receipts + post images)
+      // 2. Clear image_urls/receipt_urls/cover_image before delete (bypass triggers)
+      // 3. Delete trip row
+      // 4. Remove orphaned files from 'nomadsync-media' bucket
+      // 5. Remove cascaded expenses+posts from local signals
+      await this.travelStore.deleteTrip(this.tripId());
       this.router.navigate(['/trips']);
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete trip. Please try again.');
     }
   }
 
