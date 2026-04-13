@@ -4,7 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { TravelStore } from '../../core/store/travel.store';
 import { Trip } from '../../core/models/trip.model';
 import { Expense, Member } from '../../core/models/expense.model';
-import { Post } from '../../core/models/social.model';
+import { Post, Comment } from '../../core/models/social.model';
+import { SupabaseService } from '../../core/services/supabase.service';
 
 export interface Debt {
   fromId: string; fromName: string;
@@ -33,6 +34,7 @@ export class TripDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private travelStore = inject(TravelStore);
+  private supabaseService = inject(SupabaseService);
 
   readonly defaultCover = 'https://images.unsplash.com/photo-1473496169904-6a58eb22bf2f?q=80&w=1000';
 
@@ -45,6 +47,11 @@ export class TripDetailComponent implements OnInit {
   readonly expenseModalOpen = signal(false);
   readonly isSavingExpense = signal(false);
   editingExpense: Expense | null = null;
+
+  // ─── Comments modal state ──────────────────────────────────────────────
+  commentPost: Post | null = null;
+  commentText = '';
+  readonly isSendingComment = signal(false);
 
   // Expense form state
   expForm: { desc: string; amount: number; category: string; payerId: string; date: string } = {
@@ -198,6 +205,9 @@ export class TripDetailComponent implements OnInit {
   // ─── Navigation ───────────────────────────────────────────────────────────
   goBack() { this.router.navigate(['/trips']); }
   setTab(tab: string) { this.activeTab = tab; }
+  navigateToAddMoment() {
+    this.router.navigate(['/add-moment'], { queryParams: { tripId: this.tripId() } });
+  }
 
   // ─── Social ───────────────────────────────────────────────────────────────
   async toggleLike(postId: string) {
@@ -211,7 +221,55 @@ export class TripDetailComponent implements OnInit {
     await db.from('posts').update({ likes: newLikes }).eq('id', postId);
   }
 
-  openComments(post: Post) { /* TODO: Step 8 - comments modal */ }
+  openComments(post: Post) {
+    this.commentPost = { ...post }; // snapshot to keep reference stable
+    this.commentText = '';
+  }
+
+  closeComments() {
+    this.commentPost = null;
+    this.commentText = '';
+  }
+
+  async sendComment() {
+    const text = this.commentText.trim();
+    if (!text || !this.commentPost) return;
+    this.isSendingComment.set(true);
+
+    try {
+      const uid = this.travelStore.currentUserId();
+      const profile = this.travelStore.currentUserProfile();
+      const member = this.trip()?.members.find(m => m.id === uid);
+      const authorName = profile?.name || member?.name || 'Traveler';
+
+      const newComment: Comment = {
+        id: crypto.randomUUID(),
+        authorId: uid,
+        authorName,
+        authorAvatar: profile?.avatar || undefined,
+        text,
+        timestamp: new Date().toISOString()
+      };
+
+      const existingComments = this.commentPost!.comments;
+      const updatedComments = [...existingComments, newComment];
+
+      // Update Supabase — comments stored as JSONB array
+      const db = this.supabaseService.client;
+      await db.from('posts').update({ comments: updatedComments }).eq('id', this.commentPost!.id);
+
+      // Update local store
+      this.travelStore.updatePost(this.commentPost!.id, { comments: updatedComments });
+
+      // Update modal reference so new comment appears immediately
+      this.commentPost = { ...this.commentPost!, comments: updatedComments };
+      this.commentText = '';
+    } catch (err: any) {
+      alert(err.message || 'Failed to send comment.');
+    } finally {
+      this.isSendingComment.set(false);
+    }
+  }
 
   async deletePost(postId: string) {
     if (!confirm('Delete this post?')) return;
