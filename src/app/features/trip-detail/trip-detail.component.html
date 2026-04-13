@@ -108,11 +108,11 @@
                 <!-- IG Header -->
                 <div class="ig-header">
                   <div class="ig-user">
-                    <div class="ig-avatar">
+                    <div class="ig-avatar" [style.background]="!post.authorAvatar ? getAvatarBg(post.authorName || '?') : ''">
                       @if (post.authorAvatar) {
                         <img [src]="post.authorAvatar" alt="avatar" class="ig-avatar-img" />
                       } @else {
-                        <span class="ig-avatar-initial">{{ (post.authorName || '?').charAt(0).toUpperCase() }}</span>
+                        <span class="ig-avatar-initial" [style.color]="getAvatarColor(post.authorName || '?')">{{ (post.authorName || '?').charAt(0).toUpperCase() }}</span>
                       }
                     </div>
                     <div class="ig-user-info">
@@ -248,8 +248,8 @@
                     <span>{{ getCategoryEmoji(exp.category || 'OTHER') }}</span>
                   </div>
                   <div class="expense-info">
-                    <p class="expense-desc">{{ exp.desc }}</p>
-                    <p class="expense-meta">{{ exp.date }} • Paid by {{ getPayerName(exp.payerId) }}</p>
+                    <p class="expense-desc">{{ exp.desc || getCategoryLabel(exp.category || 'OTHER') }}</p>
+                    <p class="expense-meta">{{ getCategoryLabel(exp.category || 'OTHER') }} • {{ exp.date }} • Paid by {{ getPayerName(exp.payerId) }}</p>
                   </div>
                 </div>
                 <span class="expense-amount">₫{{ formatNumber(exp.amount) }}</span>
@@ -347,8 +347,8 @@
             @for (member of trip()!.members; track member.id) {
               <div class="expense-item">
                 <div class="expense-left">
-                  <div class="expense-icon member-avatar">
-                    <span>{{ member.name.charAt(0).toUpperCase() }}</span>
+                  <div class="expense-icon member-avatar" [style.background]="getAvatarBg(member.name)">
+                    <span [style.color]="getAvatarColor(member.name)">{{ member.name.charAt(0).toUpperCase() }}</span>
                   </div>
                   <div class="expense-info">
                     <div class="member-name-row">
@@ -492,9 +492,12 @@
             <div class="receipt-icon-wrapper" [style.background]="getCategoryBg(selectedExpense.category || 'OTHER')">
               <span class="receipt-emoji">{{ getCategoryEmoji(selectedExpense.category || 'OTHER') }}</span>
             </div>
-            <h2 class="receipt-title">{{ selectedExpense.desc }}</h2>
             <div class="receipt-amount-display">₫{{ formatNumber(selectedExpense.amount) }}</div>
-            <p class="receipt-date">{{ formatDate(selectedExpense.date) }} • {{ getCategoryLabel(selectedExpense.category || 'OTHER') }}</p>
+            <h2 class="receipt-title">{{ selectedExpense.desc || getCategoryLabel(selectedExpense.category || 'OTHER') }}</h2>
+            <div class="receipt-date">
+              <span class="receipt-category-pill" [style.background]="getCategoryBg(selectedExpense.category || 'OTHER')">{{ getCategoryLabel(selectedExpense.category || 'OTHER') }}</span>
+              {{ formatDate(selectedExpense.date) }}
+            </div>
           </div>
           
           <div class="receipt-divider"></div>
@@ -564,11 +567,11 @@
           @for (c of commentPost.comments; track c.id) {
             <div class="comment-item" [id]="'comment-' + c.id">
               <!-- Avatar -->
-              <div class="comment-avatar">
+              <div class="comment-avatar" [style.background]="!c.authorAvatar ? getAvatarBg(c.authorName || '?') : ''">
                 @if (c.authorAvatar) {
                   <img [src]="c.authorAvatar" [alt]="c.authorName" class="comment-avatar-img" />
                 } @else {
-                  <span class="comment-avatar-initial">{{ (c.authorName || '?').charAt(0).toUpperCase() }}</span>
+                  <span class="comment-avatar-initial" [style.color]="getAvatarColor(c.authorName || '?')">{{ (c.authorName || '?').charAt(0).toUpperCase() }}</span>
                 }
               </div>
               <!-- Bubble -->

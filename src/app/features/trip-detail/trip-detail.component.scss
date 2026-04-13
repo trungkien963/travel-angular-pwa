@@ -19,6 +19,7 @@ $border: #F0F0F0;
   background: $bg;
   min-height: 100%;
   font-family: 'Inter', -apple-system, sans-serif;
+  padding-bottom: 120px;
 }
 
 .loading-page {
@@ -69,8 +70,8 @@ $border: #F0F0F0;
   top: 56px;
   width: 46px; height: 46px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
@@ -80,7 +81,7 @@ $border: #F0F0F0;
   z-index: 10;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.25);
+    background: rgba(0, 0, 0, 0.5);
     box-shadow: 0 4px 16px rgba(0,0,0,0.12);
   }
 }
@@ -158,7 +159,8 @@ $border: #F0F0F0;
 }
 
 .tab-btn {
-  padding: 10px 20px;
+  padding: 12px 24px;
+  min-height: 48px;
   border-radius: 100px;
   border: 1px solid $border;
   background: $bg;
@@ -215,7 +217,7 @@ $border: #F0F0F0;
 
   &--primary {
     background: $text-dark;
-    color: $bg;
+    color: #FFFFFF !important;
   }
 }
 
@@ -833,18 +835,30 @@ $border: #F0F0F0;
 .receipt-emoji { font-size: 28px; }
 
 .receipt-title {
-  font-size: 20px; font-weight: 800; color: $text-dark;
-  margin: 0 0 8px; line-height: 1.2; text-align: center;
+  font-size: 16px; font-weight: 600; color: $text-muted;
+  margin: 0 0 16px; line-height: 1.4; text-align: center;
 }
 
 .receipt-amount-display {
-  font-size: 40px; font-weight: 900; color: $text-dark;
-  letter-spacing: -1.5px; margin-bottom: 8px; text-align: center;
+  font-size: 44px; font-weight: 900; color: $text-dark;
+  letter-spacing: -1.5px; margin-bottom: 6px; text-align: center;
+  line-height: 1;
 }
 
 .receipt-date {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
   font-size: 13px; font-weight: 600; color: $text-muted;
-  margin: 0 0 24px; text-align: center;
+  margin: 0 0 24px;
+}
+
+.receipt-category-pill {
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 800;
+  color: $text-dark;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .receipt-divider {
