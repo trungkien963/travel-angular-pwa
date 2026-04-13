@@ -181,27 +181,42 @@ export class TripDetailComponent implements OnInit {
       }
     });
 
-    const creditors = Object.entries(balance).filter(([, v]) => v > 0.5).map(([id, v]) => ({ id, amount: v }));
-    const debtors   = Object.entries(balance).filter(([, v]) => v < -0.5).map(([id, v]) => ({ id, amount: -v }));
-    const result: Debt[] = [];
+    const creditors = Object.entries(balance).filter(([, v]) => v > 1).map(([id, v]) => ({ id, amount: v }));
+    const debtors   = Object.entries(balance).filter(([, v]) => v < -1).map(([id, v]) => ({ id, amount: -v }));
 
-    for (const debtor of debtors) {
-      for (const creditor of creditors) {
-        if (debtor.amount < 0.5 || creditor.amount < 0.5) continue;
-        const settled = Math.min(debtor.amount, creditor.amount);
+    // Sort by largest debts/credits first for efficient greedy matching
+    debtors.sort((a, b) => b.amount - a.amount);
+    creditors.sort((a, b) => b.amount - a.amount);
+
+    const result: Debt[] = [];
+    
+    let i = 0; // debtors index
+    let j = 0; // creditors index
+
+    while (i < debtors.length && j < creditors.length) {
+      const debtor = debtors[i];
+      const creditor = creditors[j];
+
+      const settled = Math.min(debtor.amount, creditor.amount);
+
+      if (settled > 0) {
         const fromMember = members.find(m => m.id === debtor.id);
-        const toMember   = members.find(m => m.id === creditor.id);
-        if (fromMember && toMember) {
-          result.push({
-            fromId: debtor.id, fromName: fromMember.name,
-            toId: creditor.id, toName: toMember.name,
-            amount: Math.round(settled)
-          });
-        }
-        debtor.amount -= settled;
-        creditor.amount -= settled;
+        const toMember = members.find(m => m.id === creditor.id);
+        
+        result.push({
+          fromId: debtor.id, fromName: fromMember?.name || debtor.id,
+          toId: creditor.id, toName: toMember?.name || creditor.id,
+          amount: Math.round(settled)
+        });
       }
+
+      debtor.amount -= settled;
+      creditor.amount -= settled;
+
+      if (debtor.amount < 1) i++;
+      if (creditor.amount < 1) j++;
     }
+
     return result;
   });
 
@@ -326,19 +341,26 @@ export class TripDetailComponent implements OnInit {
         timestamp: new Date().toISOString()
       };
 
-      const existingComments = this.commentPost!.comments;
+      const existingComments = this.commentPost!.comments || [];
       const updatedComments = [...existingComments, newComment];
 
-      // Update Supabase — comments stored as JSONB array
-      const db = this.supabaseService.client;
-      await db.from('posts').update({ comments: updatedComments }).eq('id', this.commentPost!.id);
-
-      // Update local store
+      // Optimistic local state update
       this.travelStore.updatePost(this.commentPost!.id, { comments: updatedComments });
-
-      // Update modal reference so new comment appears immediately
       this.commentPost = { ...this.commentPost!, comments: updatedComments };
       this.commentText = '';
+
+      // Update Supabase using RPC to avoid race conditions on JSONB arrays
+      const db = this.supabaseService.client;
+      const { error } = await db.rpc('add_post_comment', {
+        p_post_id: this.commentPost!.id,
+        p_comment: newComment
+      });
+      
+      if (error) {
+        // Fallback to traditional update if RPC is not available in the database yet
+        console.warn('RPC failed, falling back to full array replace:', error);
+        await db.from('posts').update({ comments: updatedComments }).eq('id', this.commentPost!.id);
+      }
     } catch (err: any) {
       alert(err.message || 'Failed to send comment.');
     } finally {
