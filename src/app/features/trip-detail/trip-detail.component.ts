@@ -162,6 +162,17 @@ export class TripDetailComponent implements OnInit {
     return floatCount > 0 ? Math.round(Math.max(0, remainder) / floatCount) : 0;
   }
 
+  onInputSplitAmount(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const raw = input.value.replace(/[^0-9]/g, '');
+    const num = parseInt(raw, 10);
+    if (!isNaN(num)) {
+      input.value = num.toLocaleString('en-US');
+    } else {
+      input.value = '';
+    }
+  }
+
   readonly categories = Object.entries(CATEGORY_META).map(([id, v]) => ({
     id, emoji: v.emoji, label: v.label
   }));

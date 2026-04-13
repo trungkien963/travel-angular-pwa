@@ -227,6 +227,7 @@
                     [value]="lockedShares()[member.id] != null ? formatNumber(lockedShares()[member.id]!) : ''"
                     inputmode="text"
                     placeholder="{{ formatNumber(calcShare(member.id)) }}"
+                    (input)="onInputSplitAmount($event)"
                     (blur)="setLockedAmount(member.id, amtInput.value)"
                     (keydown.enter)="setLockedAmount(member.id, amtInput.value)"
                     (click)="$event.stopPropagation()"

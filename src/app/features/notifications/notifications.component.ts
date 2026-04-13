@@ -64,6 +64,15 @@ export class NotificationsComponent {
     }
   }
 
+  // Intercept hardcoded backend messages like "- $3000000" and convert to "- ₫3,000,000"
+  formatMessage(msg: string): string {
+    if (!msg) return '';
+    return msg.replace(/\$(\d+)/g, (match, p1) => {
+      const num = parseInt(p1, 10);
+      return '₫' + num.toLocaleString('en-US');
+    });
+  }
+
   // ─── Helpers ──────────────────────────────────────────────────────────────
   getIconBg(type: string): string {
     return ICON_BACKGROUNDS[type] || '#F3F4F6';

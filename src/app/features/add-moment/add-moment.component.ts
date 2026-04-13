@@ -402,6 +402,17 @@ export class AddMomentComponent implements OnInit, OnDestroy {
     return floatCount > 0 ? Math.round(remainder / floatCount) : 0;
   }
 
+  onInputSplitAmount(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const raw = input.value.replace(/[^0-9]/g, '');
+    const num = parseInt(raw, 10);
+    if (!isNaN(num)) {
+      input.value = num.toLocaleString('en-US');
+    } else {
+      input.value = '';
+    }
+  }
+
   // ─── Location search ─────────────────────────────────────────────────────
   onLocationSearch() {
     if (this.locationTimer) clearTimeout(this.locationTimer);
