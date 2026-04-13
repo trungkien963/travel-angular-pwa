@@ -13,7 +13,7 @@
   <div class="camera-area">
     
     <!-- Video Stream (Live Camera) -->
-    <video #videoElement autoplay playsinline class="video-feed"></video>
+    <video #videoElement autoplay playsinline class="video-feed" [class.mirrored]="facingMode() === 'user'"></video>
     <!-- Hidden canvas for capture -->
     <canvas #canvasElement class="hidden-canvas"></canvas>
 
@@ -24,7 +24,7 @@
       </button>
       <button class="icon-circle" (click)="toggleCamera()">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
+          <path d="M11 19H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/><path d="M13 5h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-5"/><circle cx="12" cy="12" r="3"/><path d="m18 22-3-3 3-3"/><path d="m6 2 3 3-3 3"/>
         </svg>
       </button>
       <label class="icon-circle" for="file-input">

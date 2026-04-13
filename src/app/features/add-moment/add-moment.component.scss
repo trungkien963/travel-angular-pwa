@@ -166,6 +166,10 @@ $border: #F0F0F0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+
+  &.mirrored {
+    transform: scaleX(-1);
+  }
 }
 
 .hidden-canvas, .hidden {

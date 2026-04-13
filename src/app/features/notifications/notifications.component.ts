@@ -33,10 +33,13 @@ export class NotificationsComponent {
   }
 
   // ─── Notification handlers ────────────────────────────────────────────────
-  handlePress(item: AppNotification) {
+  async handlePress(item: AppNotification) {
     if (!item.isRead) {
       this.travelStore.markNotificationAsRead(item.id);
     }
+    // Force a fresh HTTP pull to guarantee the newly added post/expense is visible
+    // immediately regardless of WebSocket delta status.
+    await this.travelStore.refreshData();
     if (item.tripId) {
       this.router.navigate(['/trip', item.tripId]);
     }

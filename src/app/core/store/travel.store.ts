@@ -225,38 +225,72 @@ export class TravelStore {
         const { data: postsData, error: postsError } = await db.from('posts').select('*').order('created_at', { ascending: false });
         let formattedPosts: Post[] = [];
         if (!postsError && postsData) {
-          formattedPosts = postsData.map(p => ({
-            id: p['id'],
-            tripId: p['trip_id'],
-            authorId: p['user_id'],
-            authorName: formattedTrips.find(t => t.id === p['trip_id'])?.members?.find(m => m.id === p['user_id'])?.name || 'Traveler',
-            authorAvatar: formattedTrips.find(t => t.id === p['trip_id'])?.members?.find(m => m.id === p['user_id'])?.avatar,
-            content: p['content'] || '',
-            images: p['image_urls'] || [],
-            isDual: p['is_dual_camera'] || false,
-            timestamp: p['created_at'] || new Date().toISOString(),
-            date: p['created_at'] ? p['created_at'].split('T')[0] : new Date().toISOString().split('T')[0],
-            likes: Array.isArray(p['likes']) ? p['likes'].length : 0,
-            hasLiked: Array.isArray(p['likes']) ? p['likes'].includes(this.currentUserId()) : false,
-            comments: Array.isArray(p['comments']) ? p['comments'] : []
-          }));
+          formattedPosts = postsData.map((p: any) => {
+            let parsedLikes = p['likes'];
+            if (typeof parsedLikes === 'string') {
+              try { parsedLikes = JSON.parse(parsedLikes); } catch (e) { parsedLikes = []; }
+            }
+            if (!Array.isArray(parsedLikes)) parsedLikes = [];
+
+            let parsedComments = p['comments'];
+            if (typeof parsedComments === 'string') {
+              try { parsedComments = JSON.parse(parsedComments); } catch (e) { parsedComments = []; }
+            }
+            if (!Array.isArray(parsedComments)) parsedComments = [];
+
+            let parsedImages = p['image_urls'];
+            if (typeof parsedImages === 'string') {
+              try { parsedImages = JSON.parse(parsedImages); } catch (e) { parsedImages = []; }
+            }
+            if (!Array.isArray(parsedImages)) parsedImages = [];
+
+            return {
+              id: p['id'],
+              tripId: p['trip_id'],
+              authorId: p['user_id'],
+              authorName: formattedTrips.find(t => t.id === p['trip_id'])?.members?.find(m => m.id === p['user_id'])?.name || 'Traveler',
+              authorAvatar: formattedTrips.find(t => t.id === p['trip_id'])?.members?.find(m => m.id === p['user_id'])?.avatar,
+              content: p['content'] || '',
+              images: parsedImages,
+              isDual: p['is_dual_camera'] || false,
+              timestamp: p['created_at'] || new Date().toISOString(),
+              date: p['created_at'] ? p['created_at'].split('T')[0] : new Date().toISOString().split('T')[0],
+              likes: parsedLikes.length,
+              hasLiked: parsedLikes.includes(this.currentUserId()),
+              comments: parsedComments
+            };
+          });
         }
 
         // Fetch expenses
         const { data: expensesData, error: expensesError } = await db.from('expenses').select('*');
         let formattedExpenses: Expense[] = [];
         if (!expensesError && expensesData) {
-          formattedExpenses = expensesData.map(e => ({
-            id: e['id'],
-            tripId: e['trip_id'],
-            amount: e['amount'],
-            desc: e['description'] || '',
-            date: e['created_at'] ? e['created_at'].split('T')[0] : new Date().toISOString().split('T')[0],
-            payerId: e['payer_id'] || 'Traveler',
-            category: e['category'] || 'OTHER',
-            splits: e['splits'] || {},
-            receipts: e['receipt_urls'] || []
-          }));
+          formattedExpenses = expensesData.map(e => {
+            let parsedSplits = e['splits'];
+            if (typeof parsedSplits === 'string') {
+               try { parsedSplits = JSON.parse(parsedSplits); } catch (e) { parsedSplits = {}; }
+            }
+            if (!parsedSplits || typeof parsedSplits !== 'object') parsedSplits = {};
+
+            let parsedReceipts = e['receipt_urls'];
+            if (typeof parsedReceipts === 'string') {
+               try { parsedReceipts = JSON.parse(parsedReceipts); } catch (e) { parsedReceipts = []; }
+            }
+            if (!Array.isArray(parsedReceipts)) parsedReceipts = [];
+
+            return {
+              id: e['id'],
+              tripId: e['trip_id'],
+              amount: e['amount'],
+              desc: e['description'] || '',
+              date: e['created_at'] ? e['created_at'].split('T')[0] : new Date().toISOString().split('T')[0],
+              payerId: e['payer_id'] || 'Traveler',
+              category: e['category'] || 'OTHER',
+              splits: parsedSplits,
+              receipts: parsedReceipts
+            };
+          });
         }
 
         // Fetch notifications
@@ -320,6 +354,10 @@ export class TravelStore {
           createdAt: n.created_at, isRead: n.is_read
         }, ...list]);
 
+        // Auto-fetch fresh data from REST API to guarantee consistency, 
+        // bypassing any WebSocket RLS dropout or REPLICA IDENTITY issues on the posts table.
+        this.refreshData();
+
         // L2: Trigger Web Push notification if allowed
         if ('Notification' in window && Notification.permission === 'granted') {
           try {
@@ -357,17 +395,35 @@ export class TravelStore {
     const trip = this.trips().find(t => t.id === p.trip_id);
     const author = trip?.members?.find(m => m.id === p.user_id);
 
+    let parsedLikes = p.likes;
+    if (typeof parsedLikes === 'string') {
+      try { parsedLikes = JSON.parse(parsedLikes); } catch (e) { parsedLikes = []; }
+    }
+    if (!Array.isArray(parsedLikes)) parsedLikes = [];
+
+    let parsedComments = p.comments;
+    if (typeof parsedComments === 'string') {
+      try { parsedComments = JSON.parse(parsedComments); } catch (e) { parsedComments = []; }
+    }
+    if (!Array.isArray(parsedComments)) parsedComments = [];
+
+    let parsedImages = p.image_urls;
+    if (typeof parsedImages === 'string') {
+      try { parsedImages = JSON.parse(parsedImages); } catch (e) { parsedImages = []; }
+    }
+    if (!Array.isArray(parsedImages)) parsedImages = [];
+
     const formatted: Post = {
       id: p.id, tripId: p.trip_id, authorId: p.user_id,
       authorName: author?.name || 'Traveler',
       authorAvatar: author?.avatar,
-      content: p.content || '', images: p.image_urls || [],
+      content: p.content || '', images: parsedImages,
       isDual: p.is_dual_camera || false,
       timestamp: p.created_at || new Date().toISOString(),
       date: p.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
-      likes: Array.isArray(p.likes) ? p.likes.length : 0,
-      hasLiked: Array.isArray(p.likes) ? p.likes.includes(this.currentUserId()) : false,
-      comments: Array.isArray(p.comments) ? p.comments : []
+      likes: parsedLikes.length,
+      hasLiked: parsedLikes.includes(this.currentUserId()),
+      comments: parsedComments
     };
 
     if (payload.eventType === 'INSERT') {
@@ -385,13 +441,25 @@ export class TravelStore {
       return;
     }
     const e = payload.new;
+    let parsedSplits = e.splits;
+    if (typeof parsedSplits === 'string') {
+      try { parsedSplits = JSON.parse(parsedSplits); } catch (err) { parsedSplits = {}; }
+    }
+    if (!parsedSplits || typeof parsedSplits !== 'object') parsedSplits = {};
+
+    let parsedReceipts = e.receipt_urls;
+    if (typeof parsedReceipts === 'string') {
+      try { parsedReceipts = JSON.parse(parsedReceipts); } catch (err) { parsedReceipts = []; }
+    }
+    if (!Array.isArray(parsedReceipts)) parsedReceipts = [];
+
     const formatted: Expense = {
       id: e.id, tripId: e.trip_id, amount: e.amount,
       desc: e.description || '',
       date: e.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
       payerId: e.payer_id || 'Traveler',
       category: e.category || 'OTHER',
-      splits: e.splits || {}, receipts: e.receipt_urls || []
+      splits: parsedSplits, receipts: parsedReceipts
     };
 
     if (payload.eventType === 'INSERT') {

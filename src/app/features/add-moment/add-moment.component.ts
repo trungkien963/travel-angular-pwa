@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { TravelStore } from '../../core/store/travel.store';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { ToastService } from '../../core/services/toast.service';
+import { ConfirmService } from '../../core/services/confirm.service';
 import { Trip } from '../../core/models/trip.model';
 import { Expense } from '../../core/models/expense.model';
 import { Post } from '../../core/models/social.model';
@@ -35,13 +36,14 @@ export class AddMomentComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private travelStore = inject(TravelStore);
   private supabase = inject(SupabaseService);
+  private confirmService = inject(ConfirmService);
 
   @ViewChild('videoElement') videoElement?: ElementRef<HTMLVideoElement>;
   @ViewChild('canvasElement') canvasElement?: ElementRef<HTMLCanvasElement>;
 
   // ─── Camera state ────────────────────────────────────────────────────────
   readonly isCameraActive = signal(true);
-  readonly facingMode = signal<'environment' | 'user'>('environment');
+  readonly facingMode = signal<'environment' | 'user'>('user');
   readonly isDualMode = signal(false);
   private stream: MediaStream | null = null;
   private dualFirstImage: HTMLImageElement | null = null;
@@ -73,17 +75,17 @@ export class AddMomentComponent implements OnInit, OnDestroy {
   readonly isExpenseMode = signal(false);
   readonly isSubmitting = signal(false);
   
-  readonly canSubmit = computed(() => {
+  canSubmit(): boolean {
     if (this.photos().length === 0) return false;
     if (!this.selectedTripId()) return false;
-    if (!this.caption || !this.caption.trim()) return false;
     
     if (this.isExpenseMode()) {
+      if (!this.caption || !this.caption.trim()) return false;
       if (!this.expenseAmount || this.expenseAmount <= 0) return false;
       if (!this.paidById()) return false; 
     }
     return true;
-  });
+  }
 
   readonly selectedTripId = signal<string | null>(null);
   
@@ -206,17 +208,39 @@ export class AddMomentComponent implements OnInit, OnDestroy {
     const video = this.videoElement.nativeElement;
     const canvas = this.canvasElement.nativeElement;
     
-    canvas.width = video.videoWidth || 1080;
-    canvas.height = video.videoHeight || 1920;
-    const ctx = canvas.getContext('2d');
+    // Ensure we crop the raw video feed to match the exact framing shown in the UI (object-fit: cover)
+    const displayWidth = video.offsetWidth;
+    const displayHeight = video.offsetHeight;
+    
+    const videoRatio = video.videoWidth / video.videoHeight;
+    const displayRatio = displayWidth / displayHeight;
+
+    let targetWidth, targetHeight;
+    let sx = 0, sy = 0, sw = video.videoWidth, sh = video.videoHeight;
+
+    if (videoRatio > displayRatio) {
+      targetHeight = video.videoHeight;
+      targetWidth = video.videoHeight * displayRatio;
+      sw = targetWidth;
+      sx = (video.videoWidth - sw) / 2;
+    } else {
+      targetWidth = video.videoWidth;
+      targetHeight = video.videoWidth / displayRatio;
+      sh = targetHeight;
+      sy = (video.videoHeight - sh) / 2;
+    }
+
+    canvas.width = targetWidth || 1080;
+    canvas.height = targetHeight || 1920;
+    const ctx = (canvas as any).getContext('2d', { colorSpace: 'display-p3' }) || canvas.getContext('2d');
     if (!ctx) return;
     
-    // Draw current frame
+    // Draw current frame with precise cropping
     if (this.facingMode() === 'user') {
       ctx.translate(canvas.width, 0);
       ctx.scale(-1, 1);
     }
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
     
     if (this.isDualMode() && !this.dualFirstImage) {
       // Step 1 of Dual: Save first frame, flip camera, capture step 2
@@ -494,9 +518,10 @@ export class AddMomentComponent implements OnInit, OnDestroy {
     }
   }
 
-  handleClose() {
+  async handleClose() {
     if (this.photos().length > 0 || this.caption) {
-      if (!confirm('Hủy bỏ bài đăng này?')) return;
+      const confirmed = await this.confirmService.confirm('Hủy bỏ bài đăng này?');
+      if (!confirmed) return;
     }
     history.length > 1 ? history.back() : this.router.navigate(['/discover']);
   }

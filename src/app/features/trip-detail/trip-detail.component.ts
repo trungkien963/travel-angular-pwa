@@ -7,6 +7,7 @@ import { Expense, Member } from '../../core/models/expense.model';
 import { Post, Comment } from '../../core/models/social.model';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { ToastService } from '../../core/services/toast.service';
+import { ConfirmService } from '../../core/services/confirm.service';
 import { MomentsComponent } from '../moments/moments.component';
 import * as XLSX from 'xlsx';
 
@@ -38,6 +39,7 @@ export class TripDetailComponent implements OnInit {
   private travelStore = inject(TravelStore);
   private supabaseService = inject(SupabaseService);
   private toastService = inject(ToastService);
+  private confirmService = inject(ConfirmService);
 
   readonly defaultCover = 'https://images.unsplash.com/photo-1473496169904-6a58eb22bf2f?q=80&w=1000';
 
@@ -52,7 +54,14 @@ export class TripDetailComponent implements OnInit {
   editingExpense: Expense | null = null;
 
   // ─── Comments modal state ──────────────────────────────────────────────
-  commentPost: Post | null = null;
+  readonly commentPostId = signal<string | null>(null);
+  
+  readonly activeCommentPost = computed(() => {
+    const id = this.commentPostId();
+    if (!id) return null;
+    return this.tripPosts().find(p => p.id === id) || null;
+  });
+
   commentText = '';
   readonly isSendingComment = signal(false);
 
@@ -306,8 +315,9 @@ export class TripDetailComponent implements OnInit {
       await this.travelStore.initSupabase();
     }
 
-    // Load expenses for this trip
+    // Load isolated dependencies for this trip guaranteeing consistency regardless of Realtime dropouts
     await this.loadExpenses();
+    await this.loadPosts();
 
     // Set default payer to current user
     this.expForm.payerId = this.currentUserId();
@@ -329,6 +339,55 @@ export class TripDetailComponent implements OnInit {
           splits: row.splits || {}
         };
         this.travelStore.upsertExpense(expense);
+      });
+    }
+  }
+
+  private async loadPosts() {
+    const db = this.supabaseService.client;
+    const { data } = await db.from('posts').select('*').eq('trip_id', this.tripId()).order('created_at', { ascending: false });
+    if (data) {
+      const trip = this.trip();
+      data.forEach((p: any) => {
+        const author = trip?.members?.find(m => m.id === p.user_id);
+        let parsedLikes = p.likes;
+        if (typeof parsedLikes === 'string') {
+          try { parsedLikes = JSON.parse(parsedLikes); } catch (e) { parsedLikes = []; }
+        }
+        if (!Array.isArray(parsedLikes)) parsedLikes = [];
+
+        let parsedComments = p.comments;
+        if (typeof parsedComments === 'string') {
+          try { parsedComments = JSON.parse(parsedComments); } catch (e) { parsedComments = []; }
+        }
+        if (!Array.isArray(parsedComments)) parsedComments = [];
+
+        let parsedImages = p.image_urls;
+        if (typeof parsedImages === 'string') {
+          try { parsedImages = JSON.parse(parsedImages); } catch (e) { parsedImages = []; }
+        }
+        if (!Array.isArray(parsedImages)) parsedImages = [];
+
+        const post: Post = {
+          id: p.id,
+          tripId: p.trip_id,
+          authorId: p.user_id,
+          authorName: author?.name || 'Traveler',
+          authorAvatar: author?.avatar,
+          content: p.content || '',
+          images: parsedImages,
+          isDual: p.is_dual_camera || false,
+          timestamp: p.created_at || new Date().toISOString(),
+          date: p.created_at ? p.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
+          likes: parsedLikes.length,
+          hasLiked: parsedLikes.includes(this.currentUserId()),
+          comments: parsedComments
+        };
+        // Update local store ensuring we overwrite stale with fresh HTTP data
+        this.travelStore.updatePost(post.id, post);
+        if (!this.travelStore.posts().find(existing => existing.id === post.id)) {
+           this.travelStore.addPost(post);
+        }
       });
     }
   }
@@ -358,7 +417,16 @@ export class TripDetailComponent implements OnInit {
         .from('posts').select('likes').eq('id', postId).single();
       if (error) throw error;
 
-      const currentLikes: string[] = Array.isArray(data['likes']) ? data['likes'] : [];
+      let currentLikes: string[] = [];
+      if (data && data['likes']) {
+        const raw = data['likes'];
+        if (Array.isArray(raw)) {
+          currentLikes = raw;
+        } else if (typeof raw === 'string') {
+          try { currentLikes = JSON.parse(raw); } catch (e) { currentLikes = []; }
+        }
+      }
+      
       const userIndex = currentLikes.indexOf(uid);
       let updatedLikes: string[];
 
@@ -385,18 +453,20 @@ export class TripDetailComponent implements OnInit {
   }
 
   openComments(post: Post) {
-    this.commentPost = { ...post }; // snapshot to keep reference stable
+    this.commentPostId.set(post.id);
     this.commentText = '';
   }
 
   closeComments() {
-    this.commentPost = null;
+    this.commentPostId.set(null);
     this.commentText = '';
   }
 
   async sendComment() {
     const text = this.commentText.trim();
-    if (!text || !this.commentPost) return;
+    const activePost = this.activeCommentPost();
+    if (!text || !activePost) return;
+    
     this.isSendingComment.set(true);
     this.travelStore.setGlobalLoading(true);
 
@@ -415,25 +485,39 @@ export class TripDetailComponent implements OnInit {
         timestamp: new Date().toISOString()
       };
 
-      const existingComments = this.commentPost!.comments || [];
+      const existingComments = activePost.comments || [];
       const updatedComments = [...existingComments, newComment];
 
       // Optimistic local state update
-      this.travelStore.updatePost(this.commentPost!.id, { comments: updatedComments });
-      this.commentPost = { ...this.commentPost!, comments: updatedComments };
+      this.travelStore.updatePost(activePost.id, { comments: updatedComments });
       this.commentText = '';
 
       // Update Supabase using RPC to avoid race conditions on JSONB arrays
       const db = this.supabaseService.client;
       const { error } = await db.rpc('add_post_comment', {
-        p_post_id: this.commentPost!.id,
+        p_post_id: activePost.id,
         p_comment: newComment
       });
       
       if (error) {
         // Fallback to traditional update if RPC is not available in the database yet
         console.warn('RPC failed, falling back to full array replace:', error);
-        await db.from('posts').update({ comments: updatedComments }).eq('id', this.commentPost!.id);
+
+        // Fetch the absolute latest `comments` array from the database just before we flush to avoid overwriting someone else's concurrent comment.
+        const { data: freshPost } = await db.from('posts').select('comments').eq('id', activePost.id).single();
+        
+        let freshComments = [];
+        if (freshPost) {
+          const raw = freshPost['comments'];
+          if (Array.isArray(raw)) {
+            freshComments = raw;
+          } else if (typeof raw === 'string') {
+            try { freshComments = JSON.parse(raw); } catch (e) { freshComments = []; }
+          }
+        }
+        
+        const safelyMergedComments = [...freshComments, newComment];
+        await db.from('posts').update({ comments: safelyMergedComments }).eq('id', activePost.id);
       }
     } catch (err: any) {
       this.toastService.show(err.message || 'Failed to send comment.', 'error');
@@ -444,7 +528,8 @@ export class TripDetailComponent implements OnInit {
   }
 
   async deletePost(postId: string) {
-    if (!confirm('Delete this post?')) return;
+    const confirmed = await this.confirmService.confirm('Delete this post?');
+    if (!confirmed) return;
     const db = this.supabaseService.client;
     const post = this.tripPosts().find(p => p.id === postId);
     this.travelStore.setGlobalLoading(true);
@@ -644,7 +729,8 @@ export class TripDetailComponent implements OnInit {
   }
 
   async deleteExpenseConfirm(expId: string) {
-    if (!confirm('Delete this expense?')) return;
+    const confirmed = await this.confirmService.confirm('Delete this expense?');
+    if (!confirmed) return;
     const db = this.supabaseService.client;
     const { error } = await db.from('expenses').delete().eq('id', expId);
     if (!error) {
@@ -715,7 +801,16 @@ export class TripDetailComponent implements OnInit {
         isMe: false
       };
 
-      const updatedMembers = [...trip.members, newMember];
+
+      // Fetch latest members to prevent race condition
+      const { data: freshTrip } = await db.from('trips').select('members').eq('id', trip.id).single();
+      let dbMembers = trip.members;
+      if (freshTrip && freshTrip.members) {
+         let raw = freshTrip.members;
+         if (typeof raw === 'string') { try { raw = JSON.parse(raw); } catch (e) { raw = []; } }
+         if (Array.isArray(raw)) dbMembers = raw;
+      }
+      const updatedMembers = [...dbMembers, newMember];
 
       // 4. Update Supabase trip record
       const { error } = await db
@@ -772,10 +867,19 @@ export class TripDetailComponent implements OnInit {
     if (!trip) return;
 
     try {
-      const updatedMember: Member = { ...this.editingMember, name, email };
-      const newMembers = trip.members.map(m => m.id === updatedMember.id ? updatedMember : m);
-
       const db = this.supabaseService.client;
+      // Fetch latest members to prevent race condition
+      const { data: freshTrip } = await db.from('trips').select('members').eq('id', trip.id).single();
+      let dbMembers = trip.members;
+      if (freshTrip && freshTrip.members) {
+         let raw = freshTrip.members;
+         if (typeof raw === 'string') { try { raw = JSON.parse(raw); } catch (e) { raw = []; } }
+         if (Array.isArray(raw)) dbMembers = raw;
+      }
+
+      const updatedMember: Member = { ...this.editingMember, name, email };
+      const newMembers = dbMembers.map(m => m.id === updatedMember.id ? updatedMember : m);
+
       const { error } = await db.from('trips').update({ members: newMembers }).eq('id', trip.id);
       if (error) throw error;
 
@@ -791,18 +895,30 @@ export class TripDetailComponent implements OnInit {
   }
 
   async removeMember(memberId: string) {
-    if (!confirm('Remove this member?')) return;
+    const confirmed = await this.confirmService.confirm('Remove this member?');
+    if (!confirmed) return;
     const trip = this.trip();
     if (!trip) return;
     const db = this.supabaseService.client;
-    const updated = trip.members.filter(m => m.id !== memberId);
+
+    // Fetch latest members to prevent race condition
+    const { data: freshTrip } = await db.from('trips').select('members').eq('id', trip.id).single();
+    let dbMembers = trip.members;
+    if (freshTrip && freshTrip.members) {
+       let raw = freshTrip.members;
+       if (typeof raw === 'string') { try { raw = JSON.parse(raw); } catch (e) { raw = []; } }
+       if (Array.isArray(raw)) dbMembers = raw;
+    }
+
+    const updated = dbMembers.filter((m: any) => m.id !== memberId);
     await db.from('trips').update({ members: updated }).eq('id', trip.id);
     this.travelStore.updateTrip(trip.id, { members: updated });
   }
 
   // ─── Delete Trip ───────────────────────────────────────────────────────────
   async confirmDelete() {
-    if (!confirm('Delete this adventure permanently? This cannot be undone.')) return;
+    const confirmed = await this.confirmService.confirm('Delete this adventure permanently? This cannot be undone.');
+    if (!confirmed) return;
     try {
       // Delegates to TravelStore.deleteTrip() which handles full Storage GC:
       // 1. Collect all media URLs (cover + expense receipts + post images)
@@ -949,4 +1065,16 @@ export class TripDetailComponent implements OnInit {
 
   formatCurrency(val: number): string { return `₫${val.toLocaleString('en-US')}`; }
   formatNumber(val: number): string   { return val.toLocaleString('en-US'); }
+
+  getAvatarBg(name: string): string {
+    if (!name) return '#F3F4F6';
+    const colors = ['#FEE2E2', '#FFEDD5', '#FEF3C7', '#D1FAE5', '#DBEAFE', '#E0E7FF', '#EDE9FE', '#FCE7F3'];
+    return colors[name.charCodeAt(0) % colors.length];
+  }
+
+  getAvatarColor(name: string): string {
+    if (!name) return '#6B7280';
+    const colors = ['#DC2626', '#EA580C', '#D97706', '#059669', '#2563EB', '#4F46E5', '#7C3AED', '#DB2777'];
+    return colors[name.charCodeAt(0) % colors.length];
+  }
 }

@@ -3,15 +3,17 @@ import { RouterOutlet } from '@angular/router';
 import { PwaBannerComponent } from './shared/components/pwa-banner/pwa-banner.component';
 import { LoadingSpinnerComponent } from './shared/components/loading-spinner/loading-spinner.component';
 import { ToastComponent } from './shared/components/toast/toast.component';
+import { ConfirmComponent } from './shared/components/confirm/confirm.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, PwaBannerComponent, LoadingSpinnerComponent, ToastComponent],
+  imports: [RouterOutlet, PwaBannerComponent, LoadingSpinnerComponent, ToastComponent, ConfirmComponent],
   template: `
     <app-pwa-banner />
     <app-loading-spinner />
     <app-toast />
+    <app-confirm />
     <router-outlet />
   `,
   styles: [`

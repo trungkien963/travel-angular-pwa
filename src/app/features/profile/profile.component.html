@@ -15,7 +15,7 @@
   <!-- User Identity Card -->
   <div class="profile-card">
     @if (avatarUrl()) {
-      <img [src]="avatarUrl()!" [alt]="displayName()" class="profile-avatar" />
+      <img [src]="avatarUrl()!" [alt]="displayName()" class="profile-avatar" (error)="onAvatarError()" />
     } @else {
       <div class="profile-avatar-initial">{{ displayName().charAt(0).toUpperCase() }}</div>
     }
@@ -35,15 +35,15 @@
   <p class="section-label">MILESTONES</p>
   <div class="stats-row">
     <div class="stat-box stat-box--green">
-      <span class="stat-number">{{ totalTrips() }}</span>
+      <span class="stat-number">{{ formatStat(totalTrips()) }}</span>
       <span class="stat-label">Trips</span>
     </div>
     <div class="stat-box stat-box--yellow">
-      <span class="stat-number">{{ totalPosts() }}</span>
+      <span class="stat-number">{{ formatStat(totalPosts()) }}</span>
       <span class="stat-label">Moments</span>
     </div>
     <div class="stat-box stat-box--gray">
-      <span class="stat-number">{{ totalMembers() }}</span>
+      <span class="stat-number">{{ formatStat(totalMembers()) }}</span>
       <span class="stat-label">Friends</span>
     </div>
   </div>

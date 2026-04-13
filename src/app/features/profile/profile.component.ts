@@ -47,7 +47,18 @@ export class ProfileComponent implements OnInit {
     }
   }
 
+  // ─── Formatting ─────────────────────────────────────────────────────────────
+  formatStat(num: number): string {
+    if (num >= 1000000) return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+    return num.toString();
+  }
+
   // ─── Actions ──────────────────────────────────────────────────────────────
+  onAvatarError() {
+    this.avatarUrl.set(null);
+  }
+
   async signOut() {
     try {
       // Clear push token (best-effort)
