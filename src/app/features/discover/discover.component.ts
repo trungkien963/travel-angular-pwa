@@ -12,6 +12,8 @@ interface FeedItem {
   likes: number;
   comments: number;
   tripId?: string;
+  photoCount?: number;
+  postImages?: string[];
 }
 
 @Component({
@@ -63,17 +65,43 @@ export class DiscoverComponent implements OnInit {
         const tripExpenses = allExpenses.filter(e => e.tripId === t.id);
         const totalCost = tripExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
         
+        const tripPosts = this.travelStore.posts().filter(p => p.tripId === t.id);
+        let postImages = tripPosts.flatMap(p => p.images || []).filter(img => img);
+        postImages = Array.from(new Set(postImages)); // Unique images
+        
+        // Push cover image to the end so it anchors the stack if they only have a few post images
+        if (t.coverImage && !postImages.includes(t.coverImage)) {
+          postImages.push(t.coverImage);
+        }
+        
+        const photoCount = postImages.length;
+        
+        // Calculate Days & Nights (x Ngày x Đêm -> xNxD format)
+        let durationStr = '1N0D';
+        if (t.startDate && t.endDate) {
+          const start = new Date(t.startDate);
+          const end = new Date(t.endDate);
+          if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+            const diffTime = Math.abs(end.getTime() - start.getTime());
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // inclusive of start day
+            const nights = diffDays > 1 ? diffDays - 1 : 0;
+            durationStr = `${diffDays}N${nights}D`;
+          }
+        }
+        
         return {
           id: t.id,
           title: t.title,
           image: t.coverImage || 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=800&auto=format&fit=crop',
-          dateRange: `${t.startDate} - ${t.endDate}`,
+          dateRange: durationStr,
           locationType: t.locationName || t.locationCity || 'GLOBAL',
           likes: 0,
           comments: 0,
           tripId: t.id,
           totalCost: totalCost,
-          totalCostFormatted: totalCost > 0 ? `₫${totalCost.toLocaleString('en-US')}` : 'Free'
+          totalCostFormatted: totalCost > 0 ? `₫${totalCost.toLocaleString('en-US')}` : 'Free',
+          photoCount: photoCount,
+          postImages: postImages
         };
       });
   });

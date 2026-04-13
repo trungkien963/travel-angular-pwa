@@ -30,11 +30,10 @@ export class ShellComponent {
   readonly activeIndex = computed(() => {
     const url = this.currentUrl() || '';
     if (url.includes('/discover')) return 0;
-    if (url.includes('/trips')) return 1;
+    if (url.includes('/trip')) return 1;
     if (url.includes('/add-moment')) return 2;
     if (url.includes('/profile')) return 3;
-    // Notifications should be index 4 if we use 5 tabs, let's keep all 5 properly ordered.
     if (url.includes('/notifications')) return 4;
-    return 0; // Default
+    return -1; // Default to no highlight if no match
   });
 }

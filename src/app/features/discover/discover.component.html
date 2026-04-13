@@ -54,16 +54,37 @@
       @for (item of displayedTrips(); track item.id) {
         <div class="feed-card" [routerLink]="item.tripId ? ['/trip', item.tripId] : null" [id]="'feed-' + item.id">
           
-          <!-- Image & Top Badge -->
-          <div class="card-img-wrapper">
-            <img [src]="item.image" [alt]="item.title" class="card-img" loading="lazy" />
-            <div class="card-badge">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFC800" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
-              </svg>
-              <span>{{ item.locationType }}</span>
+          <!-- Image Section -->
+          @if (item.postImages && item.postImages.length >= 3) {
+            <!-- Photo Stack Layout (Casual Scrapbook Drop) -->
+            <div class="photo-stack-container">
+              <div class="location-pill">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFC800" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+                </svg>
+                <span>{{ item.locationType }}</span>
+              </div>
+              
+              <img [src]="item.postImages[0]" class="stack-img img-back-left" alt="Memory" loading="lazy" />
+              <img [src]="item.postImages[1]" class="stack-img img-back-right" alt="Memory" loading="lazy" />
+              <img [src]="item.postImages[2]" class="stack-img img-front" [alt]="item.title" loading="lazy" />
+              
+              @if (item.postImages.length > 3) {
+                <div class="more-photos-badge">+{{ item.postImages.length - 3 }}</div>
+              }
             </div>
-          </div>
+          } @else {
+            <!-- Single Cover Fallback Layout -->
+            <div class="card-img-wrapper">
+              <img [src]="item.image" [alt]="item.title" class="card-img" loading="lazy" />
+              <div class="card-badge">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFC800" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+                </svg>
+                <span>{{ item.locationType }}</span>
+              </div>
+            </div>
+          }
 
           <!-- Meta Info -->
           <div class="card-meta">

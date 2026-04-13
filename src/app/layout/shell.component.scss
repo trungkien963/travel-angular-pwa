@@ -31,34 +31,38 @@ $bg-bar: #FFFFFF;
   }
 }
 
-// ─── Sleek Glass Dock ──────────────────────────────────────────────────────────
+// ─── Sleek Liquid Glass Dock ──────────────────────────────────────────────────────────
 .glass-dock {
   position: fixed;
   bottom: 24px; 
   left: 50%;
   transform: translateX(-50%);
-  width: calc(100% - 40px); // More breathing room on the sides
-  max-width: 380px; // Tighter icon cluster for elegance
-  height: 64px; // Slim and modern height
+  width: calc(100% - 40px);
+  max-width: 380px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-around;
   padding: 0 12px;
   z-index: 100;
   
-  // Pure, clean glassmorphism
-  background: rgba(255, 255, 255, 0.85); // High opacity looks cleaner on white apps
-  backdrop-filter: blur(24px) saturate(120%);
-  -webkit-backdrop-filter: blur(24px) saturate(120%);
+  // Advanced Liquid Glass Background
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.35) 100%);
+  backdrop-filter: blur(32px) saturate(180%);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
   
-  // Crisp single pixel border
-  border: 1px solid rgba(255, 255, 255, 0.9);
+  // Inner highlights to make it look like a physical glass object
+  border-radius: 36px;
+  border-top: 1px solid rgba(255, 255, 255, 0.95);
+  border-left: 1px solid rgba(255, 255, 255, 0.8);
+  border-right: 1px solid rgba(255, 255, 255, 0.4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
   
-  border-radius: 32px; // Perfectly rounded pill
-  
-  // Very soft diffuse shadow, no chunky blacks
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.05), 
-              0 2px 8px rgba(0, 0, 0, 0.03);
+  // Extruded shadow and ambient occlusion
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.08), 
+    inset 0 2px 10px rgba(255, 255, 255, 0.8),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.02);
 }
 
 // ─── Tab Items ────────────────────────────────────────────────────────────────
@@ -85,12 +89,12 @@ $bg-bar: #FFFFFF;
   justify-content: center;
   color: $text-inactive;
   background: transparent;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
   
   svg {
-    transition: all 0.2s ease;
-    stroke-width: 2; // Thin, delicate strokes
-    width: 22px; // Slightly smaller for elegance
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    stroke-width: 2; 
+    width: 22px; 
     height: 22px;
   }
 }
@@ -100,56 +104,91 @@ $bg-bar: #FFFFFF;
   color: $primary; 
   
   svg {
-    stroke-width: 2.5; // Bolder active state
-    transform: translateY(-1px) scale(1.05); // Tiny elegant scale pulse up
+    stroke-width: 2.5; 
+    transform: translateY(-2px) scale(1.08); // Bouncy pulse up
+    filter: drop-shadow(0 4px 6px rgba(255, 200, 0, 0.3)); // Glowing active element
   }
 
   &::after {
     content: '';
     position: absolute;
-    bottom: -4px;
+    bottom: -6px;
     left: 50%;
     transform: translateX(-50%);
-    width: 5px;
-    height: 5px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     background: $primary;
+    box-shadow: 0 0 8px $primary; // Liquid glow
   }
 }
 
-// ─── Center Add Moment Overlay ────────────────────────────────────────────────−
+// ─── Center Add Moment Water Drop ─────────────────────────────────────────────
 .tab-center {
   flex: 0 0 56px; // Tight reservation
 }
 
 .glass-center-btn {
   position: absolute;
-  top: -12px; // Subtly breaking the top edge instead of a massive detach
+  top: -24px; // Pop out more to emphasize the teardrop
   left: 50%;
   transform: translateX(-50%);
-  width: 52px; // Elegant sizing
-  height: 52px;
-  border-radius: 50%;
+  width: 58px; 
+  height: 58px;
   
-  // Pure color, no harsh borders
-  background: $primary; 
+  // Container properties
+  background: transparent; // No direct background
   color: #FFFFFF; 
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   
-  // Clean soft outer drop shadow only
-  box-shadow: 0 8px 20px rgba(255, 200, 0, 0.35);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  // Chuyển sang Hình Tròn Hoàn Hảo (Perfect Circle) với khoảng trống (Gap / fake cutout)
+  border: 6px solid #FAFAFA; // Tạo khoảng trống (cutout) giả với nav bar
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.02); // Tách biệt nhẹ
+  
+  // Hiệu ứng Glass 3D bên trong
+  &::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%; 
+    
+    // 3D Liquid style
+    background: linear-gradient(135deg, lighten($primary, 8%) 0%, darken($primary, 5%) 100%);
+    box-shadow: 
+      inset 2px 2px 8px rgba(255, 255, 255, 0.6),    // Glossy highlight top-left
+      inset -2px -2px 8px rgba(0, 0, 0, 0.15),       // Internal depth shadow
+      0 8px 20px rgba(255, 200, 0, 0.4);             // Radiant glow
+    
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: -1;
+  }
   
   svg {
-    stroke-width: 2.5; // Beautiful weight for the plus icon
-    width: 24px;
-    height: 24px;
+    position: relative;
+    z-index: 2;
+    stroke-width: 2.2; 
+    width: 26px;
+    height: 26px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15)); // Soft shadow under icon
   }
 }
 
-// Click effect
+// Click / interaction effect (Button shrinks slightly)
 .tab-center:active .glass-center-btn {
-  transform: translateX(-50%) translateY(2px) scale(0.97);
-  box-shadow: 0 4px 10px rgba(255, 200, 0, 0.25);
+  transform: translateX(-50%) translateY(4px) scale(0.92);
+  
+  &::before {
+    box-shadow: 
+      inset 2px 2px 5px rgba(255, 255, 255, 0.4),
+      inset -2px -2px 5px rgba(0, 0, 0, 0.1),
+      0 4px 10px rgba(255, 200, 0, 0.3);
+  }
 }
 
 // ─── Notification Badge ───────────────────────────────────────────────────────
@@ -163,8 +202,10 @@ $bg-bar: #FFFFFF;
   right: 2px;
   min-width: 14px;
   height: 14px;
-  background: #EF4444; 
-  border: 1.5px solid #FFFFFF; 
+  // Glassy notification
+  background: linear-gradient(135deg, #FF5F5F, #E02828);
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
   border-radius: 7px;
   font-size: 8px;
   font-weight: 700;
@@ -173,6 +214,5 @@ $bg-bar: #FFFFFF;
   align-items: center;
   justify-content: center;
   padding: 0 3px;
-  font-family: 'Inter', sans-serif;
 }
 

@@ -704,32 +704,62 @@ $border: #F0F0F0;
 // ─── Owner Actions ────────────────────────────────────────────────────────────
 .owner-actions {
   display: flex;
-  gap: 12px;
+  gap: 16px;
   padding: 0 24px 40px;
 }
 
 .btn-publish, .btn-delete {
   flex: 1;
-  padding: 16px;
-  border-radius: 16px;
-  border: none;
+  padding: 16px 8px;
+  border-radius: 100px;
   cursor: pointer;
   font-size: 15px;
   font-weight: 800;
   font-family: inherit;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  transition: transform 0.15s ease;
-  &:hover { transform: scale(1.02); }
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  gap: 8px;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: hidden;
+  
+  &:active { 
+    transform: scale(0.96); 
+  }
 }
 
 .btn-publish {
-  background: $primary;
-  color: $text-dark;
+  background: rgba(28, 25, 23, 0.85); /* Premium Dark Glass */
+  color: #FFFFFF !important;
+  text-shadow: none;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  
+  &:hover {
+    background: rgba(28, 25, 23, 0.95);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+  }
 }
 
 .btn-delete {
-  background: #FEF2F2;
-  color: #DC2626;
+  background: rgba(255, 255, 255, 0.7); /* Premium White Glass */
+  color: #DC2626 !important;
+  text-shadow: none;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 24px rgba(220, 38, 38, 0.08), inset 0 1px 0 rgba(255, 255, 255, 1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  
+  &:hover {
+    background: rgba(254, 242, 242, 0.85); /* Very soft red tint on hover */
+    box-shadow: 0 12px 32px rgba(220, 38, 38, 0.12), inset 0 1px 0 rgba(255, 255, 255, 1);
+    transform: translateY(-2px);
+    color: #B91C1C !important;
+  }
 }
 
 // ─── Modal shared ─────────────────────────────────────────────────────────────

@@ -373,9 +373,10 @@ export class TravelStore {
           }
         }
       })
+
       .subscribe();
 
-    // Data sync channel (posts + expenses delta, trips full refresh)
+    // Data sync channel (posts + expenses delta, trips full refresh, plus broadcast for RLS invisible->visible transitions)
     db.channel('public:sync')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'trips' }, () => {
         this.refreshData(); // Safe: trips have complex relations
@@ -386,8 +387,22 @@ export class TravelStore {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, (payload) => {
         this._handlePostDelta(payload);
       })
+      .on('broadcast', { event: 'force_refresh' }, () => {
+        // Triggered manually when an item's visibility changes (e.g. Publish Trip)
+        // to circumvent Supabase Realtime dropping RLS transition events
+        this.refreshData();
+      })
       .subscribe();
   }
+
+  broadcastRefresh() {
+    this.supabase.client.channel('public:sync').send({
+      type: 'broadcast',
+      event: 'force_refresh',
+      payload: { timestamp: Date.now() }
+    }).catch(console.warn);
+  }
+
 
   private _handlePostDelta(payload: any) {
     if (payload.eventType === 'DELETE') {

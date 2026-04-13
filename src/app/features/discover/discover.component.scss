@@ -86,13 +86,112 @@ $bg: #FAFAFA; // Very light gray to make white cards pop
 .feed-card {
   background: #FFFFFF;
   border-radius: 32px;
-  box-shadow: 0 2px 24px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08); /* Đổ bóng sâu hơn để bóc tách thẻ khỏi nền */
   overflow: hidden;
   text-decoration: none;
   display: block; // For routerLink
-  border: 1px solid rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.03); /* Viền mỏng tang */
 }
 
+.photo-stack-container {
+  width: 100%;
+  height: 280px;
+  position: relative;
+  background: #FFFFFF; /* Cùng tông nền trắng liền mạch với khu vực nội dung (content) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 32px 32px 0 0;
+  border-bottom: 1px solid rgba(0,0,0,0.03);
+}
+
+.location-pill {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 8px 14px;
+  border-radius: 100px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 10;
+  max-width: 65%; /* Không cho dài quá 65% width của card */
+
+  span {
+    font-size: 13px;
+    font-weight: 800;
+    color: $text-dark;
+    white-space: nowrap;      /* Ép văn bản nằm trên 1 dòng */
+    overflow: hidden;         /* Ẩn phần thừa */
+    text-overflow: ellipsis;  /* Hiện dấu ... khi bị cắt */
+  }
+}
+
+.stack-img {
+  position: absolute;
+  object-fit: cover;
+  border-radius: 20px;
+  border: 4px solid #FFFFFF;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+  .feed-card:hover & {
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.16);
+  }
+}
+
+.img-back-left {
+  width: 35%; /* Thu nhỏ thêm tí xíu */
+  aspect-ratio: 1 / 1.05;
+  top: 10%;
+  left: 10%; /* Kéo sâu vào trong để cách xa viền trái */
+  transform: rotate(-12deg);
+  z-index: 1;
+  .feed-card:hover & { transform: rotate(-16deg) translateX(-10px) translateY(-5px) scale(1.02); }
+}
+
+.img-back-right {
+  width: 35%;
+  aspect-ratio: 1 / 1.05;
+  top: 6%;
+  right: 10%; /* Kéo sâu vào trong để cách xa viền phải */
+  transform: rotate(10deg);
+  z-index: 2;
+  .feed-card:hover & { transform: rotate(14deg) translateX(10px) translateY(-5px) scale(1.02); }
+}
+
+.img-front {
+  width: 40%; /* Giảm độ bự của em này xuống chừa chỗ thở */
+  aspect-ratio: 1 / 1.05;
+  bottom: 8%; /* Nhấc lên trên, không cho chạm sát mép dưới nữa */
+  left: 30%; /* Canh giữa hoàn hảo (100 - 40) / 2 */
+  transform: rotate(-2deg);
+  z-index: 3;
+  .feed-card:hover & { transform: rotate(0deg) translateY(5px) scale(1.04); }
+}
+
+.more-photos-badge {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 8px 16px;
+  border-radius: 100px;
+  font-weight: 800;
+  font-size: 14px;
+  color: $text-dark;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+// ─── Single Cover Layout (Fallback) ──────────────────────────────────────────
 .card-img-wrapper {
   position: relative;
   width: 100%;
@@ -147,13 +246,13 @@ $bg: #FAFAFA; // Very light gray to make white cards pop
 
 .card-price {
   background: rgba($primary, 0.15);
-  padding: 4px 12px;
+  padding: 6px 14px;
   border-radius: 12px;
   
   .price-val {
-    font-size: 14px;
-    font-weight: 700;
-    color: #CC9F00;
+    font-size: 15px;
+    font-weight: 800;
+    color: #A37A00; /* Đậm hơn để dễ đọc rách rệt ngoài trời */
   }
 }
 
@@ -164,8 +263,9 @@ $bg: #FAFAFA; // Very light gray to make white cards pop
   color: #A8A29E;
 
   span {
-    font-size: 15px;
-    font-weight: 500;
+    font-size: 16px;
+    font-weight: 600;
+    color: #78716C;
   }
   
   svg {
@@ -193,7 +293,7 @@ $bg: #FAFAFA; // Very light gray to make white cards pop
   border: none;
   padding: 0;
   cursor: pointer;
-  color: $text-muted;
+  color: $text-dark;
   transition: opacity 0.2s;
 
   &:hover {
@@ -202,7 +302,7 @@ $bg: #FAFAFA; // Very light gray to make white cards pop
 
   span {
     font-size: 16px;
-    font-weight: 500;
+    font-weight: 700;
   }
 }
 
@@ -219,21 +319,22 @@ $bg: #FAFAFA; // Very light gray to make white cards pop
 
 .filter-pill {
   flex-shrink: 0;
-  padding: 8px 16px;
+  padding: 8px 18px;
   border-radius: 20px;
   border: 1px solid rgba(0, 0, 0, 0.05);
   background: white;
   color: $text-muted;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   font-family: 'Inter', sans-serif;
   cursor: pointer;
   transition: all 0.2s ease;
   
   &.active {
-    background: $text-dark;
-    color: #FFFFFF !important;
-    border-color: $text-dark;
+    background: $primary; /* Đổi về màu vàng chủ đạo */
+    color: $text-dark !important; /* Chữ màu tối nhìn sang và dễ đọc */
+    border-color: $primary;
+    box-shadow: 0 4px 12px rgba(255, 200, 0, 0.2); /* Tạo hiệu ứng nổi bong bóng nhẹ */
   }
 }
 

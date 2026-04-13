@@ -33,9 +33,9 @@ import { ConfirmService } from '../../../core/services/confirm.service';
       left: 0;
       width: 100vw;
       height: 100dvh;
-      background: rgba(0, 0, 0, 0.4);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       z-index: 9999;
       display: flex;
       align-items: center;
@@ -58,24 +58,25 @@ import { ConfirmService } from '../../../core/services/confirm.service';
     .confirm-modal {
       width: 90%;
       max-width: 320px;
-      background: rgba(255, 255, 255, 0.9);
-      backdrop-filter: blur(30px);
-      -webkit-backdrop-filter: blur(30px);
+      /* Super Premium Liquid Glass */
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.4));
+      backdrop-filter: blur(32px);
+      -webkit-backdrop-filter: blur(32px);
       border: 1px solid rgba(255, 255, 255, 0.8);
-      border-radius: 24px;
-      padding: 24px;
+      border-radius: 32px;
+      padding: 32px 24px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.1), inset 0 2px 10px rgba(255, 255, 255, 0.7);
       transform: scale(0.95) translateY(10px);
       opacity: 0;
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .confirm-title {
-      font-size: 18px;
-      font-weight: 700;
+      font-size: 20px;
+      font-weight: 800;
       color: #1C1917;
       margin: 0 0 12px 0;
       text-align: center;
@@ -84,8 +85,8 @@ import { ConfirmService } from '../../../core/services/confirm.service';
 
     .confirm-message {
       font-size: 15px;
-      color: #4B5563;
-      margin: 0 0 24px 0;
+      color: #78716C;
+      margin: 0 0 32px 0;
       text-align: center;
       line-height: 1.5;
     }
@@ -98,33 +99,38 @@ import { ConfirmService } from '../../../core/services/confirm.service';
 
     button {
       flex: 1;
-      padding: 14px;
-      border-radius: 16px;
+      padding: 16px;
+      border-radius: 100px;
       font-size: 15px;
-      font-weight: 600;
+      font-weight: 800;
       border: none;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .btn-cancel {
-      background: rgba(0, 0, 0, 0.05);
-      color: #4B5563;
+      background: rgba(255, 255, 255, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      color: #1C1917;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.02), inset 0 2px 4px rgba(255,255,255, 0.8);
     }
 
     .btn-cancel:hover {
-      background: rgba(0, 0, 0, 0.1);
+      background: rgba(255, 255, 255, 0.8);
+      transform: translateY(-2px);
     }
 
     .btn-confirm {
-      background: #EF4444; /* Changed to red to match standard danger / delete action themes */
-      color: white;
-      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+      background: rgba(28, 25, 23, 0.85); /* Universal Premium Dark */
+      color: #FFFFFF !important;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.2);
     }
 
     .btn-confirm:hover {
-      background: #DC2626;
-      box-shadow: 0 6px 16px rgba(239, 68, 68, 0.3);
+      background: rgba(28, 25, 23, 0.95);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
     }
   `]
 })

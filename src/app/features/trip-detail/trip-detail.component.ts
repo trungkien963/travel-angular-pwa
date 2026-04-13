@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TravelStore } from '../../core/store/travel.store';
@@ -46,7 +46,172 @@ export class TripDetailComponent implements OnInit {
   readonly tabs = ['MOMENTS', 'SOCIAL', 'EXPENSES', 'BALANCES', 'MEMBERS'];
   activeTab = 'SOCIAL';
   quickPostMode = false;
+
+  // ─── Edit Trip State ────────────────────────────────────────────────────────
   editTripModal = false;
+  editTripTitle = '';
+  editTripLocation = '';
+  editTripStartDate = '';
+  editTripEndDate = '';
+  editTripCoverPreviewUrl: string | null = null;
+  editTripCoverFile: File | null = null;
+  readonly editLocationSuggestions = signal<any[]>([]);
+  readonly isEditLocationLoading = signal(false);
+  private editLocationTimeout: any;
+  readonly isSavingTrip = signal(false);
+  @ViewChild('editFileInput') editFileInput!: ElementRef<HTMLInputElement>;
+
+  openEditTrip() {
+    const t = this.trip();
+    if (!t) return;
+    this.editTripTitle = t.title || '';
+    this.editTripLocation = t.locationName || '';
+    this.editTripStartDate = t.startDate ? new Date(t.startDate).toISOString().split('T')[0] : '';
+    this.editTripEndDate = t.endDate ? new Date(t.endDate).toISOString().split('T')[0] : '';
+    this.editTripCoverPreviewUrl = t.coverImage || null;
+    this.editTripCoverFile = null;
+    this.editTripModal = true;
+  }
+
+  closeEditTrip() {
+    this.editTripModal = false;
+  }
+
+  triggerEditImageInput() {
+    if (this.editFileInput?.nativeElement) {
+      this.editFileInput.nativeElement.click();
+    }
+  }
+
+  onEditImageSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    this.editTripCoverFile = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.editTripCoverPreviewUrl = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  onEditLocationChange(query: string) {
+    clearTimeout(this.editLocationTimeout);
+    if (!query || query.trim().length < 2) {
+      this.editLocationSuggestions.set([]);
+      this.isEditLocationLoading.set(false);
+      return;
+    }
+    
+    this.isEditLocationLoading.set(true);
+    this.editLocationTimeout = setTimeout(async () => {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`);
+        const data = await res.json();
+        this.editLocationSuggestions.set(data);
+      } catch (err) {
+        console.error('Failed to fetch locations', err);
+        this.editLocationSuggestions.set([]);
+      } finally {
+        this.isEditLocationLoading.set(false);
+      }
+    }, 400);
+  }
+
+  selectEditLocation(loc: any) {
+    this.editTripLocation = loc.display_name;
+    this.editLocationSuggestions.set([]);
+  }
+
+  openEditDatePicker(event: Event, inputEl: HTMLInputElement) {
+    event.preventDefault();
+    event.stopPropagation();
+    try {
+      if (typeof inputEl.showPicker === 'function') {
+        inputEl.showPicker();
+      } else {
+        inputEl.click();
+      }
+    } catch (e) {
+      console.warn('Native date picker not supported or cannot be opened programmatically.', e);
+    }
+  }
+
+  async saveEditTrip() {
+    if (!this.editTripTitle.trim()) {
+      this.toastService.show('Please enter a trip title!', 'error');
+      return;
+    }
+    if (this.editTripStartDate > this.editTripEndDate) {
+      this.toastService.show('Start date must be before end date!', 'error');
+      return;
+    }
+    
+    const t = this.trip();
+    if (!t) return;
+    
+    this.isSavingTrip.set(true);
+    this.travelStore.setGlobalLoading(true);
+
+    try {
+      const db = this.supabaseService.client;
+      let finalCoverUrl = t.coverImage;
+
+      if (this.editTripCoverFile) {
+        try {
+          const ext = this.editTripCoverFile.name.split('.').pop();
+          const path = `covers/${Date.now()}.${ext}`;
+          const { data, error } = await db.storage
+            .from('nomadsync-media')
+            .upload(path, this.editTripCoverFile, { contentType: this.editTripCoverFile.type });
+            
+          if (!error && data) {
+            const { data: urlData } = db.storage.from('nomadsync-media').getPublicUrl(path);
+            finalCoverUrl = urlData.publicUrl;
+            
+            // Delete old cover if it's from our storage bucket
+            if (t.coverImage && t.coverImage.includes('/nomadsync-media/')) {
+               const oldPath = t.coverImage.split('/nomadsync-media/')[1];
+               if (oldPath) {
+                 await db.storage.from('nomadsync-media').remove([oldPath]);
+               }
+            }
+          }
+        } catch (e) {
+          console.warn('Cover upload failed', e);
+        }
+      }
+
+      const updateData = {
+        title: this.editTripTitle,
+        cover_image: finalCoverUrl,
+        location_name: this.editTripLocation || null,
+        location_city: this.editTripLocation || null,
+        start_date: this.editTripStartDate,
+        end_date: this.editTripEndDate,
+      };
+
+      const { error } = await db.from('trips').update(updateData).eq('id', t.id);
+      if (error) throw error;
+
+      this.travelStore.updateTrip(t.id, {
+        title: this.editTripTitle,
+        coverImage: finalCoverUrl,
+        locationName: this.editTripLocation || undefined,
+        locationCity: this.editTripLocation || undefined,
+        startDate: this.editTripStartDate,
+        endDate: this.editTripEndDate
+      });
+      
+      this.toastService.show('Trip updated successfully!', 'success');
+      this.closeEditTrip();
+    } catch (err: any) {
+      this.toastService.show(err.message || 'Failed to update trip.', 'error');
+    } finally {
+      this.isSavingTrip.set(false);
+      this.travelStore.setGlobalLoading(false);
+    }
+  }
   selectedExpense: Expense | null = null;
 
   readonly expenseModalOpen = signal(false);
@@ -975,8 +1140,42 @@ export class TripDetailComponent implements OnInit {
     }
   }
 
-  publishTrip() {
-    this.toastService.show('Your amazing adventure is now live on the Discover feed! 🌍', 'success');
+  async publishTrip() {
+    const isCurrentlyPrivate = this.trip()?.isPrivate ?? true;
+    const actionText = isCurrentlyPrivate ? 'publish' : 'unpublish';
+    const confirmMessage = isCurrentlyPrivate 
+      ? 'Are you sure you want to publish this trip to the Discover feed?'
+      : 'Are you sure you want to hide this trip from the Discover feed?';
+
+    const confirmed = await this.confirmService.confirm(confirmMessage);
+    if (!confirmed) return;
+    
+    this.travelStore.setGlobalLoading(true);
+    
+    try {
+      const db = this.supabaseService.client;
+      const { error } = await db
+        .from('trips')
+        .update({ is_private: !isCurrentlyPrivate })
+        .eq('id', this.tripId());
+
+      if (error) throw error;
+      
+      this.travelStore.updateTrip(this.tripId(), { isPrivate: !isCurrentlyPrivate });
+      
+      // Broadcast to other devices to bypass RLS missing-event bug
+      this.travelStore.broadcastRefresh();
+      
+      if (isCurrentlyPrivate) {
+        this.toastService.show('Your amazing adventure is now live on the Discover feed! 🌍', 'success');
+      } else {
+        this.toastService.show('Trip has been hidden from the Discover feed.', 'success');
+      }
+    } catch (err: any) {
+      this.toastService.show(err.message || `Failed to ${actionText} trip.`, 'error');
+    } finally {
+      this.travelStore.setGlobalLoading(false);
+    }
   }
 
   // ─── Export ────────────────────────────────────────────────────────────────
