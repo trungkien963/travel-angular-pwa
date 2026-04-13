@@ -1,13 +1,15 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { PwaBannerComponent } from './shared/components/pwa-banner/pwa-banner.component';
+import { LoadingSpinnerComponent } from './shared/components/loading-spinner/loading-spinner.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, PwaBannerComponent],
+  imports: [RouterOutlet, PwaBannerComponent, LoadingSpinnerComponent],
   template: `
     <app-pwa-banner />
+    <app-loading-spinner />
     <router-outlet />
   `,
   styles: [`
@@ -21,3 +23,4 @@ import { PwaBannerComponent } from './shared/components/pwa-banner/pwa-banner.co
   `]
 })
 export class App {}
+

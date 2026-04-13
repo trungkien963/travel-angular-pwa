@@ -229,46 +229,35 @@ export class TripDetailComponent implements OnInit {
     const newLikes = newLiked ? post.likes + 1 : Math.max(0, post.likes - 1);
     this.travelStore.updatePost(postId, { hasLiked: newLiked, likes: newLikes });
 
+    this.travelStore.setGlobalLoading(true);
     try {
-      // 1. Read the current likes UUID array from DB (source of truth)
       const { data, error } = await db
-        .from('posts')
-        .select('likes')
-        .eq('id', postId)
-        .single();
-
+        .from('posts').select('likes').eq('id', postId).single();
       if (error) throw error;
 
-      // 2. likes column is a UUID[] array — add or remove current user
       const currentLikes: string[] = Array.isArray(data['likes']) ? data['likes'] : [];
       const userIndex = currentLikes.indexOf(uid);
       let updatedLikes: string[];
 
       if (newLiked) {
-        // Add user UUID if not already present
         updatedLikes = userIndex === -1 ? [...currentLikes, uid] : currentLikes;
       } else {
-        // Remove user UUID
         updatedLikes = currentLikes.filter(id => id !== uid);
       }
 
-      // 3. Write the full UUID array back to DB
       const { error: updateError } = await db
-        .from('posts')
-        .update({ likes: updatedLikes })
-        .eq('id', postId);
-
+        .from('posts').update({ likes: updatedLikes }).eq('id', postId);
       if (updateError) throw updateError;
 
-      // 4. Sync local state with actual DB values
       this.travelStore.updatePost(postId, {
         hasLiked: updatedLikes.includes(uid),
         likes: updatedLikes.length
       });
     } catch (err: any) {
-      // Revert optimistic update on failure
       this.travelStore.updatePost(postId, { hasLiked: post.hasLiked, likes: post.likes });
       console.error('toggleLike failed:', err);
+    } finally {
+      this.travelStore.setGlobalLoading(false);
     }
   }
 
@@ -286,6 +275,7 @@ export class TripDetailComponent implements OnInit {
     const text = this.commentText.trim();
     if (!text || !this.commentPost) return;
     this.isSendingComment.set(true);
+    this.travelStore.setGlobalLoading(true);
 
     try {
       const uid = this.travelStore.currentUserId();
@@ -319,6 +309,7 @@ export class TripDetailComponent implements OnInit {
       alert(err.message || 'Failed to send comment.');
     } finally {
       this.isSendingComment.set(false);
+      this.travelStore.setGlobalLoading(false);
     }
   }
 
@@ -326,7 +317,7 @@ export class TripDetailComponent implements OnInit {
     if (!confirm('Delete this post?')) return;
     const db = this.supabaseService.client;
     const post = this.tripPosts().find(p => p.id === postId);
-
+    this.travelStore.setGlobalLoading(true);
     try {
       // 1. Collect Storage paths before deletion
       const pathsToDelete = (post?.images || [])
@@ -351,6 +342,8 @@ export class TripDetailComponent implements OnInit {
       this.travelStore.removePost(postId);
     } catch (err: any) {
       alert(err.message || 'Failed to delete post.');
+    } finally {
+      this.travelStore.setGlobalLoading(false);
     }
   }
 
@@ -373,6 +366,7 @@ export class TripDetailComponent implements OnInit {
   async saveExpense() {
     if (!this.expForm.desc || !this.expForm.amount) return;
     this.isSavingExpense.set(true);
+    this.travelStore.setGlobalLoading(true);
 
     const db = this.supabaseService.client;
     const members = this.trip()?.members || [];
@@ -412,6 +406,7 @@ export class TripDetailComponent implements OnInit {
       alert(err.message || 'Failed to save expense');
     } finally {
       this.isSavingExpense.set(false);
+      this.travelStore.setGlobalLoading(false);
     }
   }
 
@@ -442,6 +437,7 @@ export class TripDetailComponent implements OnInit {
 
     this.isInviting.set(true);
     this.inviteStatus.set('');
+    this.travelStore.setGlobalLoading(true);
 
     const db = this.supabaseService.client;
     const trip = this.trip();
@@ -514,6 +510,7 @@ export class TripDetailComponent implements OnInit {
       this.setInviteError(err.message || 'Failed to add member. Please try again.');
     } finally {
       this.isInviting.set(false);
+      this.travelStore.setGlobalLoading(false);
     }
   }
 
