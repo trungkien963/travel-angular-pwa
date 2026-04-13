@@ -95,13 +95,25 @@ $bg-bar: #FFFFFF;
   }
 }
 
-// Active State - Simple and refined (No thick pill lines)
+// Active State - Simple and refined
 .tab-item:not(.tab-center).active .icon-wrapper {
-  color: $text-active; 
+  color: $primary; 
   
   svg {
-    stroke-width: 2.2; // Very subtly bolder
-    transform: scale(1.05); // Tiny elegant scale pulse
+    stroke-width: 2.5; // Bolder active state
+    transform: translateY(-1px) scale(1.05); // Tiny elegant scale pulse up
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: $primary;
   }
 }
 

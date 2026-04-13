@@ -215,6 +215,12 @@ export class TripDetailComponent implements OnInit {
     return t?.ownerId === this.currentUserId();
   });
 
+  readonly isMember = computed(() => {
+    const t = this.trip();
+    if (!t) return false;
+    return t.members?.some(m => m.id === this.currentUserId()) ?? false;
+  });
+
   readonly tripExpenses = computed<Expense[]>(() =>
     this.travelStore.expenses().filter(e => e['tripId'] === this.tripId())
   );
@@ -436,6 +442,7 @@ export class TripDetailComponent implements OnInit {
 
   // ─── Social ───────────────────────────────────────────────────────────────
   async toggleLike(postId: string) {
+    if (!this.isMember()) return;
     const db = this.supabaseService.client;
     const uid = this.currentUserId();
     const post = this.tripPosts().find(p => p.id === postId);

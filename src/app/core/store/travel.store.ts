@@ -38,6 +38,9 @@ export class TravelStore {
   readonly myTrips = computed(() =>
     this.trips().filter(t => t.members?.some(m => m.id === this.currentUserId()))
   );
+  readonly publicTrips = computed(() =>
+    this.trips().filter(t => t.isPrivate === false)
+  );
 
   constructor() {
     effect(() => {

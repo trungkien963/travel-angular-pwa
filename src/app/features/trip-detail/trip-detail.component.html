@@ -88,13 +88,15 @@
         @if (activeTab === 'SOCIAL') {
           <div class="section-header">
             <h2 class="section-title">Trip Diary</h2>
-            <button class="btn-action" (click)="navigateToAddMoment()" id="btn-add-post">
-              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
-                <circle cx="12" cy="13" r="3"/>
-              </svg>
-              Chụp Ảnh
-            </button>
+            @if (isMember()) {
+              <button class="btn-action" (click)="navigateToAddMoment()" id="btn-add-post">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+                  <circle cx="12" cy="13" r="3"/>
+                </svg>
+                Chụp Ảnh
+              </button>
+            }
           </div>
 
           @if (tripPosts().length === 0) {
@@ -241,12 +243,14 @@
 
           <div class="section-header">
             <h2 class="section-title">Transactions</h2>
-            <button class="btn-action btn-action--primary" (click)="openExpenseModal()" id="btn-log-expense">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M5 12h14"/><path d="M12 5v14"/>
-              </svg>
-              Log Expense
-            </button>
+            @if (isMember()) {
+              <button class="btn-action btn-action--primary" (click)="openExpenseModal()" id="btn-log-expense">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12h14"/><path d="M12 5v14"/>
+                </svg>
+                Log Expense
+              </button>
+            }
           </div>
 
           @if (tripExpenses().length === 0) {
@@ -255,14 +259,19 @@
 
           <div class="expense-list">
             @for (exp of tripExpenses(); track exp.id) {
-              <div class="expense-item" (click)="openExpenseDetail(exp)" [id]="'expense-' + exp.id">
+              <div class="expense-item" (click)="isMember() ? openExpenseDetail(exp) : null" [id]="'expense-' + exp.id">
                 <div class="expense-left">
                   <div class="expense-icon" [style.background]="getCategoryBg(exp.category || 'OTHER')">
                     <span>{{ getCategoryEmoji(exp.category || 'OTHER') }}</span>
                   </div>
                   <div class="expense-info">
                     <p class="expense-desc">{{ exp.desc || getCategoryLabel(exp.category || 'OTHER') }}</p>
-                    <p class="expense-meta">{{ getCategoryLabel(exp.category || 'OTHER') }} • {{ exp.date }} • Paid by {{ getPayerName(exp.payerId) }}</p>
+                    <p class="expense-meta">
+                      {{ getCategoryLabel(exp.category || 'OTHER') }} • {{ exp.date }}
+                      @if (isMember()) {
+                        • Paid by {{ getPayerName(exp.payerId) }}
+                      }
+                    </p>
                   </div>
                 </div>
                 <span class="expense-amount">₫{{ formatNumber(exp.amount) }}</span>
@@ -601,28 +610,30 @@
         </div>
 
         <!-- Input area -->
-        <div class="comment-input-area">
-          <textarea
-            class="comment-input"
-            placeholder="Write a comment..."
-            [(ngModel)]="commentText"
-            rows="1"
-            id="input-comment"
-            (keydown.enter)="$event.preventDefault(); sendComment()"
-          ></textarea>
-          <button
-            class="btn-send"
-            (click)="sendComment()"
-            [disabled]="!commentText.trim() || isSendingComment()"
-            id="btn-send-comment"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-              [attr.stroke]="commentText.trim() ? '#FFC800' : '#E5E5E5'"
-              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>
-            </svg>
-          </button>
-        </div>
+        @if (isMember()) {
+          <div class="comment-input-area">
+            <textarea
+              class="comment-input"
+              placeholder="Write a comment..."
+              [(ngModel)]="commentText"
+              rows="1"
+              id="input-comment"
+              (keydown.enter)="$event.preventDefault(); sendComment()"
+            ></textarea>
+            <button
+              class="btn-send"
+              (click)="sendComment()"
+              [disabled]="!commentText.trim() || isSendingComment()"
+              id="btn-send-comment"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                [attr.stroke]="commentText.trim() ? '#FFC800' : '#E5E5E5'"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>
+              </svg>
+            </button>
+          </div>
+        }
 
       </div>
     </div>

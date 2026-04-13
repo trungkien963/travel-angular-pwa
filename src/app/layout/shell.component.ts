@@ -1,14 +1,13 @@
 import { Component, inject, computed } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
+import { RouterOutlet, RouterLink, Router, NavigationEnd } from '@angular/router';
 import { TravelStore } from '../core/store/travel.store';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
-import { TranslatePipe } from '../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe],
+  imports: [RouterOutlet, RouterLink],
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.scss'
 })

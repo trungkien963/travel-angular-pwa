@@ -1,4 +1,4 @@
-import { Component, inject, computed, OnInit } from '@angular/core';
+import { Component, inject, computed, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TravelStore } from '../../core/store/travel.store';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
@@ -26,36 +26,66 @@ export class DiscoverComponent implements OnInit {
 
   readonly unreadCount = computed(() => this.travelStore.unreadCount());
 
-  // Unified feed items matching the new UI design
-  readonly feedItems: FeedItem[] = [
-    {
-      id: 'f1',
-      title: 'Bảo Lộc',
-      image: 'https://images.unsplash.com/photo-1542272201-b1ca555f8505?w=800&auto=format&fit=crop', // Foggy trees landscape
-      dateRange: 'Apr 29 - May 1, 2026',
-      locationType: 'GLOBAL',
-      likes: 0,
-      comments: 12
-    },
-    {
-      id: 'f2',
-      title: 'Da Lat',
-      image: 'https://images.unsplash.com/photo-1528127269322-539801943592?w=800&auto=format&fit=crop', // Vietnam scenery
-      dateRange: 'May 12 - May 15, 2026',
-      locationType: 'GLOBAL',
-      likes: 54,
-      comments: 8
-    },
-    {
-      id: 'f3',
-      title: 'Phu Quoc',
-      image: 'https://images.unsplash.com/photo-1600093678033-9097723af8bb?w=800&auto=format&fit=crop', // Beach
-      dateRange: 'Jun 1 - Jun 5, 2026',
-      locationType: 'GLOBAL',
-      likes: 120,
-      comments: 24
+  readonly searchQuery = signal('');
+  readonly activeFilter = signal('All');
+  readonly filters = ['All', 'Trending', 'Vietnam', 'Japan', 'Beach', 'Camping'];
+  
+  readonly isLoading = computed(() => this.travelStore.isSyncing() || this.travelStore.trips().length === 0);
+
+  readonly displayedTrips = computed(() => {
+    const query = this.searchQuery().toLowerCase().trim();
+    const filter = this.activeFilter();
+    let publicTrips = this.travelStore.publicTrips();
+    const allExpenses = this.travelStore.expenses();
+
+    // Apply quick filters (simulated logic for demo purposes based on title/location)
+    if (filter !== 'All') {
+      publicTrips = publicTrips.filter(t => {
+        const fullText = `${t.title} ${t.locationName} ${t.locationCity}`.toLowerCase();
+        if (filter === 'Trending') return true; // Just show all or mock it
+        if (filter === 'Vietnam') return fullText.includes('vietnam') || fullText.includes('vn') || fullText.includes('đà lạt') || fullText.includes('phú quốc');
+        if (filter === 'Japan') return fullText.includes('japan') || fullText.includes('tokyo');
+        if (filter === 'Beach') return fullText.includes('beach') || fullText.includes('biển') || fullText.includes('phú quốc');
+        if (filter === 'Camping') return fullText.includes('camp') || fullText.includes('đà lạt');
+        return true;
+      });
     }
-  ];
+
+    return publicTrips
+      .filter(t => {
+        if (!query) return true;
+        const nameMatch = t.title?.toLowerCase().includes(query) ?? false;
+        const locMatch = t.locationName?.toLowerCase().includes(query) ?? false;
+        const cityMatch = t.locationCity?.toLowerCase().includes(query) ?? false;
+        return nameMatch || locMatch || cityMatch;
+      })
+      .map(t => {
+        const tripExpenses = allExpenses.filter(e => e.tripId === t.id);
+        const totalCost = tripExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+        
+        return {
+          id: t.id,
+          title: t.title,
+          image: t.coverImage || 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=800&auto=format&fit=crop',
+          dateRange: `${t.startDate} - ${t.endDate}`,
+          locationType: t.locationName || t.locationCity || 'GLOBAL',
+          likes: 0,
+          comments: 0,
+          tripId: t.id,
+          totalCost: totalCost,
+          totalCostFormatted: totalCost > 0 ? `₫${totalCost.toLocaleString('en-US')}` : 'Free'
+        };
+      });
+  });
+
+  onSearch(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.searchQuery.set(input.value);
+  }
+
+  setFilter(f: string) {
+    this.activeFilter.set(f);
+  }
 
   async ngOnInit() {
     if (this.travelStore.trips().length === 0) {
