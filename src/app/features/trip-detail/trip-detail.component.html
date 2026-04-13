@@ -10,11 +10,15 @@
     <div class="cover-area">
       <img [src]="trip()!.coverImage || defaultCover" [alt]="trip()!.title" class="cover-img" />
       <div class="cover-overlay"></div>
+      
+      <!-- Back Button -->
       <button class="btn-back" (click)="goBack()" id="btn-back">
         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>
         </svg>
       </button>
+      
+      <!-- Edit Cover Button -->
       @if (isOwner()) {
         <button class="btn-edit-cover" (click)="editTripModal = true" id="btn-edit-trip">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -22,32 +26,32 @@
           </svg>
         </button>
       }
-    </div>
 
-    <!-- White Card Sheet -->
-    <div class="sheet">
-
-      <!-- Trip Info -->
-      <div class="trip-info">
+      <!-- Trip Info Overlay -->
+      <div class="trip-info-overlay">
         @if (trip()!.isPrivate) {
           <div class="private-badge">PRIVATE</div>
         }
         <h1 class="trip-title">{{ trip()!.title }}</h1>
         <div class="trip-meta">
           <div class="meta-item">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A8A29E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4B5563" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
             </svg>
-            <span>{{ formatDate(trip()!.startDate) }} – {{ formatDate(trip()!.endDate) }}</span>
+            <span>{{ formatDate(trip()!.startDate) }} - {{ formatDate(trip()!.endDate) }}</span>
           </div>
           <div class="meta-item">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A8A29E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4B5563" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
             </svg>
             <span>{{ trip()!.members.length }} members</span>
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- White Card Sheet -->
+    <div class="sheet">
 
       <!-- Tabs -->
       <div class="tabs-scroll">
@@ -95,7 +99,7 @@
                       @if (post.images.length > 0) {
                         <div class="timeline-images" [class.multiple]="post.images.length > 1">
                           @for (img of post.images.slice(0, 4); track img) {
-                           <img [src]="img" class="timeline-img" loading="lazy" />
+                           <img [src]="img" class="timeline-img" loading="lazy" #imgRefTimeline (error)="imgRefTimeline.style.display='none'" />
                           }
                           @if (post.images.length > 4) {
                             <div class="timeline-more-overlay">+{{ post.images.length - 4 }}</div>
@@ -131,63 +135,115 @@
             <div class="empty-card">No posts yet. Be the first to share a moment!</div>
           }
 
-          @for (post of tripPosts(); track post.id) {
-            <div class="post-card" [id]="'post-' + post.id">
-              <!-- Post header -->
-              <div class="post-header">
-                <div class="post-avatar">{{ (post.authorName || '?').charAt(0).toUpperCase() }}</div>
-                <div class="post-author-info">
-                  <span class="post-author">{{ post.authorName }}</span>
-                  <span class="post-time">{{ formatRelative(post.timestamp) }}</span>
+          <div class="ig-feed">
+            @for (post of tripPosts(); track post.id) {
+              <div class="ig-post" [id]="'post-' + post.id">
+                
+                <!-- IG Header -->
+                <div class="ig-header">
+                  <div class="ig-user">
+                    <div class="ig-avatar">
+                      @if (post.authorAvatar) {
+                        <img [src]="post.authorAvatar" alt="avatar" class="ig-avatar-img" />
+                      } @else {
+                        <span class="ig-avatar-initial">{{ (post.authorName || '?').charAt(0).toUpperCase() }}</span>
+                      }
+                    </div>
+                    <div class="ig-user-info">
+                      <span class="ig-author">{{ post.authorName }}</span>
+                      <span class="ig-time">{{ formatRelative(post.timestamp) }}</span>
+                    </div>
+                  </div>
+                  <div class="ig-options">
+                    @if (isOwner() || post.authorId === currentUserId()) {
+                      <button class="ig-icon-btn" (click)="toggleMenu(post.id); $event.stopPropagation()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="12" r="1.5"/>
+                        </svg>
+                      </button>
+
+                      @if (activeMenuId() === post.id) {
+                        <!-- Invisible backdrop to close menu -->
+                        <div class="menu-backdrop" (click)="activeMenuId.set(null); $event.stopPropagation()"></div>
+                        <!-- Dropdown -->
+                        <div class="ig-dropdown-menu">
+                          <button class="ig-dropdown-item" (click)="openEditPost(post); activeMenuId.set(null); $event.stopPropagation()">Edit</button>
+                          <button class="ig-dropdown-item delete-item" (click)="deletePost(post.id); activeMenuId.set(null); $event.stopPropagation()">Delete</button>
+                        </div>
+                      }
+                    } @else {
+                      <div class="ig-more">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="12" r="1.5"/>
+                        </svg>
+                      </div>
+                    }
+                  </div>
                 </div>
-              </div>
-              <!-- Post images -->
-              @if (post.images.length > 0) {
-                <div class="post-images" [class.dual]="post.isDual">
-                  @for (img of post.images.slice(0, post.isDual ? 2 : 1); track img) {
-                    <img [src]="img" [alt]="post.content" class="post-img" loading="lazy" />
+
+                <!-- IG Images -->
+                @if (post.images.length > 0) {
+                  <div class="ig-images" [class.dual]="post.isDual">
+                    @for (img of post.images.slice(0, post.isDual ? 2 : 1); track img) {
+                      <img [src]="img" [alt]="post.content" class="ig-img" loading="lazy" #imgRefPost (error)="imgRefPost.style.display='none'" />
+                    }
+                  </div>
+                }
+
+                <!-- IG Actions Row -->
+                <div class="ig-actions">
+                  <div class="ig-actions-left">
+                    <button class="ig-action-btn" [class.liked]="post.hasLiked" (click)="toggleLike(post.id)">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" [attr.fill]="post.hasLiked ? '#EF4444' : 'none'" [attr.stroke]="post.hasLiked ? '#EF4444' : '#1C1917'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                      </svg>
+                    </button>
+                    <button class="ig-action-btn" (click)="openComments(post)">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                      </svg>
+                    </button>
+                  </div>
+                  <button class="ig-action-btn ig-action-share" (click)="sharePost(post)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                    </svg>
+                  </button>
+                </div>
+
+                <!-- IG Likes Info -->
+                <div class="ig-likes-count">
+                  @if (post.hasLiked) {
+                    Liked by <strong>You</strong> {{ post.likes > 1 ? 'and others' : '' }}
+                  } @else {
+                    @if (post.likes > 0) {
+                      <strong>{{ post.likes }} likes</strong>
+                    }
                   }
                 </div>
-              }
-              <!-- Post content -->
-              @if (post.content) {
-                <p class="post-content">{{ post.content }}</p>
-              }
-              <!-- Post actions -->
-              <div class="post-actions">
-                <button class="post-action-btn" [class.liked]="post.hasLiked" (click)="toggleLike(post.id)">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" [attr.stroke]="post.hasLiked ? '#EF4444' : '#78716C'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                  </svg>
-                  <span>{{ post.likes }}</span>
-                </button>
-                <button class="post-action-btn" (click)="openComments(post)">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#78716C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                  </svg>
-                  <span>{{ post.comments.length }}</span>
-                </button>
-                <button class="post-action-btn post-action-share" (click)="sharePost(post)">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#78716C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-                  </svg>
-                  <span>Share</span>
-                </button>
-                @if (isOwner() || post.authorId === currentUserId()) {
-                  <button class="post-action-btn post-action-edit" (click)="openEditPost(post)">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                    </svg>
-                  </button>
-                  <button class="post-action-btn post-action-delete" (click)="deletePost(post.id)">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <polyline points="3 6 5 6 21 6"/><path d="m19 6-.867 12.142A2 2 0 0 1 16.138 20H7.862a2 2 0 0 1-1.995-1.858L5 6m5 0V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/>
-                    </svg>
-                  </button>
+
+                <!-- IG Caption -->
+                @if (post.content) {
+                  <div class="ig-caption">
+                    <span class="ig-caption-author">{{ post.authorName }}</span>
+                    <span class="ig-caption-text">{{ post.content }}</span>
+                  </div>
                 }
+
+                <!-- IG Comments Preview -->
+                @if (post.comments.length > 0) {
+                  <div class="ig-comments-link" (click)="openComments(post)">
+                    View all {{ post.comments.length }} comments
+                  </div>
+                  <div class="ig-comment-preview">
+                    <span class="ig-caption-author">{{ post.comments[post.comments.length - 1].authorName }}</span>
+                    <span class="ig-caption-text">{{ post.comments[post.comments.length - 1].text }}</span>
+                  </div>
+                }
+
               </div>
-            </div>
-          }
+            }
+          </div>
         }
 
         <!-- ═══ EXPENSES ═══ -->

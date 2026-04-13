@@ -58,6 +58,11 @@ export class TripDetailComponent implements OnInit {
   editPostObj: Post | null = null;
   editPostContent = '';
   readonly isSavingPost = signal(false);
+  readonly activeMenuId = signal<string | null>(null);
+
+  toggleMenu(postId: string) {
+    this.activeMenuId.update(id => id === postId ? null : postId);
+  }
 
   // ─── Add Member modal state ───────────────────────────────────────────
   readonly addMemberOpen = signal(false);

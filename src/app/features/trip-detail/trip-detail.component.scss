@@ -38,12 +38,16 @@ $border: #F0F0F0;
 
 // ─── Cover ────────────────────────────────────────────────────────────────────
 .cover-area {
-  height: 320px;
+  height: 460px;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
 }
 
 .cover-img {
+  position: absolute; inset: 0;
   width: 100%; height: 100%;
   object-fit: cover;
   display: block;
@@ -51,75 +55,91 @@ $border: #F0F0F0;
 
 .cover-overlay {
   position: absolute; inset: 0;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 60%);
+  background: linear-gradient(
+    to bottom, 
+    rgba(0,0,0,0.2) 0%, 
+    rgba(0,0,0,0) 30%, 
+    rgba(255,255,255,0.7) 70%, 
+    rgba(255,255,255,1) 100%
+  );
 }
 
 .btn-back, .btn-edit-cover {
   position: absolute;
   top: 56px;
-  width: 44px; height: 44px;
+  width: 46px; height: 46px;
   border-radius: 50%;
-  background: rgba(0,0,0,0.3);
-  border: none; cursor: pointer;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  backdrop-filter: blur(8px);
-  transition: background 0.15s ease;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+  z-index: 10;
 
-  &:hover { background: rgba(0,0,0,0.5); }
+  &:hover {
+    background: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  }
 }
 
-.btn-back { left: 20px; }
-.btn-edit-cover { right: 16px; }
+.btn-back { left: 24px; }
+.btn-edit-cover { right: 24px; }
 
-// ─── Sheet ────────────────────────────────────────────────────────────────────
-.sheet {
-  margin-top: -32px;
-  background: $bg;
-  border-radius: 32px 32px 0 0;
-  min-height: calc(100vh - 280px);
-  overflow: hidden;
+// ─── Trip Info Overlay ────────────────────────────────────────────────────────
+.trip-info-overlay {
+  position: relative;
+  z-index: 10;
+  padding: 0 24px 24px 24px;
 }
-
-// ─── Trip Info ────────────────────────────────────────────────────────────────
-.trip-info { padding: 28px 24px 0; }
 
 .private-badge {
   display: inline-block;
   background: $primary;
   color: $text-dark;
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 1px;
-  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  padding: 6px 14px;
   border-radius: 100px;
   margin-bottom: 12px;
 }
 
 .trip-title {
-  font-size: 32px;
+  font-size: 40px;
   font-weight: 900;
   color: $text-dark;
-  letter-spacing: -0.5px;
-  margin: 0 0 12px;
+  letter-spacing: -1px;
+  margin: 0 0 16px;
+  line-height: 1.1;
 }
 
 .trip-meta {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
   flex-wrap: wrap;
 }
 
 .meta-item {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 
   span {
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 600;
-    color: $text-muted;
+    color: #4B5563;
   }
+}
+
+// ─── Sheet ────────────────────────────────────────────────────────────────────
+.sheet {
+  background: $bg;
+  min-height: calc(100vh - 460px);
+  border-top: 1px solid rgba(0,0,0,0.05);
 }
 
 // ─── Tabs ─────────────────────────────────────────────────────────────────────
@@ -153,7 +173,7 @@ $border: #F0F0F0;
 
   &.active {
     background: $text-dark;
-    color: $bg;
+    color: #FFFFFF !important; // Forced to fix the contrast issue
     border-color: $text-dark;
   }
 }
@@ -243,92 +263,186 @@ $border: #F0F0F0;
 
 .moments-icon { font-size: 40px; }
 
-// ─── Post Card ────────────────────────────────────────────────────────────────
-.post-card {
-  background: $bg;
-  border: 1px solid $border;
-  border-radius: 24px;
-  padding: 16px;
-  margin-bottom: 20px;
-  animation: fadeIn 0.3s ease;
+// ─── Instagram Style Feed ──────────────────────────────────────────────────────
+.ig-feed {
+  display: flex;
+  flex-direction: column;
+  margin: 16px -24px 0;
 }
 
-.post-header {
+.ig-post {
+  background: $bg;
+  padding: 0;
+  margin-bottom: 24px;
+  animation: fadeIn 0.3s ease;
+  padding-bottom: 24px;
+}
+
+.ig-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
+  justify-content: space-between;
+  padding: 12px 24px;
 }
 
-.post-avatar {
+.ig-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ig-avatar {
   width: 40px; height: 40px;
   border-radius: 50%;
-  background: $primary;
-  color: $text-dark;
-  font-size: 16px;
-  font-weight: 900;
+  background: #F3F4F6;
+  overflow: hidden;
   display: flex; align-items: center; justify-content: center;
+  border: 1px solid rgba(0,0,0,0.05);
 }
 
-.post-author-info {
+.ig-avatar-img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+
+.ig-avatar-initial {
+  font-size: 16px; font-weight: 800; color: $text-dark;
+}
+
+.ig-user-info {
   display: flex;
   flex-direction: column;
 }
 
-.post-author { font-size: 14px; font-weight: 700; color: $text-dark; }
-.post-time { font-size: 12px; color: $text-inactive; }
-
-.post-images {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 4px;
-  border-radius: 16px;
-  overflow: hidden;
-  margin-bottom: 12px;
-
-  &.dual { grid-template-columns: 1fr 1fr; }
+.ig-author {
+  font-size: 14px; font-weight: 700; color: $text-dark;
 }
 
-.post-img {
-  width: 100%; height: 220px;
+.ig-time {
+  font-size: 12px; color: $text-inactive;
+}
+
+.ig-options {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.ig-icon-btn, .ig-more {
+  background: none; border: none; cursor: pointer; padding: 4px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+}
+
+.ig-dropdown-menu {
+  position: absolute;
+  top: 100%; right: 0;
+  margin-top: 4px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  border: 1px solid $border;
+  padding: 8px 0;
+  min-width: 140px;
+  z-index: 100;
+  animation: fadeIn 0.15s ease;
+}
+
+.ig-dropdown-item {
+  width: 100%;
+  padding: 10px 16px;
+  background: none; border: none; cursor: pointer;
+  text-align: left;
+  font-size: 14px; font-weight: 600; color: $text-dark;
+  font-family: inherit;
+  transition: background 0.1s ease;
+  
+  &:hover { background: #F9F9F9; }
+  &.delete-item { color: #DC2626; }
+}
+
+.ig-images {
+  width: 100%;
+  padding: 0 16px;
+  margin-bottom: 12px;
+  
+  &.dual {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
+  }
+}
+
+.ig-img {
+  width: 100%;
+  height: auto;
+  max-height: 480px;
   object-fit: cover;
+  border-radius: 24px;
   display: block;
 }
 
-.post-content {
-  font-size: 14px;
-  color: $text-dark;
-  margin: 8px 0 12px;
-  line-height: 1.5;
+.ig-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 24px 8px;
 }
 
-.post-actions {
+.ig-actions-left {
   display: flex;
   align-items: center;
   gap: 16px;
-  border-top: 1px solid $border;
-  padding-top: 12px;
 }
 
-.post-action-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: none;
-  border: none;
+.ig-action-btn {
+  background: none; border: none; cursor: pointer; padding: 4px 0;
+  display: flex; align-items: center; justify-content: center;
+  color: $text-dark;
+  transition: opacity 0.15s ease;
+  
+  &:hover { opacity: 0.7; }
+}
+
+.ig-likes-count {
+  padding: 0 24px;
+  font-size: 14px;
+  color: $text-dark;
+  margin-bottom: 6px;
+}
+
+.ig-caption {
+  padding: 0 24px;
+  font-size: 14px;
+  color: $text-dark;
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+
+.ig-caption-author {
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+.ig-comments-link {
+  padding: 0 24px;
+  font-size: 14px;
+  color: $text-inactive;
   cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
-  color: $text-muted;
-  font-family: inherit;
-  padding: 4px 0;
-  transition: color 0.15s ease;
-
-  &.liked { color: #EF4444; }
-  &:hover { color: $text-dark; }
+  margin-bottom: 6px;
+  
+  &:hover { text-decoration: underline; }
 }
 
-.post-action-delete { margin-left: auto; }
+.ig-comment-preview {
+  padding: 0 24px;
+  font-size: 14px;
+  color: $text-dark;
+}
 
 // ─── Expense / Balance Items ───────────────────────────────────────────────────
 .summary-row {
