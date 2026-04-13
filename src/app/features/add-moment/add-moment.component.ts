@@ -51,7 +51,6 @@ export class AddMomentComponent implements OnInit, OnDestroy {
   // New Camera Features
   readonly isFlashOn = signal(false);
   readonly showGrid = signal(false);
-  readonly aspectRatio = signal<'1:1' | '4:3' | '16:9'>('1:1');
   readonly activeFilter = signal<'none' | 'film' | 'kodak' | 'y2k' | 'cine'>('none');
   
   videoDevices: MediaDeviceInfo[] = [];
@@ -259,11 +258,6 @@ export class AddMomentComponent implements OnInit, OnDestroy {
         console.warn('Torch not supported');
       }
     }
-  }
-
-  cycleRatio() {
-    const r = this.aspectRatio();
-    this.aspectRatio.set(r === '1:1' ? '4:3' : r === '4:3' ? '16:9' : '1:1');
   }
 
   toggleDualMode() {

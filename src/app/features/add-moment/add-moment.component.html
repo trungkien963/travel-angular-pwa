@@ -8,9 +8,6 @@
       </svg>
     </button>
     <div class="top-right-controls">
-      <button class="icon-circle text-btn" (click)="cycleRatio()">
-        {{ aspectRatio() }}
-      </button>
       <button class="icon-circle text-btn" [class.active]="isDualMode()" (click)="toggleDualMode()">
         DUAL
       </button>
@@ -27,7 +24,7 @@
   </div>
 
   <!-- Camera / Preview Area -->
-  <div class="camera-area" [style.aspect-ratio]="aspectRatio() === '16:9' ? '9/16' : aspectRatio() === '4:3' ? '3/4' : '1/1'">
+  <div class="camera-area">
     
     <!-- Video Stream (Live Camera) -->
     <video #videoElement autoplay playsinline class="video-feed" 
