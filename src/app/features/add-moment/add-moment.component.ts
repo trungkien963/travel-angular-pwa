@@ -48,6 +48,15 @@ export class AddMomentComponent implements OnInit, OnDestroy {
   private stream: MediaStream | null = null;
   private dualFirstImage: HTMLImageElement | null = null;
 
+  // New Camera Features
+  readonly isFlashOn = signal(false);
+  readonly showGrid = signal(false);
+  readonly aspectRatio = signal<'1:1' | '4:3' | '16:9'>('1:1');
+  readonly activeFilter = signal<'none' | 'film' | 'kodak' | 'y2k' | 'cine'>('none');
+  
+  videoDevices: MediaDeviceInfo[] = [];
+  currentCameraId: string | null = null;
+
   // ─── Image state ─────────────────────────────────────────────────────────
   readonly photos = signal<PhotoCapture[]>([]);
   readonly viewingPhotoId = signal<string | null>(null);
@@ -173,11 +182,30 @@ export class AddMomentComponent implements OnInit, OnDestroy {
   async startCamera() {
     this.stopCamera();
     this.isCameraActive.set(true);
+    
+    const constraints: any = {
+      width: { ideal: 1920 },
+      height: { ideal: 1080 }
+    };
+
+    if (this.currentCameraId && this.facingMode() === 'environment') {
+      constraints.deviceId = { exact: this.currentCameraId };
+    } else {
+      constraints.facingMode = this.facingMode();
+    }
+
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: this.facingMode(), width: { ideal: 1080 }, height: { ideal: 1920 } },
+        video: constraints,
         audio: false
       });
+      
+      // Update devices after granting permission
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      this.videoDevices = devices.filter(d => d.kind === 'videoinput');
+
+      this.applyFlash();
+
       if (this.videoElement?.nativeElement) {
         this.videoElement.nativeElement.srcObject = this.stream;
         this.videoElement.nativeElement.play();
@@ -196,7 +224,46 @@ export class AddMomentComponent implements OnInit, OnDestroy {
 
   toggleCamera() {
     this.facingMode.update(m => m === 'environment' ? 'user' : 'environment');
+    this.currentCameraId = null; // Reset explicit lens when flipping
     this.startCamera();
+  }
+
+  hasMultipleBackCameras(): boolean {
+    return this.videoDevices.filter(d => !d.label.toLowerCase().includes('front')).length > 1;
+  }
+
+  cycleLens() {
+    const backs = this.videoDevices.filter(d => !d.label.toLowerCase().includes('front'));
+    if (backs.length < 2) return;
+    let idx = backs.findIndex(d => d.deviceId === this.currentCameraId);
+    idx = (idx + 1) % backs.length;
+    this.currentCameraId = backs[idx].deviceId;
+    this.facingMode.set('environment');
+    this.startCamera();
+  }
+
+  toggleFlash() {
+    this.isFlashOn.update(v => !v);
+    this.applyFlash();
+  }
+
+  applyFlash() {
+    if (!this.stream) return;
+    const track = this.stream.getVideoTracks()[0];
+    if (track && 'applyConstraints' in track) {
+      try {
+        track.applyConstraints({
+          advanced: [{ torch: this.isFlashOn() } as any]
+        });
+      } catch (e) {
+        console.warn('Torch not supported');
+      }
+    }
+  }
+
+  cycleRatio() {
+    const r = this.aspectRatio();
+    this.aspectRatio.set(r === '1:1' ? '4:3' : r === '4:3' ? '16:9' : '1:1');
   }
 
   toggleDualMode() {
@@ -231,7 +298,7 @@ export class AddMomentComponent implements OnInit, OnDestroy {
     }
 
     canvas.width = targetWidth || 1080;
-    canvas.height = targetHeight || 1920;
+    canvas.height = targetHeight || 1080;
     const ctx = (canvas as any).getContext('2d', { colorSpace: 'display-p3' }) || canvas.getContext('2d');
     if (!ctx) return;
     
@@ -240,7 +307,23 @@ export class AddMomentComponent implements OnInit, OnDestroy {
       ctx.translate(canvas.width, 0);
       ctx.scale(-1, 1);
     }
+
+    // Apply Base CSS Filters
+    if (this.activeFilter() === 'film') {
+        ctx.filter = 'sepia(0.05) saturate(1.05) hue-rotate(-2deg)';
+    } else if (this.activeFilter() === 'kodak') {
+        ctx.filter = 'sepia(0.1) saturate(1.1)';
+    } else if (this.activeFilter() === 'y2k') {
+        ctx.filter = 'contrast(0.95) brightness(1.1) saturate(1.1) sepia(0.05) hue-rotate(-5deg)';
+    } else if (this.activeFilter() === 'cine') {
+        ctx.filter = 'contrast(1.05) saturate(0.85) brightness(0.95) sepia(0.05) hue-rotate(5deg)';
+    }
+
+    // Draw base video frame
     ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+    
+    // Reset filter
+    ctx.filter = 'none';
     
     if (this.isDualMode() && !this.dualFirstImage) {
       // Step 1 of Dual: Save first frame, flip camera, capture step 2
@@ -274,13 +357,13 @@ export class AddMomentComponent implements OnInit, OnDestroy {
 
     canvas.toBlob(blob => {
       if (!blob) return;
-      const file = new File([blob], `capture_${Date.now()}.jpg`, { type: 'image/jpeg' });
+      const file = new File([blob], `capture_${Date.now()}.webp`, { type: 'image/webp' });
       const url = URL.createObjectURL(file);
       const id = Date.now().toString();
       
       this.photos.update(p => [...p, { id, url, file, isDual: this.isDualMode() }]);
       // Do not stop camera, always go back to new photo
-    }, 'image/jpeg', 0.9);
+    }, 'image/webp', 0.9);
   }
 
   viewPhoto(id: string) {

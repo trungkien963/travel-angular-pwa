@@ -34,6 +34,7 @@ $border: #F0F0F0;
   padding: calc(env(safe-area-inset-top, 44px) + 12px) 20px 16px;
 }
 
+
 .top-right-controls {
   display: flex;
   gap: 12px;
@@ -43,18 +44,36 @@ $border: #F0F0F0;
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.35); /* Dark frosted */
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.2); // White Glass
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  color: #FFFFFF !important;
   text-decoration: none;
-  transition: background 0.15s ease;
+  transition: all 0.2s ease;
 
-  &:hover { background: rgba(0, 0, 0, 0.5); }
+  &:hover { background: rgba(255, 255, 255, 0.35); }
+  
+  svg {
+    stroke: #FFFFFF;
+    transition: all 0.2s ease;
+  }
+
+  &.text-btn {
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  &.active {
+    background: #FFC800 !important;
+    color: #1C1917 !important;
+    border-color: #FFC800 !important;
+    svg { stroke: #1C1917 !important; }
+  }
 }
 
 .retake-btn {
@@ -81,14 +100,32 @@ $border: #F0F0F0;
 
 // ─── Camera / Preview Area ────────────────────────────────────────────────────
 .camera-area {
-  height: 55vh;
-  min-height: 300px;
+  aspect-ratio: 1 / 1;
   width: 100%;
+  height: auto;
   background: #1C1917;
   position: relative;
   overflow: hidden;
   border-radius: 0 0 40px 40px;
+  transition: aspect-ratio 0.3s ease;
 }
+
+.grid-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 15;
+}
+
+.grid-hline, .grid-vline {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.grid-hline { left: 0; right: 0; height: 1px; }
+.grid-vline { top: 0; bottom: 0; width: 1px; }
+
+
 
 .preview-img {
   width: 100%;
@@ -170,17 +207,45 @@ $border: #F0F0F0;
   &.mirrored {
     transform: scaleX(-1);
   }
+
+  &.filter-base-film {
+    filter: sepia(0.05) saturate(1.05) hue-rotate(-2deg);
+  }
+  &.filter-base-kodak {
+    filter: sepia(0.1) saturate(1.1);
+  }
+  &.filter-base-y2k {
+    filter: contrast(0.95) brightness(1.1) saturate(1.1) sepia(0.05) hue-rotate(-5deg);
+  }
+  &.filter-base-cine {
+    filter: contrast(1.05) saturate(0.85) brightness(0.95) sepia(0.05) hue-rotate(5deg);
+  }
 }
 
+.video-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 15%, transparent 80%, rgba(0,0,0,0.5) 100%);
+  border-radius: inherit;
+}
+
+// ─── Photos Tray ──────────────────────────────────────────────────────────
+.photos-tray {
+  padding: 24px 24px 32px; /* Increase bottom margin for breathing room */
+  background: $bg;
+}
 .hidden-canvas, .hidden {
   display: none !important;
 }
 
 .camera-toolbar {
   position: absolute;
-  top: calc(env(safe-area-inset-top, 44px) + 12px);
+  top: calc(env(safe-area-inset-top, 44px) + 60px);
   right: 20px;
   display: flex;
+  flex-direction: column;
   gap: 12px;
   z-index: 25;
 }
@@ -206,11 +271,59 @@ $border: #F0F0F0;
   }
 }
 
-.shutter-wrapper {
+
+.filters-scroll {
+  position: absolute;
+  bottom: 110px; // Above shutter
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 8px;
+  padding: 0 20px;
+  overflow-x: auto;
+  z-index: 25;
+  &::-webkit-scrollbar { display: none; }
+}
+
+.filter-pill {
+  padding: 8px 16px;
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.2); // White Glass
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #FFFFFF !important;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+  transition: all 0.15s ease;
+
+  &.active {
+    background: #FFC800 !important;
+    color: #1C1917 !important;
+    border-color: #FFC800 !important;
+  }
+}
+
+.camera-primary-actions {
   position: absolute;
   bottom: 24px;
   left: 0;
   right: 0;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0 40px; /* Generous padding on edges */
+  z-index: 25;
+
+  .action-left { justify-self: start; }
+  .shutter-wrapper { justify-self: center; }
+  .action-right { justify-self: end; }
+}
+
+.shutter-wrapper {
   display: flex;
   justify-content: center;
 }

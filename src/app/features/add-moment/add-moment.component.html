@@ -3,44 +3,85 @@
   <!-- Top Controls -->
   <div class="top-bar">
     <button class="icon-circle" (click)="handleClose()" id="btn-close-moment">
-      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
       </svg>
     </button>
+    <div class="top-right-controls">
+      <button class="icon-circle text-btn" (click)="cycleRatio()">
+        {{ aspectRatio() }}
+      </button>
+      <button class="icon-circle text-btn" [class.active]="isDualMode()" (click)="toggleDualMode()">
+        DUAL
+      </button>
+      <button class="icon-circle" (click)="toggleFlash()" [class.active]="isFlashOn()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          @if (isFlashOn()) {
+            <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.9 1.2 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>
+          } @else {
+            <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.9 1.2 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/><line x1="2" y1="2" x2="22" y2="22"/>
+          }
+        </svg>
+      </button>
+    </div>
   </div>
 
   <!-- Camera / Preview Area -->
-  <div class="camera-area">
+  <div class="camera-area" [style.aspect-ratio]="aspectRatio() === '16:9' ? '9/16' : aspectRatio() === '4:3' ? '3/4' : '1/1'">
     
     <!-- Video Stream (Live Camera) -->
-    <video #videoElement autoplay playsinline class="video-feed" [class.mirrored]="facingMode() === 'user'"></video>
+    <video #videoElement autoplay playsinline class="video-feed" 
+      [class.mirrored]="facingMode() === 'user'"
+      [class.filter-base-film]="activeFilter() === 'film'"
+      [class.filter-base-kodak]="activeFilter() === 'kodak'"
+      [class.filter-base-y2k]="activeFilter() === 'y2k'"
+      [class.filter-base-cine]="activeFilter() === 'cine'"
+    ></video>
+    <div class="video-vignette"></div>
+    @if (showGrid()) {
+      <div class="grid-overlay">
+        <div class="grid-hline" style="top: 33.33%"></div>
+        <div class="grid-hline" style="top: 66.66%"></div>
+        <div class="grid-vline" style="left: 33.33%"></div>
+        <div class="grid-vline" style="left: 66.66%"></div>
+      </div>
+    }
     <!-- Hidden canvas for capture -->
     <canvas #canvasElement class="hidden-canvas"></canvas>
 
-    <!-- Camera Tools Overlay -->
-    <div class="camera-toolbar">
-      <button class="tool-btn" [class.active]="isDualMode()" (click)="toggleDualMode()">
-        DUAL
-      </button>
-      <button class="icon-circle" (click)="toggleCamera()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M11 19H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/><path d="M13 5h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-5"/><circle cx="12" cy="12" r="3"/><path d="m18 22-3-3 3-3"/><path d="m6 2 3 3-3 3"/>
-        </svg>
-      </button>
-      <label class="icon-circle" for="file-input">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Filters Bar -->
+    <div class="filters-scroll">
+      <button class="filter-pill" [class.active]="activeFilter() === 'none'" (click)="activeFilter.set('none')">NORMAL</button>
+      <button class="filter-pill" [class.active]="activeFilter() === 'film'" (click)="activeFilter.set('film')">FUJI 400</button>
+      <button class="filter-pill" [class.active]="activeFilter() === 'kodak'" (click)="activeFilter.set('kodak')">KODAK</button>
+      <button class="filter-pill" [class.active]="activeFilter() === 'y2k'" (click)="activeFilter.set('y2k')">Y2K GLOW</button>
+      <button class="filter-pill" [class.active]="activeFilter() === 'cine'" (click)="activeFilter.set('cine')">CINEMA</button>
+    </div>
+
+    <!-- Primary Camera Actions -->
+    <div class="camera-primary-actions">
+      <!-- Gallery Left -->
+      <label class="icon-circle action-left" for="file-input">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
         </svg>
       </label>
-      <input id="file-input" type="file" accept="image/*" multiple class="file-input-hidden" (change)="onFilePicked($event)" />
-    </div>
 
-    <!-- Native camera capture button -->
-    <div class="shutter-wrapper">
-      <button class="shutter-ring" (click)="capturePhoto()">
-        <div class="shutter-inner"></div>
+      <!-- Shutter Center -->
+      <div class="shutter-wrapper">
+        <button class="shutter-ring" (click)="capturePhoto()">
+          <div class="shutter-inner"></div>
+        </button>
+      </div>
+
+      <!-- Flip Camera Right -->
+      <button class="icon-circle action-right" (click)="toggleCamera()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 19H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/><path d="M13 5h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-5"/><circle cx="12" cy="12" r="3"/><path d="m18 22-3-3 3-3"/><path d="m6 2 3 3-3 3"/>
+        </svg>
       </button>
     </div>
+    <input id="file-input" type="file" accept="image/*" multiple class="file-input-hidden" (change)="onFilePicked($event)" />
   </div>
 
   <!-- Selected Photos List -->
