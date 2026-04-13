@@ -53,6 +53,14 @@ export class TripDetailComponent implements OnInit {
   commentText = '';
   readonly isSendingComment = signal(false);
 
+  // ─── Add Member modal state ───────────────────────────────────────────
+  readonly addMemberOpen = signal(false);
+  newMemberName = '';
+  newMemberEmail = '';
+  readonly isInviting = signal(false);
+  readonly inviteStatus = signal('');
+  readonly inviteSuccess = signal(false);
+
   // Expense form state
   expForm: { desc: string; amount: number; category: string; payerId: string; date: string } = {
     desc: '', amount: 0, category: 'OTHER', payerId: '', date: new Date().toISOString().split('T')[0]
@@ -350,7 +358,101 @@ export class TripDetailComponent implements OnInit {
   }
 
   // ─── Members ──────────────────────────────────────────────────────────────
-  openAddMemberModal() { /* TODO: Step 8 */ }
+  openAddMemberModal() {
+    this.newMemberName = '';
+    this.newMemberEmail = '';
+    this.inviteStatus.set('');
+    this.addMemberOpen.set(true);
+  }
+
+  async inviteMember() {
+    const name = this.newMemberName.trim();
+    const email = this.newMemberEmail.trim();
+
+    if (!name) { this.setInviteError('Please enter the member\'s name.'); return; }
+    if (!email || !email.includes('@')) { this.setInviteError('Please enter a valid email address.'); return; }
+
+    this.isInviting.set(true);
+    this.inviteStatus.set('');
+
+    const db = this.supabaseService.client;
+    const trip = this.trip();
+    if (!trip) { this.isInviting.set(false); return; }
+
+    try {
+      // 1. Try to find user by email in `users` table
+      let userId: string | null = null;
+      const { data: userData } = await db
+        .from('users')
+        .select('id, name')
+        .eq('email', email)
+        .maybeSingle();
+
+      if (userData) {
+        userId = userData['id'];
+      }
+
+      // 2. Try Edge Function (best-effort - may not exist in all envs)
+      if (!userId) {
+        try {
+          const { data: fnData } = await db.functions.invoke('invite-member', {
+            body: { email }
+          });
+          if (fnData?.userId) userId = fnData.userId;
+        } catch { /* Edge function optional */ }
+      }
+
+      // 3. Build member object (use found userId or generate temp ID)
+      const finalId = userId || ('guest_' + Date.now());
+      const alreadyMember = trip.members.some(m => m.id === finalId || m.email === email);
+
+      if (alreadyMember) {
+        this.setInviteError('This person is already a member of the trip.');
+        return;
+      }
+
+      const newMember: Member = {
+        id: finalId,
+        name,
+        email,
+        isMe: false
+      };
+
+      const updatedMembers = [...trip.members, newMember];
+
+      // 4. Update Supabase trip record
+      const { error } = await db
+        .from('trips')
+        .update({ members: updatedMembers })
+        .eq('id', trip.id);
+
+      if (error) throw error;
+
+      // 5. Update local store
+      this.travelStore.updateTrip(trip.id, { members: updatedMembers });
+
+      // 6. Success
+      this.inviteSuccess.set(true);
+      this.inviteStatus.set(`✅ ${name} has been added to the trip!`);
+      this.newMemberName = '';
+      this.newMemberEmail = '';
+
+      // Close after short delay
+      setTimeout(() => {
+        this.addMemberOpen.set(false);
+        this.inviteStatus.set('');
+      }, 1500);
+    } catch (err: any) {
+      this.setInviteError(err.message || 'Failed to add member. Please try again.');
+    } finally {
+      this.isInviting.set(false);
+    }
+  }
+
+  private setInviteError(msg: string) {
+    this.inviteSuccess.set(false);
+    this.inviteStatus.set(msg);
+  }
 
   async removeMember(memberId: string) {
     if (!confirm('Remove this member?')) return;
