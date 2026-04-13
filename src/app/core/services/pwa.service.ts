@@ -75,8 +75,15 @@ export class PwaService {
   }
 
   async applyUpdate(): Promise<void> {
-    await this.swUpdate.activateUpdate();
-    window.location.reload();
+    try {
+      if (this.swUpdate.isEnabled) {
+        await this.swUpdate.activateUpdate();
+      }
+    } catch (err) {
+      console.error('SW Activate Update Error:', err);
+    } finally {
+      window.location.reload();
+    }
   }
 
   dismiss() {
