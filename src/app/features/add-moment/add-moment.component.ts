@@ -182,9 +182,10 @@ export class AddMomentComponent implements OnInit, OnDestroy {
     this.stopCamera();
     this.isCameraActive.set(true);
     
+    const isPortrait = window.innerHeight > window.innerWidth;
     const constraints: any = {
-      width: { ideal: 1920 },
-      height: { ideal: 1080 }
+      width: { ideal: isPortrait ? 1080 : 1920 },
+      height: { ideal: isPortrait ? 1920 : 1080 }
     };
 
     if (this.currentCameraId && this.facingMode() === 'environment') {

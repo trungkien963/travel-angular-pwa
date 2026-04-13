@@ -1,3 +1,5 @@
+import { appVersion } from '../../../environments/version';
+
 export const viDictionary = {
   // LANDING
   'landing.title': 'Hành trình vẫy gọi ✈️',
@@ -16,7 +18,7 @@ export const viDictionary = {
   'profile.preferences': 'Tùy chọn',
   'profile.privacy': 'Riêng tư & Bảo mật',
   'profile.help': 'Trung tâm hỗ trợ',
-  'profile.madeWith': 'WanderPool v1.0.0 · Làm ra với ❤️',
+  'profile.madeWith': `WanderPool ${appVersion} · Làm ra với ❤️`,
 
   // DISCOVER
   'discover.title': 'Cộng đồng',

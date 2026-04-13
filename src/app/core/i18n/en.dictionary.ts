@@ -1,3 +1,5 @@
+import { appVersion } from '../../../environments/version';
+
 export const enDictionary = {
   // LANDING
   'landing.title': 'Your Journey Awaits ✈️',
@@ -16,7 +18,7 @@ export const enDictionary = {
   'profile.preferences': 'Preferences',
   'profile.privacy': 'Privacy & Security',
   'profile.help': 'Help Center',
-  'profile.madeWith': 'WanderPool v1.0.0 · Made with ❤️',
+  'profile.madeWith': `WanderPool ${appVersion} · Made with ❤️`,
 
   // DISCOVER
   'discover.title': 'Community',

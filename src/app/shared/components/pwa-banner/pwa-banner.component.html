@@ -1,3 +1,18 @@
+@if (pwa.showIosPrompt()) {
+  <div class="pwa-banner install" role="banner">
+    <div class="banner-left">
+      <img src="icons/icon-96x96.png" class="banner-icon" alt="WanderPool" />
+      <div>
+        <p class="banner-title">Thêm vào Màn hình chính</p>
+        <p class="banner-sub">Dùng iPhone? Bấm nút [Share] <svg width="14" height="18" viewBox="0 0 14 18" fill="none" style="display:inline; vertical-align:middle; margin:0 2px;"><path d="M7 1v11M7 1L3 5M7 1l4 4M2 13v2a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> ở dưới và chọn "Add to Home Screen".</p>
+      </div>
+    </div>
+    <div class="banner-actions">
+      <button class="btn-dismiss" (click)="pwa.dismissIos()" aria-label="Dismiss">✕</button>
+    </div>
+  </div>
+}
+
 @if (pwa.canInstall()) {
   <div class="pwa-banner install" role="banner">
     <div class="banner-left">

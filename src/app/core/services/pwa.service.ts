@@ -9,11 +9,29 @@ export class PwaService {
   // ─── Install Prompt ───────────────────────────────────────────────────────
   readonly canInstall = signal(false);
   readonly updateAvailable = signal(false);
+  readonly showIosPrompt = signal(false);
   private deferredPrompt: any = null;
 
   constructor() {
     this.listenForInstallPrompt();
     this.listenForSwUpdates();
+    this.checkIosSafari();
+  }
+
+  private checkIosSafari() {
+    const ua = window.navigator.userAgent.toLowerCase();
+    const isIos = /iphone|ipad|ipod/.test(ua);
+    const isSafari = /safari/.test(ua) && !/chrome/.test(ua);
+    // Check if already in standalone mode
+    const isStandalone = ('standalone' in window.navigator) && (window.navigator as any).standalone;
+
+    // Only show prompt if on iOS Safari, not installed, and not dismissed before
+    if (isIos && isSafari && !isStandalone) {
+      const dismissed = localStorage.getItem('pwa_ios_dismissed');
+      if (!dismissed) {
+        this.showIosPrompt.set(true);
+      }
+    }
   }
 
   // Capture the browser's beforeinstallprompt event
@@ -63,5 +81,10 @@ export class PwaService {
 
   dismiss() {
     this.updateAvailable.set(false);
+  }
+
+  dismissIos() {
+    localStorage.setItem('pwa_ios_dismissed', 'true');
+    this.showIosPrompt.set(false);
   }
 }
