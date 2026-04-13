@@ -65,9 +65,52 @@
 
         <!-- ═══ MOMENTS ═══ -->
         @if (activeTab === 'MOMENTS') {
-          <div class="moments-empty">
-            <div class="moments-icon">📅</div>
-            <p>Tap the <strong>SOCIAL</strong> tab to add photos &amp; moments during your trip.</p>
+          <div class="section-header">
+            <h2 class="section-title">Timeline</h2>
+          </div>
+
+          @if (tripPostsGroups().length === 0) {
+            <div class="moments-empty">
+              <div class="moments-icon">📅</div>
+              <p>Tap the <strong>SOCIAL</strong> tab to add photos &amp; moments during your trip.</p>
+            </div>
+          }
+
+          <div class="timeline">
+            @for (group of tripPostsGroups(); track group.dateLabel) {
+              <div class="timeline-group">
+                <div class="timeline-date">
+                  <span class="timeline-date-label">{{ group.dateLabel }}</span>
+                  <div class="timeline-line"></div>
+                </div>
+
+                <div class="timeline-posts">
+                  @for (post of group.posts; track post.id) {
+                    <div class="timeline-post-card">
+                      <div class="timeline-author">
+                        <span class="author-avatar">{{ (post.authorName || '?').charAt(0).toUpperCase() }}</span>
+                        <span class="author-time">{{ formatRelative(post.timestamp) }}</span>
+                      </div>
+                      
+                      @if (post.images.length > 0) {
+                        <div class="timeline-images" [class.multiple]="post.images.length > 1">
+                          @for (img of post.images.slice(0, 4); track img) {
+                           <img [src]="img" class="timeline-img" loading="lazy" />
+                          }
+                          @if (post.images.length > 4) {
+                            <div class="timeline-more-overlay">+{{ post.images.length - 4 }}</div>
+                          }
+                        </div>
+                      }
+                      
+                      @if (post.content) {
+                        <p class="timeline-caption">{{ post.content }}</p>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            }
           </div>
         }
 

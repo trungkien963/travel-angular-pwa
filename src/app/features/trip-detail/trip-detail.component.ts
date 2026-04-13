@@ -105,6 +105,27 @@ export class TripDetailComponent implements OnInit {
     this.travelStore.posts().filter(p => p.tripId === this.tripId())
   );
 
+  readonly tripPostsGroups = computed(() => {
+    const posts = this.tripPosts();
+    const groups: { dateLabel: string; posts: Post[] }[] = [];
+    const map = new Map<string, Post[]>();
+    
+    posts.forEach(p => {
+      // Use device local string without year for cleaner look
+      const dateStr = new Date(p.timestamp).toLocaleDateString('en-US', {
+        weekday: 'short', month: 'short', day: 'numeric'
+      });
+      if (!map.has(dateStr)) map.set(dateStr, []);
+      map.get(dateStr)!.push(p);
+    });
+
+    map.forEach((pts, dateLabel) => {
+      groups.push({ dateLabel, posts: pts });
+    });
+
+    return groups;
+  });
+
   readonly totalTripCost = computed(() =>
     this.tripExpenses().reduce((sum, e) => sum + e.amount, 0)
   );
