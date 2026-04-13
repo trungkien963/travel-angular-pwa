@@ -1,4 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { TravelStore } from '../../core/store/travel.store';
+import { SupabaseService } from '../../core/services/supabase.service';
 
 @Component({
   selector: 'app-profile',
@@ -6,4 +9,56 @@ import { Component } from '@angular/core';
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss'
 })
-export class ProfileComponent {}
+export class ProfileComponent implements OnInit {
+  private router = inject(Router);
+  private supabaseService = inject(SupabaseService);
+  private travelStore = inject(TravelStore);
+
+  // ─── User info signals ────────────────────────────────────────────────────
+  readonly displayName = signal('Nomad Explorer');
+  readonly email = signal('');
+  readonly avatarUrl = signal<string | null>(null);
+
+  // ─── Real stats from store ────────────────────────────────────────────────
+  readonly totalTrips = computed(() => this.travelStore.trips().length);
+  readonly totalPosts = computed(() => this.travelStore.posts().length);
+  readonly totalMembers = computed(() => {
+    const uid = this.travelStore.currentUserId();
+    const seen = new Set<string>();
+    this.travelStore.trips().forEach(t => {
+      t.members?.forEach(m => { if (m.id !== uid) seen.add(m.id); });
+    });
+    return seen.size;
+  });
+
+  // ─── Lifecycle ────────────────────────────────────────────────────────────
+  async ngOnInit() {
+    const { data } = await this.supabaseService.client.auth.getUser();
+    const user = data?.user;
+    if (user) {
+      const meta = user.user_metadata;
+      this.displayName.set(meta?.['full_name'] || meta?.['name'] || user.email?.split('@')[0] || 'Nomad Explorer');
+      this.email.set(user.email || '');
+      this.avatarUrl.set(meta?.['avatar_url'] || meta?.['picture'] || null);
+    }
+
+    if (this.travelStore.trips().length === 0) {
+      await this.travelStore.initSupabase();
+    }
+  }
+
+  // ─── Actions ──────────────────────────────────────────────────────────────
+  async signOut() {
+    try {
+      // Clear push token (best-effort)
+      const uid = this.travelStore.currentUserId();
+      if (uid) {
+        await this.supabaseService.client
+          .from('users').update({ expo_push_token: null }).eq('id', uid);
+      }
+    } catch { /* ignore */ }
+
+    await this.supabaseService.client.auth.signOut();
+    this.router.navigateByUrl('/auth', { replaceUrl: true });
+  }
+}

@@ -1,1 +1,118 @@
-<p>notifications works!</p>
+<div class="notif-page">
+
+  <!-- Header -->
+  <header class="notif-header">
+    <button class="btn-back" (click)="goBack()" id="btn-back-notif">
+      <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m15 18-6-6 6-6"/>
+      </svg>
+    </button>
+    <h1 class="notif-header__title">Notifications</h1>
+    <div class="notif-header__spacer"></div>
+  </header>
+
+  <!-- List -->
+  @if (notifications().length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#D6D3D1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+          <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+        </svg>
+      </div>
+      <h2 class="empty-title">No Notifications Yet</h2>
+      <p class="empty-sub">When your friends interact with you, it will show up here.</p>
+    </div>
+  } @else {
+    <div class="notif-list">
+      @for (item of notifications(); track item.id) {
+        <div
+          class="notif-card"
+          [class.unread]="!item.isRead"
+          (click)="handlePress(item)"
+          [id]="'notif-' + item.id"
+        >
+          <!-- Unread dot -->
+          @if (!item.isRead) {
+            <div class="unread-dot"></div>
+          }
+
+          <!-- Actor avatar -->
+          @if (item.actorAvatar) {
+            <img [src]="item.actorAvatar" [alt]="item.actorName" class="notif-avatar" />
+          } @else {
+            <div class="notif-avatar notif-avatar--initial">
+              {{ (item.actorName || '?').charAt(0).toUpperCase() }}
+            </div>
+          }
+
+          <!-- Content -->
+          <div class="notif-content">
+            <p class="notif-message">
+              <strong>{{ item.actorName }}</strong>
+              {{ item.message }}
+            </p>
+            <p class="notif-time">{{ formatTime(item.createdAt) }}</p>
+
+            <!-- TRIP_INVITE actions -->
+            @if (item.type === 'TRIP_INVITE' && !item.isRead) {
+              <div class="action-row">
+                <button class="btn-accept" (click)="$event.stopPropagation(); handleAccept(item)" [id]="'btn-accept-' + item.id">
+                  Accept
+                </button>
+                <button class="btn-decline" (click)="$event.stopPropagation(); handleDecline(item)" [id]="'btn-decline-' + item.id">
+                  Decline
+                </button>
+              </div>
+            }
+
+            <!-- EXPENSE_ADDED action -->
+            @if (item.type === 'EXPENSE_ADDED' && !item.isRead) {
+              <div class="action-row">
+                <button class="btn-settle" (click)="$event.stopPropagation(); handleSettle(item)" [id]="'btn-settle-' + item.id">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                  </svg>
+                  Settle Up
+                </button>
+              </div>
+            }
+          </div>
+
+          <!-- Type icon -->
+          <div class="notif-type-icon" [style.background]="getIconBg(item.type)">
+            @switch (item.type) {
+              @case ('TRIP_INVITE') {
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21 4 19 2c-2-2-4-2-5.5-.5L10 5 1.8 6.2a1 1 0 0 0-.6 1.7l4.6 4.6-1.1 4.9a1 1 0 0 0 1.4 1.1l4.3-2.3 4.6 4.6a1 1 0 0 0 1.7-.6z"/>
+                </svg>
+              }
+              @case ('EXPENSE_ADDED') {
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+              }
+              @case ('POST_COMMENT') {
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+              }
+              @case ('POST_LIKE') {
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+              }
+              @default {
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+                  <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+                </svg>
+              }
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+</div>

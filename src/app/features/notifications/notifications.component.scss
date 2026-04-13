@@ -1,1 +1,224 @@
-// Notifications styles - to be implemented
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+$text-dark: #1C1917;
+$text-muted: #78716C;
+$text-inactive: #A8A29E;
+$bg: #FFFFFF;
+$border: #F5F5F5;
+$primary: #FFC800;
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+.notif-page {
+  background: $bg;
+  min-height: 100%;
+  font-family: 'Inter', -apple-system, sans-serif;
+  padding-top: 56px;
+}
+
+// ─── Header ──────────────────────────────────────────────────────────────────
+.notif-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 16px 16px;
+  border-bottom: 1px solid $border;
+  background: $bg;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.notif-header__title {
+  font-size: 18px;
+  font-weight: 800;
+  color: $text-dark;
+  margin: 0;
+}
+
+.notif-header__spacer { width: 40px; }
+
+.btn-back {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background 0.15s ease;
+
+  &:hover { background: #F5F5F5; }
+}
+
+// ─── Empty State ──────────────────────────────────────────────────────────────
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100px 40px 40px;
+  gap: 12px;
+  text-align: center;
+}
+
+.empty-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #F5F5F5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.empty-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: $text-dark;
+  margin: 0;
+}
+
+.empty-sub {
+  font-size: 14px;
+  color: $text-muted;
+  line-height: 1.5;
+  margin: 0;
+}
+
+// ─── Notification List ────────────────────────────────────────────────────────
+.notif-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.notif-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid $border;
+  cursor: pointer;
+  position: relative;
+  background: $bg;
+  transition: background 0.15s ease;
+  animation: slideDown 0.2s ease;
+
+  &.unread {
+    background: #FFFAEB;
+  }
+
+  &:hover { background: #FAFAFA; }
+  &.unread:hover { background: #FFF5D6; }
+}
+
+.unread-dot {
+  position: absolute;
+  top: 22px;
+  left: 8px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #EF4444;
+  flex-shrink: 0;
+}
+
+// ─── Avatar ───────────────────────────────────────────────────────────────────
+.notif-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #F5F5F5;
+  flex-shrink: 0;
+
+  &--initial {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $primary;
+    color: $text-dark;
+    font-size: 18px;
+    font-weight: 900;
+  }
+}
+
+// ─── Content ─────────────────────────────────────────────────────────────────
+.notif-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-message {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #44403C;
+  margin: 0 0 5px;
+
+  strong {
+    font-weight: 700;
+    color: $text-dark;
+  }
+}
+
+.notif-time {
+  font-size: 12px;
+  font-weight: 600;
+  color: $text-inactive;
+  margin: 0;
+}
+
+// ─── Action Buttons ───────────────────────────────────────────────────────────
+.action-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.btn-accept, .btn-decline, .btn-settle {
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: none;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: transform 0.1s ease, opacity 0.15s ease;
+
+  &:hover { transform: scale(1.03); }
+}
+
+.btn-accept {
+  background: $primary;
+  color: $text-dark;
+}
+
+.btn-decline {
+  background: #F5F5F5;
+  color: $text-dark;
+}
+
+.btn-settle {
+  background: #10B981;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+// ─── Type Icon ────────────────────────────────────────────────────────────────
+.notif-type-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
