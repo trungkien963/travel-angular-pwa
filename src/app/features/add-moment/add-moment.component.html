@@ -1,0 +1,234 @@
+<div class="add-moment">
+
+  <!-- Top Controls -->
+  <div class="top-bar">
+    <!-- Close -->
+    <button class="icon-circle" (click)="handleClose()" id="btn-close-moment">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+      </svg>
+    </button>
+
+    <!-- Right controls (when no image captured) -->
+    @if (!previewUrl()) {
+      <div class="top-right-controls">
+        <!-- Gallery picker -->
+        <label class="icon-circle" for="file-input" id="btn-pick-image">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+          </svg>
+        </label>
+        <input id="file-input" type="file" accept="image/*" multiple class="file-input-hidden" (change)="onFilePicked($event)" />
+      </div>
+    }
+
+    <!-- Retake button (when image captured) -->
+    @if (previewUrl()) {
+      <button class="retake-btn" (click)="retake()" id="btn-retake">RETAKE</button>
+    }
+  </div>
+
+  <!-- Camera / Preview Area -->
+  <div class="camera-area">
+    @if (previewUrl()) {
+      <!-- Preview the captured/selected image -->
+      <img [src]="previewUrl()!" class="preview-img" alt="Preview" />
+
+      <!-- Dual mode pip (second image) -->
+      @if (isDual() && previewUrl2()) {
+        <div class="pip-container">
+          <img [src]="previewUrl2()!" class="pip-img" alt="Second view" />
+        </div>
+      }
+    } @else {
+      <!-- Native camera capture area -->
+      <div class="camera-placeholder">
+        <label for="camera-input" class="camera-capture-label" id="btn-take-photo">
+          <div class="shutter-ring">
+            <div class="shutter-inner"></div>
+          </div>
+          <p class="camera-hint">Tap to take a photo</p>
+        </label>
+        <input id="camera-input" type="file" accept="image/*" capture="environment" class="file-input-hidden" (change)="onCameraCapture($event)" />
+      </div>
+    }
+  </div>
+
+  <!-- Form Section -->
+  <div class="form-section">
+
+    <!-- Section header with expense toggle -->
+    <div class="form-header">
+      <h2 class="form-title">Add Details</h2>
+      <button
+        class="expense-toggle"
+        [class.active]="isExpenseMode()"
+        (click)="toggleExpenseMode()"
+        id="btn-expense-toggle"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1z"/><path d="M16 8H8"/><path d="M16 12H8"/><path d="M16 16H8"/>
+        </svg>
+        {{ isExpenseMode() ? 'EXPENSE ON' : '+ BILL' }}
+      </button>
+    </div>
+
+    <!-- Trip Selector -->
+    <p class="field-label">SAVE TO TRIP</p>
+    <button class="trip-selector" (click)="showTripPicker = !showTripPicker" id="btn-trip-selector">
+      <div class="trip-selector-left">
+        <div class="trip-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFC800" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+          </svg>
+        </div>
+        <div>
+          <p class="trip-sel-title">{{ selectedTrip()?.title || 'Select a Trip' }}</p>
+          <p class="trip-sel-sub">{{ selectedTrip()?.startDate ? formatDate(selectedTrip()!.startDate) : 'Requires selection' }}</p>
+        </div>
+      </div>
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A8A29E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m6 9 6 6 6-6"/>
+      </svg>
+    </button>
+
+    <!-- Trip Dropdown -->
+    @if (showTripPicker) {
+      <div class="trip-dropdown">
+        @for (trip of trips(); track trip.id) {
+          <button class="trip-dropdown-item" [class.selected]="selectedTripId() === trip.id" (click)="selectTrip(trip.id)" [id]="'trip-option-' + trip.id">
+            <span>{{ trip.title }}</span>
+            <span class="trip-date">{{ formatDate(trip.startDate) }}</span>
+          </button>
+        }
+        @if (trips().length === 0) {
+          <p class="trip-dropdown-empty">No trips available</p>
+        }
+      </div>
+    }
+
+    <!-- Caption Input -->
+    <div class="input-card">
+      <p class="field-label">WHAT WAS THIS?</p>
+      <textarea
+        class="caption-input"
+        placeholder="E.g., Dinner at the bay..."
+        [(ngModel)]="caption"
+        rows="2"
+        id="input-caption"
+      ></textarea>
+    </div>
+
+    <!-- Location Search -->
+    <div class="input-card">
+      <p class="field-label">LOCATION (TAG)</p>
+      @if (selectedLocation) {
+        <div class="location-selected">
+          <div>
+            <p class="location-name">📍 {{ selectedLocation.name }}</p>
+            <p class="location-city">{{ selectedLocation.city }}</p>
+          </div>
+          <button class="btn-clear-location" (click)="clearLocation()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+            </svg>
+          </button>
+        </div>
+      } @else {
+        <div class="location-search-row">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8A29E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+          </svg>
+          <input
+            type="text"
+            class="location-input"
+            placeholder="Search on OpenStreetMap..."
+            [(ngModel)]="locationQuery"
+            (input)="onLocationSearch()"
+            id="input-location"
+          />
+        </div>
+        @if (isSearching()) {
+          <p class="searching-text">Searching...</p>
+        }
+        @if (locationResults().length > 0) {
+          <div class="location-results">
+            @for (result of locationResults(); track result.placeId) {
+              <button class="location-result-item" (click)="selectLocation(result)">
+                <p class="loc-result-name">{{ result.name }}</p>
+                <p class="loc-result-addr">{{ result.address }}</p>
+              </button>
+            }
+          </div>
+        }
+      }
+    </div>
+
+    <!-- Expense Fields (when expense mode is ON) -->
+    @if (isExpenseMode()) {
+      <div class="input-card">
+        <p class="field-label">TOTAL PRICE</p>
+        <div class="amount-row">
+          <span class="currency-symbol">₫</span>
+          <input
+            type="number"
+            class="amount-input"
+            placeholder="0"
+            [(ngModel)]="expenseAmount"
+            id="input-amount"
+          />
+        </div>
+
+        <p class="field-label" style="margin-top: 20px;">PAID BY</p>
+        <div class="paidby-row">
+          @for (member of currentTripMembers(); track member.id) {
+            <button
+              class="member-pill"
+              [class.active]="paidById() === member.id"
+              (click)="paidById.set(member.id)"
+              [id]="'paidby-' + member.id"
+            >{{ member.name }}</button>
+          }
+        </div>
+
+        <p class="field-label" style="margin-top: 20px;">SPLIT EQUALLY</p>
+        <div class="split-list">
+          @for (member of currentTripMembers(); track member.id) {
+            <div class="split-row" [class.excluded]="!includedMembers()[member.id]">
+              <button class="split-check" (click)="toggleMember(member.id)">
+                @if (includedMembers()[member.id]) {
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFC800" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                  </svg>
+                } @else {
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4D4D4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                  </svg>
+                }
+              </button>
+              <span class="split-name" [class.strikethrough]="!includedMembers()[member.id]">{{ member.name }}</span>
+              <span class="split-amount">₫{{ formatNumber(calcShare(member.id)) }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Bottom spacer for FAB -->
+    <div style="height: 100px;"></div>
+  </div>
+
+  <!-- Sticky FAB Submit -->
+  <button class="fab-submit" (click)="submit()" [disabled]="isSubmitting()" id="btn-submit-moment">
+    @if (isSubmitting()) {
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="spinning">
+        <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+      </svg>
+    } @else {
+      <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+    }
+  </button>
+
+</div>

@@ -20,6 +20,13 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/auth-callback.component').then(m => m.AuthCallbackComponent)
   },
 
+  // Full-screen protected routes (NO shell / bottom nav)
+  {
+    path: 'add-moment',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/add-moment/add-moment.component').then(m => m.AddMomentComponent)
+  },
+
   // Protected routes - wrapped in Shell layout (bottom nav)
   {
     path: '',
@@ -52,3 +59,4 @@ export const routes: Routes = [
   // Fallback
   { path: '**', redirectTo: 'discover' }
 ];
+
