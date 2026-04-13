@@ -1,4 +1,4 @@
-import { Injectable, signal, computed, inject } from '@angular/core';
+import { Injectable, signal, computed, inject, effect } from '@angular/core';
 import { Trip } from '../models/trip.model';
 import { Expense } from '../models/expense.model';
 import { Post } from '../models/social.model';
@@ -38,6 +38,19 @@ export class TravelStore {
   readonly myTrips = computed(() =>
     this.trips().filter(t => t.members?.some(m => m.id === this.currentUserId()))
   );
+
+  constructor() {
+    effect(() => {
+      const count = this.unreadCount();
+      if ('setAppBadge' in navigator) {
+        if (count > 0) {
+          (navigator as any).setAppBadge(count).catch(console.error);
+        } else {
+          (navigator as any).clearAppBadge().catch(console.error);
+        }
+      }
+    });
+  }
 
   // ─── Actions: App Loading ─────────────────────────────────────────────────
   setGlobalLoading(loading: boolean) {
@@ -158,6 +171,11 @@ export class TravelStore {
           name: meta?.['full_name'] || meta?.['name'] || 'Traveler',
           avatar: meta?.['avatar_url'] || meta?.['picture'] || undefined
         });
+
+        // L2: Request Web Push Permission on app launch if needed
+        if ('Notification' in window && Notification.permission === 'default') {
+          Notification.requestPermission().catch(console.warn);
+        }
 
         // Upsert to public.users to satisfy foreign key constraint
         try {
@@ -301,6 +319,18 @@ export class TravelStore {
           tripId: n.trip_id, postId: n.post_id, expenseId: n.expense_id,
           createdAt: n.created_at, isRead: n.is_read
         }, ...list]);
+
+        // L2: Trigger Web Push notification if allowed
+        if ('Notification' in window && Notification.permission === 'granted') {
+          try {
+            new Notification('WanderPool ✨', {
+              body: n.message,
+              icon: n.actor_avatar || '/assets/icons/icon-192x192.png'
+            });
+          } catch (e) {
+            console.warn('Web Push failed:', e);
+          }
+        }
       })
       .subscribe();
 
