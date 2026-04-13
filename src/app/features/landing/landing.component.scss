@@ -173,48 +173,74 @@ $text-dark: #1C1917;
 }
 
 // ─── Auth Glass Card ──────────────────────────────────────────────────────────
-.auth-card {
+.auth-wrapper {
   position: absolute;
   inset: 0;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 32px;
+  padding: 24px;
   z-index: 20;
   opacity: 0;
-  transform: translateY(16px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  transform: translateY(24px) scale(0.95);
+  transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), 
+              transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 
   &.visible {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 24px 32px;
+  
+  // Bright White Glassmorphism (like reference)
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.25) 0%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  backdrop-filter: blur(32px) saturate(140%);
+  -webkit-backdrop-filter: blur(32px) saturate(140%);
+  
+  // Stronger white border for reflection
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-top-color: rgba(255, 255, 255, 0.6);
+  border-left-color: rgba(255, 255, 255, 0.6);
+  
+  border-radius: 32px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15), 
+              inset 0 1px 1px rgba(255, 255, 255, 0.4);
 }
 
 .auth-card > * {
   width: 100%;
-  max-width: 420px;
 }
 
 .auth-title {
   font-size: clamp(24px, 6vw, 30px);
   font-weight: 900;
-  color: #fff;
+  color: #FFFFFF;
   text-align: center;
   letter-spacing: -1px;
   margin: 0 0 10px;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
 .auth-sub {
   font-size: 15px;
-  color: #E5E5E5;
+  color: rgba(255, 255, 255, 0.95);
   text-align: center;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1.5;
   margin: 0 0 36px;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
 }
 
 .btn-get-started {
@@ -245,10 +271,11 @@ $text-dark: #1C1917;
 
 .terms-text {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.7);
   text-align: center;
   line-height: 1.5;
   margin: 0;
   max-width: 280px;
   align-self: center;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }

@@ -51,17 +51,19 @@
 
   <!-- Auth Glass Card (visible on last slide only) -->
   @if (currentIndex() === slides.length - 1) {
-    <div class="auth-card" [class.visible]="currentIndex() === slides.length - 1">
-      <h1 class="auth-title">Your Journey Awaits ✈️</h1>
-      <p class="auth-sub">The world is vast and beautiful. Choose how you want to dive in.</p>
+    <div class="auth-wrapper" [class.visible]="currentIndex() === slides.length - 1">
+      <div class="auth-card">
+        <h1 class="auth-title">Your Journey Awaits ✈️</h1>
+        <p class="auth-sub">The world is vast and beautiful. Choose how you want to dive in.</p>
 
-      <button class="btn-get-started" (click)="goToAuth()" id="btn-get-started">
-        Get Started
-      </button>
+        <button class="btn-get-started" (click)="goToAuth()" id="btn-get-started">
+          Get Started
+        </button>
 
-      <p class="terms-text">
-        By continuing, you agree to our Terms of Service &amp; Privacy Policy.
-      </p>
+        <p class="terms-text">
+          By continuing, you agree to our Terms of Service &amp; Privacy Policy.
+        </p>
+      </div>
     </div>
   }
 

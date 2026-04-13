@@ -70,6 +70,6 @@ export class ProfileComponent implements OnInit {
     } catch { /* ignore */ }
 
     await this.supabaseService.client.auth.signOut();
-    this.router.navigateByUrl('/auth', { replaceUrl: true });
+    this.router.navigateByUrl('/', { replaceUrl: true });
   }
 }
