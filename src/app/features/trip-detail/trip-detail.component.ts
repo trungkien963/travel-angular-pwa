@@ -76,6 +76,30 @@ export class TripDetailComponent implements OnInit {
     this.activeMenuId.update(id => id === postId ? null : postId);
   }
 
+  // ─── Image Carousel State ──────────────────────────────────────────────
+  activeImageIndex = signal<Record<string, number>>({});
+
+  onImageScroll(postId: string, event: Event) {
+    const target = event.target as HTMLElement;
+    // We calculate index based on scrollLeft divided by the width of the container. 
+    // Since images are 100% width minus padding, and gap is 8px, scrollWidth/children is roughly one image width.
+    const scrollLeft = target.scrollLeft;
+    const clientWidth = target.clientWidth;
+    // Estimate image width (taking padding into account roughly)
+    const index = Math.round(scrollLeft / (clientWidth - 32));
+    
+    // Only update if changed to avoid unnecessary change detection cycles
+    const current = this.activeImageIndex()[postId] || 0;
+    if (current !== index) {
+      this.activeImageIndex.update(m => ({ ...m, [postId]: index }));
+    }
+  }
+
+  getActiveImageIndex(postId: string): number {
+    return this.activeImageIndex()[postId] || 0;
+  }
+
+
   // ─── Add Member modal state ───────────────────────────────────────────
   readonly addMemberOpen = signal(false);
   newMemberName = '';

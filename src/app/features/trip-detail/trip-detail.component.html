@@ -147,11 +147,24 @@
                   </div>
                 </div>
 
-                <!-- IG Images -->
+                <!-- IG Images Carousel -->
                 @if (post.images.length > 0) {
-                  <div class="ig-images" [class.dual]="post.isDual">
-                    @for (img of post.images.slice(0, post.isDual ? 2 : 1); track img) {
-                      <img [src]="img" [alt]="post.content" class="ig-img" loading="lazy" #imgRefPost (error)="imgRefPost.style.display='none'" />
+                  <div class="ig-carousel-container">
+                    <div class="ig-images" [class.dual]="post.isDual" (scroll)="onImageScroll(post.id, $event)">
+                      @for (img of post.images; track img) {
+                        <img [src]="img" [alt]="post.content" class="ig-img" loading="lazy" #imgRefPost (error)="imgRefPost.style.display='none'" />
+                      }
+                    </div>
+                    
+                    @if (post.images.length > 1 && !post.isDual) {
+                      <div class="ig-carousel-badge">
+                        {{ getActiveImageIndex(post.id) + 1 }}/{{ post.images.length }}
+                      </div>
+                      <div class="ig-carousel-dots">
+                        @for (img of post.images; track img; let i = $index) {
+                          <div class="ig-dot" [class.active]="getActiveImageIndex(post.id) === i"></div>
+                        }
+                      </div>
                     }
                   </div>
                 }
