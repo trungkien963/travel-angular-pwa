@@ -96,6 +96,15 @@ $border: #E5E5E5;
   animation: spin 0.8s linear infinite;
 }
 
+.spinner-sm {
+  width: 16px;
+  height: 16px;
+  border: 2px solid $primary;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
 // ─── Empty State ──────────────────────────────────────────────────────────────
 .empty-state {
   display: flex;
@@ -416,6 +425,120 @@ $border: #E5E5E5;
   &::placeholder { color: #D4D4D4; }
 }
 
+// ─── Location Field ───────────────────────────────────────────────────────────
+.location-wrap {
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.location-field {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: $bg-surface;
+  border-radius: 16px;
+  padding: 14px 16px;
+  border: 1.5px solid $border-light;
+  transition: border-color 0.2s ease, border-radius 0.2s ease;
+
+  &:focus-within { border-color: $primary; }
+  
+  &.has-suggestions {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom-color: transparent;
+  }
+}
+
+.location-input {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 600;
+  color: $text-dark;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+
+  &::placeholder { color: $text-inactive; }
+}
+
+.suggestions-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: $bg;
+  border: 1.5px solid $primary;
+  border-top: none;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  z-index: 50;
+  max-height: 200px;
+  overflow-y: auto;
+  box-shadow: 0 12px 24px rgba(0,0,0,0.08);
+
+  li {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    border-top: 1px solid $border-light;
+
+    &:hover { background: $bg-surface; }
+  }
+
+  li.loc-loading {
+    justify-content: center;
+    color: $text-muted;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: default;
+    background: transparent;
+    
+    &:hover { background: transparent; }
+  }
+}
+
+.loc-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(168, 162, 158, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.loc-text {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.loc-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: $text-dark;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.loc-sub {
+  font-size: 12px;
+  color: $text-muted;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 // ─── Date Pickers ─────────────────────────────────────────────────────────────
 .date-row {
   display: flex;
@@ -425,9 +548,11 @@ $border: #E5E5E5;
 
 .date-field {
   flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
   background: #F9F9F9;
   border-radius: 16px;
-  padding: 14px 16px;
+  padding: 14px 12px;
   border: 1px solid $border-light;
   display: flex;
   flex-direction: column;
@@ -455,6 +580,9 @@ $border: #E5E5E5;
   text-align: center;
   cursor: pointer;
   width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0;
 }
 
 // ─── Primary Button ───────────────────────────────────────────────────────────

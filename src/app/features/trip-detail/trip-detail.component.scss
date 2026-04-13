@@ -799,30 +799,186 @@ $border: #F0F0F0;
   &:focus { border-color: $primary; }
 }
 
-// ─── Expense Detail ───────────────────────────────────────────────────────────
-.detail-icon { font-size: 48px; text-align: center; margin: 8px 0 16px; }
-.detail-desc { font-size: 22px; font-weight: 900; color: $text-dark; text-align: center; margin: 0 0 8px; }
-.detail-amount { font-size: 36px; font-weight: 900; color: $primary; text-align: center; margin: 0 0 20px; }
-.detail-meta {
-  display: flex; flex-direction: column; gap: 6px;
-  padding: 16px; background: #FAFAFA; border-radius: 16px; margin-bottom: 24px;
-
-  span { font-size: 14px; font-weight: 600; color: $text-muted; }
+// ─── Expense Detail Modal (Receipt Card) ──────────────────────────────────────
+.review-expense-modal {
+  padding: 32px 16px;
+  background: transparent;
+  box-shadow: none;
 }
 
-.detail-actions {
-  display: flex; gap: 12px;
+.receipt-card {
+  background: #FFFFFF;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 16px 32px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.05);
+  margin-bottom: 24px;
 }
 
-.btn-detail-edit, .btn-detail-delete {
-  flex: 1; padding: 14px;
-  border-radius: 14px; border: none;
-  font-size: 14px; font-weight: 700;
+.receipt-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.receipt-icon-wrapper {
+  width: 56px;
+  height: 56px;
+  border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 16px;
+}
+
+.receipt-emoji { font-size: 28px; }
+
+.receipt-title {
+  font-size: 20px; font-weight: 800; color: $text-dark;
+  margin: 0 0 8px; line-height: 1.2; text-align: center;
+}
+
+.receipt-amount-display {
+  font-size: 40px; font-weight: 900; color: $text-dark;
+  letter-spacing: -1.5px; margin-bottom: 8px; text-align: center;
+}
+
+.receipt-date {
+  font-size: 13px; font-weight: 600; color: $text-muted;
+  margin: 0 0 24px; text-align: center;
+}
+
+.receipt-divider {
+  border-top: 2px dashed rgba(0,0,0,0.06);
+  margin: 0 -24px 24px;
+}
+
+.receipt-pay-info {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.receipt-label { font-size: 13px; font-weight: 600; color: $text-muted; }
+.receipt-value { font-size: 14px; font-weight: 800; color: $text-dark; }
+
+.receipt-split-section {
+  background: #F9FAFB;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.receipt-split-title {
+  font-size: 10px; font-weight: 800; color: $text-inactive;
+  letter-spacing: 1px; margin: 0 0 12px; text-transform: uppercase;
+}
+
+.receipt-split-list {
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+.receipt-split-item {
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.split-person { font-size: 14px; font-weight: 700; color: $text-dark; }
+.split-share { font-size: 14px; font-weight: 800; color: $primary; }
+
+.receipt-footer-actions {
+  display: flex; align-items: center; justify-content: center; gap: 32px;
+  padding-top: 8px;
+}
+
+.receipt-action-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  background: none; border: none; cursor: pointer; padding: 0;
+  
+  .icon-circle {
+    width: 48px; height: 48px; border-radius: 24px;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.15s ease;
+  }
+  
+  span { font-size: 12px; font-weight: 700; color: $text-muted; transition: color 0.15s ease; }
+
+  &.edit .icon-circle { background: #F3F4F6; color: $text-dark; }
+  &.delete .icon-circle { background: #FEF2F2; color: #DC2626; }
+  
+  &:hover .icon-circle { transform: scale(1.05); }
+  &:hover.edit span { color: $text-dark; }
+  &:hover.delete span { color: #DC2626; }
+}
+
+.btn-receipt-close {
+  width: 100%; padding: 18px;
+  background: #FFFFFF;
+  border: none; border-radius: 100px;
+  font-size: 16px; font-weight: 800; color: $text-dark;
   cursor: pointer; font-family: inherit;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  transition: transform 0.15s ease;
+  margin-top: 16px;
+  
+  &:hover { transform: scale(1.02); }
 }
 
-.btn-detail-edit { background: $border; color: $text-dark; }
-.btn-detail-delete { background: #FEF2F2; color: #DC2626; }
+// ─── Split Input (form) ───────────────────────────────────────────────────────
+.split-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 250px;
+  overflow-y: auto;
+  border: 1px solid $border;
+  border-radius: 20px;
+  padding: 8px;
+  background: #FAFAFA;
+}
+
+.split-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1.5px solid #FFC800;
+  background: $bg;
+  transition: border-color 0.15s ease, background 0.1s ease;
+  &.excluded { border-color: transparent; background: transparent; }
+}
+
+.split-left {
+  display: flex; align-items: center; flex: 1; gap: 12px; cursor: pointer;
+}
+
+.split-right {
+  display: flex; justify-content: flex-end; align-items: center; min-width: 80px; cursor: text;
+}
+
+.split-check {
+  background: none; border: none; pointer-events: none; padding: 0; display: flex; align-items: center; flex-shrink: 0;
+}
+
+.split-name {
+  font-size: 14px; font-weight: 800; color: $text-dark;
+  &.strikethrough { text-decoration: line-through; color: $text-inactive; }
+}
+
+.amount-val {
+  font-size: 14px; font-weight: 900; color: #FBBF24;
+  display: flex; align-items: center; gap: 4px;
+  &.is-locked { color: #D97706; }
+}
+
+.lock-icon { opacity: 0.9; }
+
+.currency-symbol-small { font-size: 12px; color: #A8A29E; margin-right: 4px; }
+
+.inline-edit {
+  width: 70px; border: none; border-bottom: 2px solid #FFC800; background: transparent;
+  font-size: 14px; font-weight: 900; color: $text-dark; text-align: right;
+  outline: none; font-family: inherit; padding: 2px 0;
+  &::placeholder { color: #D4D4D4; }
+}
 
 // ─── Comments Modal ───────────────────────────────────────────────────────────
 .comments-modal {
@@ -1135,5 +1291,125 @@ $border: #F0F0F0;
   margin: 0;
 }
 
+// ─── Expense Form Styles (from Add Moment) ──────────────────────────────────
+.input-card {
+  background: white;
+  border-radius: 24px;
+  padding: 0;
+}
 
+.field-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: #A8A29E;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin: 0 0 12px;
+}
 
+.caption-input {
+  width: 100%;
+  border: 1px solid #E5E5E5;
+  border-radius: 16px;
+  padding: 16px;
+  font-size: 15px;
+  color: #1C1917;
+  background: #FAFAFA;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  &:focus {
+    background: white;
+    border-color: #FFC800;
+  }
+}
+
+.amount-row {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #E5E5E5;
+  padding-bottom: 12px;
+}
+
+.currency-symbol {
+  font-size: 24px;
+  font-weight: 900;
+  color: #F59E0B;
+  margin-right: 8px;
+}
+
+.amount-input {
+  flex: 1;
+  font-size: 30px;
+  font-weight: 900;
+  color: #1C1917;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  background: transparent;
+  min-width: 0;
+  
+  &::placeholder { color: #D0D0D0; }
+}
+
+.paidby-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.member-pill {
+  padding: 9px 18px;
+  border-radius: 100px;
+  border: none;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+  background: #F5F5F5;
+  color: #8C8C8C;
+  outline: none;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &.active {
+    background: #1C1917;
+    color: #FFFFFF !important;
+  }
+}
+
+.category-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  border-bottom: 1px solid #E5E5E5;
+  padding-bottom: 20px;
+  margin-bottom: 12px;
+  &::-webkit-scrollbar { display: none; }
+}
+
+.category-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 100px;
+  border: 1.5px solid #F5F5F5;
+  background: white;
+  font-size: 14px;
+  font-weight: 700;
+  color: #A8A29E;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  span { font-size: 16px; }
+
+  &.active {
+    border-color: #FFC800;
+    color: #1C1917;
+    background: #FFFBEB;
+    transform: scale(1.05);
+  }
+}

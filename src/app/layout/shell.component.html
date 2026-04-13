@@ -1,15 +1,15 @@
-<div class="shell">
+<div class="shell" [style.--active-index]="activeIndex()">
   <!-- Main Content Area -->
   <main class="shell-content">
     <router-outlet />
   </main>
 
-  <!-- Bottom Tab Navigation -->
-  <nav class="tab-bar">
+  <!-- Bottom Floating Glass Navigation -->
+  <nav class="tab-bar glass-dock">
     <!-- Discover / Home -->
-    <a routerLink="/discover" routerLinkActive="active" class="tab-item" id="tab-discover">
-      <div class="tab-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <a routerLink="/discover" class="tab-item" [class.active]="activeIndex() === 0" id="tab-discover">
+      <div class="icon-wrapper">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
           <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
           <polyline points="9 22 9 12 15 12 15 22"/>
         </svg>
@@ -17,29 +17,29 @@
     </a>
 
     <!-- Trips / Map -->
-    <a routerLink="/trips" routerLinkActive="active" class="tab-item" id="tab-trips">
-      <div class="tab-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <a routerLink="/trips" class="tab-item" [class.active]="activeIndex() === 1" id="tab-trips">
+      <div class="icon-wrapper">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/>
           <line x1="9" x2="9" y1="3" y2="18"/><line x1="15" x2="15" y1="6" y2="21"/>
         </svg>
       </div>
     </a>
 
-    <!-- Center Add Button -->
-    <a routerLink="/add-moment" class="tab-item tab-center" id="tab-add">
-      <div class="tab-center-btn">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
-          <circle cx="12" cy="13" r="3"/>
+    <!-- Center Add Button (Fixed FAB) -->
+    <a routerLink="/add-moment" class="tab-item tab-center" [class.active]="activeIndex() === 2" id="tab-add">
+      <div class="icon-wrapper glass-center-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+          <circle cx="12" cy="13" r="4"></circle>
         </svg>
       </div>
     </a>
 
     <!-- Profile -->
-    <a routerLink="/profile" routerLinkActive="active" class="tab-item" id="tab-profile">
-      <div class="tab-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <a routerLink="/profile" class="tab-item" [class.active]="activeIndex() === 3" id="tab-profile">
+      <div class="icon-wrapper">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="8" r="5"/>
           <path d="M20 21a8 8 0 1 0-16 0"/>
         </svg>
@@ -47,9 +47,9 @@
     </a>
 
     <!-- Notifications -->
-    <a routerLink="/notifications" routerLinkActive="active" class="tab-item" id="tab-notifications">
-      <div class="tab-icon tab-notif-wrapper">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <a routerLink="/notifications" class="tab-item" [class.active]="activeIndex() === 4" id="tab-notifications">
+      <div class="icon-wrapper tab-notif-wrapper">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
           <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
           <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
         </svg>

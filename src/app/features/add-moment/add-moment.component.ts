@@ -3,6 +3,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TravelStore } from '../../core/store/travel.store';
 import { SupabaseService } from '../../core/services/supabase.service';
+import { ToastService } from '../../core/services/toast.service';
 import { Trip } from '../../core/models/trip.model';
 import { Expense } from '../../core/models/expense.model';
 import { Post } from '../../core/models/social.model';
@@ -30,6 +31,7 @@ export interface PhotoCapture {
 })
 export class AddMomentComponent implements OnInit, OnDestroy {
   private router = inject(Router);
+  private toastService = inject(ToastService);
   private route = inject(ActivatedRoute);
   private travelStore = inject(TravelStore);
   private supabase = inject(SupabaseService);
@@ -143,6 +145,7 @@ export class AddMomentComponent implements OnInit, OnDestroy {
     const ongoing = trips.find(t => t.startDate <= todayStr && t.endDate >= todayStr);
     if (ongoing) {
       this.selectedTripId.set(ongoing.id);
+      this.setupIncludedMembers(ongoing.id);
     } else if (trips.length > 0) {
       const today = new Date();
       let closest = trips[0];
@@ -152,7 +155,16 @@ export class AddMomentComponent implements OnInit, OnDestroy {
         if (diff < minDiff) { minDiff = diff; closest = t; }
       });
       this.selectedTripId.set(closest.id);
+      this.setupIncludedMembers(closest.id);
     }
+  }
+
+  private setupIncludedMembers(tripId: string) {
+    const trip = this.trips().find(t => t.id === tripId);
+    if (!trip) return;
+    const included: Record<string, boolean> = {};
+    trip.members.forEach(m => included[m.id] = true);
+    this.includedMembers.set(included);
   }
 
   // ─── Native WebRTC Camera ─────────────────────────────────────────────────
@@ -288,10 +300,7 @@ export class AddMomentComponent implements OnInit, OnDestroy {
   selectTrip(id: string) {
     this.selectedTripId.set(id);
     this.showTripPicker = false;
-    const members = this.trips().find(t => t.id === id)?.members ?? [];
-    const included: Record<string, boolean> = {};
-    members.forEach(m => included[m.id] = true);
-    this.includedMembers.set(included);
+    this.setupIncludedMembers(id);
     if (!this.paidById()) this.paidById.set(this.travelStore.currentUserId());
   }
 
@@ -403,10 +412,10 @@ export class AddMomentComponent implements OnInit, OnDestroy {
   // ─── Submit ──────────────────────────────────────────────────────────
   async submit() {
     const tripId = this.selectedTripId();
-    if (!tripId) { alert('Please select a trip first.'); return; }
+    if (!tripId) { this.toastService.show('Please select a trip first.', 'error'); return; }
     
     if (this.photos().length === 0 && !this.caption) {
-      alert('Chưa có nội dung hoặc hình ảnh.'); return;
+      this.toastService.show('Chưa có nội dung hoặc hình ảnh.', 'error'); return;
     }
 
     this.isSubmitting.set(true);
@@ -448,7 +457,7 @@ export class AddMomentComponent implements OnInit, OnDestroy {
 
         const payload = {
           trip_id: tripId, description: this.caption || 'Untitled Expense', amount: this.expenseAmount,
-          category: this.selectedCategory(), payer_id: this.paidById(), date: new Date().toISOString().split('T')[0],
+          category: this.selectedCategory(), payer_id: this.paidById(),
           splits, receipt_urls: uploadedUrls
         };
         const { data } = await db.from('expenses').insert(payload).select().single();
@@ -480,7 +489,7 @@ export class AddMomentComponent implements OnInit, OnDestroy {
         this.router.navigate(['/trip', tripId], { queryParams: { tab: 'SOCIAL' } });
       }
     } catch (err: any) {
-      alert(err.message || 'Lỗi khi upload.');
+      this.toastService.show(err.message || 'Lỗi khi upload.', 'error');
       this.isSubmitting.set(false);
     }
   }

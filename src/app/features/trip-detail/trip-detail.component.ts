@@ -6,7 +6,9 @@ import { Trip } from '../../core/models/trip.model';
 import { Expense, Member } from '../../core/models/expense.model';
 import { Post, Comment } from '../../core/models/social.model';
 import { SupabaseService } from '../../core/services/supabase.service';
+import { ToastService } from '../../core/services/toast.service';
 import { MomentsComponent } from '../moments/moments.component';
+import * as XLSX from 'xlsx';
 
 export interface Debt {
   fromId: string; fromName: string;
@@ -15,13 +17,12 @@ export interface Debt {
 }
 
 const CATEGORY_META: Record<string, { emoji: string; label: string; color: string; bg: string }> = {
-  FOOD:       { emoji: '🍜', label: 'Food',        color: '#F59E0B', bg: '#FEF3C7' },
-  TRANSPORT:  { emoji: '🚗', label: 'Transport',   color: '#3B82F6', bg: '#DBEAFE' },
+  FOOD:       { emoji: '🍔', label: 'Food',        color: '#F59E0B', bg: '#FEF3C7' },
+  TRANSPORT:  { emoji: '🚕', label: 'Transport',   color: '#3B82F6', bg: '#DBEAFE' },
   HOTEL:      { emoji: '🏨', label: 'Hotel',       color: '#8B5CF6', bg: '#EDE9FE' },
-  ACTIVITY:   { emoji: '🏄', label: 'Activity',    color: '#10B981', bg: '#D1FAE5' },
+  ACTIVITIES: { emoji: '🎯', label: 'Activities',  color: '#10B981', bg: '#D1FAE5' },
   SHOPPING:   { emoji: '🛍️', label: 'Shopping',   color: '#EC4899', bg: '#FCE7F3' },
-  DRINKS:     { emoji: '🍹', label: 'Drinks',      color: '#06B6D4', bg: '#CFFAFE' },
-  OTHER:      { emoji: '💸', label: 'Other',       color: '#6B7280', bg: '#F3F4F6' },
+  OTHER:      { emoji: '💳', label: 'Other',       color: '#6B7280', bg: '#F3F4F6' },
 };
 
 @Component({
@@ -36,6 +37,7 @@ export class TripDetailComponent implements OnInit {
   private router = inject(Router);
   private travelStore = inject(TravelStore);
   private supabaseService = inject(SupabaseService);
+  private toastService = inject(ToastService);
 
   readonly defaultCover = 'https://images.unsplash.com/photo-1473496169904-6a58eb22bf2f?q=80&w=1000';
 
@@ -84,6 +86,72 @@ export class TripDetailComponent implements OnInit {
   expForm: { desc: string; amount: number; category: string; payerId: string; date: string } = {
     desc: '', amount: 0, category: 'OTHER', payerId: '', date: new Date().toISOString().split('T')[0]
   };
+  
+  // Split logic state
+  readonly includedMembers = signal<Record<string, boolean>>({});
+  readonly lockedShares = signal<Record<string, number | null>>({});
+  readonly editingMemberId = signal<string | null>(null);
+
+  get formattedTotalAmount(): string {
+    return this.expForm.amount ? this.formatNumber(this.expForm.amount) : '';
+  }
+
+  setTotalAmount(val: string) {
+    const parsed = parseInt(val.replace(/[^0-9]/g, ''), 10);
+    this.expForm.amount = isNaN(parsed) ? 0 : parsed;
+  }
+
+  toggleMember(id: string) {
+    this.includedMembers.update(m => ({ ...m, [id]: !m[id] }));
+    if (!this.includedMembers()[id]) {
+       this.lockedShares.update(m => ({ ...m, [id]: null })); 
+    }
+  }
+
+  startEdit(memberId: string) {
+    this.editingMemberId.set(memberId);
+  }
+
+  setLockedAmount(memberId: string, value: string) {
+    this.editingMemberId.set(null);
+    const val = value.trim();
+    if (!val) {
+      this.lockedShares.update(m => ({ ...m, [memberId]: null }));
+      return;
+    }
+    let num = 0;
+    if (val.endsWith('%')) {
+      num = (this.expForm.amount || 0) * (parseFloat(val) / 100);
+    } else {
+      num = parseFloat(val.replace(/[^0-9.]/g, ''));
+    }
+    if (isNaN(num)) {
+      this.lockedShares.update(m => ({ ...m, [memberId]: null }));
+    } else {
+      this.lockedShares.update(m => ({ ...m, [memberId]: Math.round(num) }));
+    }
+  }
+
+  calcShare(memberId: string): number {
+    if (!this.includedMembers()[memberId]) return 0;
+    const lockedAmount = this.lockedShares()[memberId];
+    if (lockedAmount !== undefined && lockedAmount !== null) return lockedAmount;
+
+    const total = this.expForm.amount || 0;
+    let totalLocked = 0;
+    let floatCount = 0;
+
+    Object.keys(this.includedMembers()).forEach(id => {
+      if (this.includedMembers()[id]) {
+        const l = this.lockedShares()[id];
+        if (l !== undefined && l !== null) totalLocked += l;
+        else floatCount++;
+      }
+    });
+
+    let remainder = total - totalLocked;
+    return floatCount > 0 ? Math.round(Math.max(0, remainder) / floatCount) : 0;
+  }
 
   readonly categories = Object.entries(CATEGORY_META).map(([id, v]) => ({
     id, emoji: v.emoji, label: v.label
@@ -368,7 +436,7 @@ export class TripDetailComponent implements OnInit {
         await db.from('posts').update({ comments: updatedComments }).eq('id', this.commentPost!.id);
       }
     } catch (err: any) {
-      alert(err.message || 'Failed to send comment.');
+      this.toastService.show(err.message || 'Failed to send comment.', 'error');
     } finally {
       this.isSendingComment.set(false);
       this.travelStore.setGlobalLoading(false);
@@ -403,7 +471,7 @@ export class TripDetailComponent implements OnInit {
       // 5. Update local store
       this.travelStore.removePost(postId);
     } catch (err: any) {
-      alert(err.message || 'Failed to delete post.');
+      this.toastService.show(err.message || 'Failed to delete post.', 'error');
     } finally {
       this.travelStore.setGlobalLoading(false);
     }
@@ -434,7 +502,7 @@ export class TripDetailComponent implements OnInit {
       this.editPostOpen.set(false);
       this.editPostObj = null;
     } catch (err: any) {
-      alert(err.message || 'Failed to edit post.');
+      this.toastService.show(err.message || 'Failed to edit post.', 'error');
     } finally {
       this.isSavingPost.set(false);
       this.travelStore.setGlobalLoading(false);
@@ -457,9 +525,9 @@ export class TripDetailComponent implements OnInit {
       // Fallback for browsers that don't support the Web Share API (copy to clipboard)
       try {
         await navigator.clipboard.writeText(window.location.href);
-        alert('Link copied to clipboard!');
+        this.toastService.show('Link copied to clipboard!', 'success');
       } catch (err) {
-        alert('Failed to copy link. Please manually copy the URL.');
+        this.toastService.show('Failed to copy link. Please manually copy the URL.', 'error');
       }
     }
   }
@@ -467,7 +535,12 @@ export class TripDetailComponent implements OnInit {
   // ─── Expenses ──────────────────────────────────────────────────────────────
   openExpenseModal() {
     this.editingExpense = null;
-    this.expForm = { desc: '', amount: 0, category: 'OTHER', payerId: this.currentUserId(), date: new Date().toISOString().split('T')[0] };
+    this.expForm = { desc: '', amount: 0, category: 'FOOD', payerId: this.currentUserId(), date: new Date().toISOString().split('T')[0] };
+    const inc: Record<string, boolean> = {};
+    const trip = this.trip();
+    if (trip) trip.members.forEach(m => inc[m.id] = true);
+    this.includedMembers.set(inc);
+    this.lockedShares.set({});
     this.expenseModalOpen.set(true);
   }
 
@@ -475,7 +548,28 @@ export class TripDetailComponent implements OnInit {
 
   editExpense(exp: Expense) {
     this.editingExpense = exp;
-    this.expForm = { desc: exp.desc, amount: exp.amount, category: exp.category || 'OTHER', payerId: exp.payerId, date: exp.date };
+    this.expForm = { desc: exp.desc, amount: exp.amount, category: exp.category || 'FOOD', payerId: exp.payerId, date: exp.date };
+    const inc: Record<string, boolean> = {};
+    const lock: Record<string, number | null> = {};
+    const trip = this.trip();
+    if (trip) {
+      if (exp.splits && Object.keys(exp.splits).length > 0) {
+        trip.members.forEach(m => {
+          const share = exp.splits![m.id];
+          if (share !== undefined && share > 0) {
+            inc[m.id] = true;
+            // Best effort state reconstruction: keep previous exact values as locked if edited
+            lock[m.id] = share;
+          } else {
+            inc[m.id] = false;
+          }
+        });
+      } else {
+        trip.members.forEach(m => inc[m.id] = true);
+      }
+    }
+    this.includedMembers.set(inc);
+    this.lockedShares.set(lock);
     this.selectedExpense = null;
     this.expenseModalOpen.set(true);
   }
@@ -486,33 +580,54 @@ export class TripDetailComponent implements OnInit {
     this.travelStore.setGlobalLoading(true);
 
     const db = this.supabaseService.client;
-    const members = this.trip()?.members || [];
-    const share = Math.round(this.expForm.amount / members.length);
     const splits: Record<string, number> = {};
-    members.forEach(m => splits[m.id] = share);
+    let totalAssigned = 0;
+    let lastMemberId: string | null = null;
+    const trip = this.trip();
+    
+    if (trip) {
+      trip.members.forEach(m => {
+        if (this.includedMembers()[m.id]) {
+          const share = this.calcShare(m.id);
+          splits[m.id] = share;
+          totalAssigned += share;
+          lastMemberId = m.id;
+        }
+      });
+    }
 
-    const payload = {
+    if (lastMemberId && totalAssigned !== this.expForm.amount) {
+       splits[lastMemberId] += (this.expForm.amount - totalAssigned);
+    }
+
+    const payload: any = {
       trip_id: this.tripId(),
-      desc: this.expForm.desc,
+      description: this.expForm.desc,
       amount: this.expForm.amount,
       category: this.expForm.category,
       payer_id: this.expForm.payerId,
-      date: this.expForm.date,
       splits
     };
+    
+    if (this.expForm.date) {
+      // Append time so it's a valid timestamp
+      payload.created_at = new Date(this.expForm.date).toISOString();
+    }
 
     try {
       if (this.editingExpense) {
-        const { data } = await db.from('expenses').update(payload).eq('id', this.editingExpense.id).select().single();
+        const { data, error } = await db.from('expenses').update(payload).eq('id', this.editingExpense.id).select().single();
+        if (error) throw error;
         if (data) this.travelStore.upsertExpense({
-          id: data['id'], tripId: data['trip_id'], desc: data['desc'],
+          id: data['id'], tripId: data['trip_id'], desc: data['description'],
           amount: data['amount'], category: data['category'],
           payerId: data['payer_id'], date: data['date'], splits: data['splits']
         } as Expense);
       } else {
-        const { data } = await db.from('expenses').insert(payload).select().single();
+        const { data, error } = await db.from('expenses').insert(payload).select().single();
+        if (error) throw error;
         if (data) this.travelStore.upsertExpense({
-          id: data['id'], tripId: data['trip_id'], desc: data['desc'],
+          id: data['id'], tripId: data['trip_id'], desc: data['description'],
           amount: data['amount'], category: data['category'],
           payerId: data['payer_id'], date: data['date'], splits: data['splits']
         } as Expense);
@@ -520,7 +635,8 @@ export class TripDetailComponent implements OnInit {
       this.expenseModalOpen.set(false);
       this.editingExpense = null;
     } catch (err: any) {
-      alert(err.message || 'Failed to save expense');
+      console.error('Save Expense Error:', err);
+      this.toastService.show(err.message || 'Failed to save expense', 'error');
     } finally {
       this.isSavingExpense.set(false);
       this.travelStore.setGlobalLoading(false);
@@ -584,7 +700,7 @@ export class TripDetailComponent implements OnInit {
       }
 
       // 3. Build member object (use found userId or generate temp ID)
-      const finalId = userId || ('guest_' + Date.now());
+      const finalId = userId || window.crypto.randomUUID();
       const alreadyMember = trip.members.some(m => m.id === finalId || m.email === email);
 
       if (alreadyMember) {
@@ -667,7 +783,7 @@ export class TripDetailComponent implements OnInit {
       this.editMemberOpen.set(false);
       this.editingMember = null;
     } catch (err: any) {
-      alert(err.message || 'Failed to update member.');
+      this.toastService.show(err.message || 'Failed to update member.', 'error');
     } finally {
       this.isSavingMember.set(false);
       this.travelStore.setGlobalLoading(false);
@@ -697,29 +813,111 @@ export class TripDetailComponent implements OnInit {
       await this.travelStore.deleteTrip(this.tripId());
       this.router.navigate(['/trips']);
     } catch (err: any) {
-      alert(err.message || 'Failed to delete trip. Please try again.');
+      this.toastService.show(err.message || 'Failed to delete trip. Please try again.', 'error');
     }
   }
 
   publishTrip() {
-    alert('Your amazing adventure is now live on the Discover feed! 🌍');
+    this.toastService.show('Your amazing adventure is now live on the Discover feed! 🌍', 'success');
   }
 
   // ─── Export ────────────────────────────────────────────────────────────────
-  exportCSV() {
-    let csv = 'Date,Description,Category,Payer,Amount(VND)\n';
+  exportExcel() {
+    const trip = this.trip();
+    if (!trip) return;
+    const members = trip.members;
+
+    const wb = XLSX.utils.book_new();
+
+    // --- SHEET 1: SUMMARY ---
+    const summaryData = [
+      ['THÔNG TIN DỰ ÁN (TRIP SUMMARY)'],
+      ['Tên chuyến đi', trip.title],
+      ['Thời gian', `${this.formatDate(trip.startDate)} - ${this.formatDate(trip.endDate)}`],
+      ['Tổng số thành viên', members.length],
+      ['Tổng chi phí chuyến đi', this.totalTripCost()],
+      ['Tổng số hóa đơn', this.tripExpenses().length]
+    ];
+    const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
+
+    // Helper for safely getting share
+    const getShare = (mId: string, e: Expense) => {
+      if (e.splits && Object.keys(e.splits).length > 0) {
+        return e.splits[mId] || 0;
+      }
+      return this.getFallbackSplit(e);
+    };
+
+    // --- SHEET 2: CHI_TIẾT CÁ NHÂN ---
+    const chiTietData: any[] = [];
+    chiTietData.push(['Tên người tham gia', 'Tên khoản chi', 'Ngày', 'Người thanh toán (Paid By)', 'Số tiền chịu (Share)']);
+    members.forEach(m => {
+      this.tripExpenses().forEach(e => {
+         const share = getShare(m.id, e);
+         if (share > 0) {
+           chiTietData.push([m.name, e.desc, this.formatDate(e.date), this.getPayerName(e.payerId), share]);
+         }
+      });
+    });
+    const wsChiTiet = XLSX.utils.aoa_to_sheet(chiTietData);
+    XLSX.utils.book_append_sheet(wb, wsChiTiet, 'Chi Tiết Cá Nhân');
+
+    // --- SHEET 3: DANH SÁCH HÓA ĐƠN ---
+    const hoaDonData: any[] = [];
+    hoaDonData.push(['Tên khoản chi', 'Ngày', 'Danh mục', 'Người thanh toán (Paid By)', 'Tổng tiền', 'Kiểu chia', 'Chi tiết chia định mức']);
     this.tripExpenses().forEach(e => {
-      csv += `"${e.date}","${e.desc}","${e.category || 'OTHER'}","${this.getPayerName(e.payerId)}",${e.amount}\n`;
+      const participantsDetail: string[] = [];
+      let isEven = true;
+      
+      members.forEach(m => {
+        const share = getShare(m.id, e);
+        if (share > 0) {
+           participantsDetail.push(`${m.name} (${this.formatNumber(share)}đ)`);
+        }
+      });
+      
+      if (e.splits && Object.keys(e.splits).length > 0) {
+         const amtValues = Object.values(e.splits).filter(v => typeof v === 'number' && v > 0);
+         if (amtValues.length > 0) {
+           const max = Math.max(...amtValues);
+           const min = Math.min(...amtValues);
+           if (max - min > 50) isEven = false;
+         }
+      }
+      
+      const splitType = isEven ? 'Chia đều' : 'Chia tùy chỉnh';
+      hoaDonData.push([e.desc, this.formatDate(e.date), this.getCategoryLabel(e.category||'OTHER'), this.getPayerName(e.payerId), e.amount, splitType, participantsDetail.join('; ')]);
     });
-    csv += '\nDebts\nFrom,To,Amount(VND)\n';
-    this.debts().forEach(d => {
-      csv += `"${d.fromName}","${d.toName}",${d.amount}\n`;
+    const wsHoaDon = XLSX.utils.aoa_to_sheet(hoaDonData);
+    XLSX.utils.book_append_sheet(wb, wsHoaDon, 'Danh Sách Hóa Đơn');
+
+    // --- SHEET 4: TỔNG KẾT TÀI CHÍNH ---
+    const overallData: any[] = [];
+    overallData.push(['Tên người tham gia', 'Tổng đã chi (Paid)', 'Tổng thực tiêu (Share)', 'Thừa / Thiếu (Balance)', 'Chi tiết Thanh toán']);
+    const debtsList = this.debts();
+    members.forEach(m => {
+       const totalPaid = this.tripExpenses().filter(e => e.payerId === m.id).reduce((sum, e) => sum + e.amount, 0);
+       const totalShare = this.tripExpenses().reduce((sum, e) => {
+          return sum + getShare(m.id, e);
+       }, 0);
+       const balance = totalPaid - totalShare;
+       
+       const memberDebts = debtsList.filter(d => d.fromId === m.id);
+       const memberCredits = debtsList.filter(d => d.toId === m.id);
+       
+       const debtStrings: string[] = [];
+       memberDebts.forEach(d => debtStrings.push(`Thiếu trả cho ${d.toName}: ${this.formatNumber(d.amount)}đ`));
+       memberCredits.forEach(c => debtStrings.push(`Nhận lại từ ${c.fromName}: ${this.formatNumber(c.amount)}đ`));
+       if (debtStrings.length === 0 && balance === 0) debtStrings.push('Vừa vặn (Không nợ)');
+       
+       overallData.push([m.name, totalPaid, totalShare, balance, debtStrings.join(' | ')]);
     });
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `${this.trip()?.title || 'TripReport'}.csv`; a.click();
-    URL.revokeObjectURL(url);
+    const wsOverall = XLSX.utils.aoa_to_sheet(overallData);
+    XLSX.utils.book_append_sheet(wb, wsOverall, 'Tổng Kết Tài Chính');
+
+    // Tải file về thiết bị
+    XLSX.writeFile(wb, `${trip.title}_Financial_Report.xlsx`);
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -730,6 +928,11 @@ export class TripDetailComponent implements OnInit {
   getCategoryEmoji(cat: string): string { return CATEGORY_META[cat]?.emoji || '💸'; }
   getCategoryLabel(cat: string): string { return CATEGORY_META[cat]?.label || 'Other'; }
   getCategoryBg(cat: string): string    { return CATEGORY_META[cat]?.bg    || '#F3F4F6'; }
+
+  getFallbackSplit(exp: Expense): number {
+    const membersCount = this.trip()?.members.length || 1;
+    return Math.round(exp.amount / membersCount);
+  }
 
   formatDate(dateStr: string): string {
     if (!dateStr) return '';

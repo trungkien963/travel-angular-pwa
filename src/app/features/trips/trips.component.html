@@ -136,21 +136,64 @@
             <input
               type="text"
               [(ngModel)]="tripTitle"
-              placeholder="Where to next?"
+              placeholder="Trip Name *"
               class="title-input"
               id="input-trip-title"
             />
           </div>
 
+          <!-- Trip Location -->
+          <div class="location-wrap">
+            <div class="location-field" [class.has-suggestions]="locationSuggestions().length > 0 || isLocationLoading()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#78716C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              <input
+                type="text"
+                [(ngModel)]="tripLocation"
+                (ngModelChange)="onLocationChange($event)"
+                placeholder="Where to next?"
+                class="location-input"
+                id="input-trip-location"
+                autocomplete="off"
+              />
+            </div>
+            
+            @if (isLocationLoading() || locationSuggestions().length > 0) {
+              <ul class="suggestions-list">
+                @if (isLocationLoading()) {
+                  <li class="loc-loading">
+                    <div class="spinner-sm"></div>
+                    <span>Searching locations...</span>
+                  </li>
+                } @else {
+                  @for (loc of locationSuggestions(); track loc.place_id) {
+                  <li (click)="selectLocation(loc)">
+                    <div class="loc-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8A29E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+                      </svg>
+                    </div>
+                    <div class="loc-text">
+                      <span class="loc-name">{{ loc.display_name.split(',')[0] }}</span>
+                      <span class="loc-sub">{{ loc.display_name.split(',').slice(1).join(', ') }}</span>
+                    </div>
+                  </li>
+                }
+                }
+              </ul>
+            }
+          </div>
+
           <!-- Dates -->
           <div class="date-row">
-            <label class="date-field" for="input-start-date">
+            <label class="date-field" for="input-start-date" (click)="openDatePicker($event, startDateInput)">
               <span class="date-label">FROM</span>
-              <input type="date" [(ngModel)]="startDate" class="date-input" id="input-start-date" />
+              <input #startDateInput type="date" [(ngModel)]="startDate" class="date-input" id="input-start-date" (click)="openDatePicker($event, startDateInput)" />
             </label>
-            <label class="date-field" for="input-end-date">
+            <label class="date-field" for="input-end-date" (click)="openDatePicker($event, endDateInput)">
               <span class="date-label">TO</span>
-              <input type="date" [(ngModel)]="endDate" class="date-input" id="input-end-date" />
+              <input #endDateInput type="date" [(ngModel)]="endDate" class="date-input" id="input-end-date" (click)="openDatePicker($event, endDateInput)" />
             </label>
           </div>
 

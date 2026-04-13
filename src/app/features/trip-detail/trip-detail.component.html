@@ -289,7 +289,7 @@
 
           <div class="section-header">
             <h2 class="section-title">Balances &amp; Debts</h2>
-            <button class="btn-export" (click)="exportCSV()" id="btn-export">
+            <button class="btn-export" (click)="exportExcel()" id="btn-export">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
               </svg>
@@ -395,40 +395,89 @@
           </button>
         </div>
 
-        <!-- Category picker -->
-        <div class="cat-grid">
-          @for (cat of categories; track cat.id) {
-            <button class="cat-btn" [class.active]="expForm.category === cat.id" (click)="expForm.category = cat.id" [id]="'cat-' + cat.id">
-              <span>{{ cat.emoji }}</span>
-              <span class="cat-label">{{ cat.label }}</span>
-            </button>
+        <div class="input-card" style="margin-top:20px;">
+          <!-- Category picker -->
+          <p class="field-label">CATEGORY</p>
+          <div class="category-scroll">
+            @for (cat of categories; track cat.id) {
+              <button class="category-pill" [class.active]="expForm.category === cat.id" (click)="expForm.category = cat.id" [id]="'cat-' + cat.id">
+                <span>{{ cat.emoji }}</span> {{ cat.label }}
+              </button>
+            }
+          </div>
+
+          <!-- Description -->
+          <p class="field-label" style="margin-top: 24px;">WHAT WAS THIS FOR? <span class="req">*</span></p>
+          <input type="text" [(ngModel)]="expForm.desc" placeholder="e.g. Lunch at beachside..." class="caption-input" id="exp-desc" />
+          
+          <!-- Amount -->
+          <p class="field-label" style="margin-top: 24px;">TOTAL PRICE <span class="req">*</span></p>
+          <div class="amount-row">
+            <span class="currency-symbol">₫</span>
+            <input type="text" inputmode="numeric" [ngModel]="formattedTotalAmount" (ngModelChange)="setTotalAmount($event)" placeholder="0" class="amount-input" id="exp-amount" />
+          </div>
+
+          <!-- Paid By -->
+          <p class="field-label" style="margin-top: 24px;">PAID BY</p>
+          <div class="paidby-row">
+            @for (member of trip()?.members ?? []; track member.id) {
+              <button class="member-pill" [class.active]="expForm.payerId === member.id" (click)="expForm.payerId = member.id">{{ member.name }}</button>
+            }
+          </div>
+
+          <!-- Date -->
+          <p class="field-label" style="margin-top: 24px;">DATE</p>
+          <div class="date-row">
+            <input type="date" [(ngModel)]="expForm.date" class="caption-input" id="exp-date" />
+          </div>
+
+          <!-- Split Logic UI (Hybrid Lock & Float) -->
+          <p class="field-label" style="margin-top: 24px; margin-bottom: 8px;">SPLIT DETAILS</p>
+          <div class="split-list">
+          @for (member of trip()!.members; track member.id) {
+            <div class="split-row" [class.excluded]="!includedMembers()[member.id]">
+              <div class="split-left" (click)="toggleMember(member.id)">
+                <button class="split-check">
+                  @if (includedMembers()[member.id]) {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFC800" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4D4D4" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+                  }
+                </button>
+                <span class="split-name" [class.strikethrough]="!includedMembers()[member.id]">{{ member.name }}</span>
+              </div>
+              <div class="split-right" (click)="$event.stopPropagation(); startEdit(member.id)">
+                @if (editingMemberId() === member.id) {
+                  <span class="currency-symbol-small">₫</span>
+                  <input 
+                    #amtInput
+                    type="text" 
+                    class="inline-edit"
+                    [value]="lockedShares()[member.id] != null ? formatNumber(lockedShares()[member.id]!) : ''"
+                    inputmode="text"
+                    placeholder="{{ formatNumber(calcShare(member.id)) }}"
+                    (blur)="setLockedAmount(member.id, amtInput.value)"
+                    (keydown.enter)="setLockedAmount(member.id, amtInput.value)"
+                    (click)="$event.stopPropagation()"
+                  />
+                } @else {
+                  <div class="amount-val" [class.is-locked]="lockedShares()[member.id] != null">
+                    @if (lockedShares()[member.id] != null) {
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="lock-icon"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    }
+                    ₫{{ formatNumber(calcShare(member.id)) }}
+                  </div>
+                }
+              </div>
+            </div>
           }
         </div>
-
-        <div class="form-field">
-          <label>Description</label>
-          <input type="text" [(ngModel)]="expForm.desc" placeholder="e.g. Lunch at beachside" class="form-input" id="exp-desc" />
-        </div>
-        <div class="form-field">
-          <label>Amount (VND)</label>
-          <input type="number" [(ngModel)]="expForm.amount" placeholder="0" class="form-input" id="exp-amount" />
-        </div>
-        <div class="form-field">
-          <label>Paid by</label>
-          <select [(ngModel)]="expForm.payerId" class="form-input" id="exp-payer">
-            @for (member of trip()?.members ?? []; track member.id) {
-              <option [value]="member.id">{{ member.name }}{{ member.id === currentUserId() ? ' (You)' : '' }}</option>
-            }
-          </select>
-        </div>
-        <div class="form-field">
-          <label>Date</label>
-          <input type="date" [(ngModel)]="expForm.date" class="form-input" id="exp-date" />
-        </div>
-
-        <button class="btn-primary" (click)="saveExpense()" [disabled]="isSavingExpense()">
+        </div> <!-- Close input-card -->
+        
+        <button class="btn-receipt-close" (click)="saveExpense()" [disabled]="isSavingExpense() || !expForm.desc || expForm.amount <= 0" style="margin-top: 16px; background: #FFF; width: 100%; border:none; padding:18px; border-radius:100px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); font-size:16px; font-weight:800;">
           {{ isSavingExpense() ? 'Saving...' : (editingExpense ? 'Update' : 'Log Expense') }}
         </button>
+
       </div>
     </div>
   }
@@ -436,27 +485,60 @@
   <!-- ═══ EXPENSE DETAIL MODAL ═══ -->
   @if (selectedExpense) {
     <div class="modal-overlay" (click)="selectedExpense = null">
-      <div class="modal" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <h3>Expense Detail</h3>
-          <button class="btn-close" (click)="selectedExpense = null">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-          </button>
-        </div>
-        <div class="detail-icon">{{ getCategoryEmoji(selectedExpense.category || 'OTHER') }}</div>
-        <h2 class="detail-desc">{{ selectedExpense.desc }}</h2>
-        <p class="detail-amount">₫{{ formatNumber(selectedExpense.amount) }}</p>
-        <div class="detail-meta">
-          <span>{{ selectedExpense.date }}</span>
-          <span>Paid by {{ getPayerName(selectedExpense.payerId) }}</span>
-          <span>{{ getCategoryLabel(selectedExpense.category || 'OTHER') }}</span>
-        </div>
-        @if (isOwner() || selectedExpense.payerId === currentUserId()) {
-          <div class="detail-actions">
-            <button class="btn-detail-edit" (click)="editExpense(selectedExpense)">Edit</button>
-            <button class="btn-detail-delete" (click)="deleteExpenseConfirm(selectedExpense.id)">Delete</button>
+      <div class="modal review-expense-modal" (click)="$event.stopPropagation()">
+        <!-- Receipt Style Card -->
+        <div class="receipt-card">
+          <div class="receipt-header">
+            <div class="receipt-icon-wrapper" [style.background]="getCategoryBg(selectedExpense.category || 'OTHER')">
+              <span class="receipt-emoji">{{ getCategoryEmoji(selectedExpense.category || 'OTHER') }}</span>
+            </div>
+            <h2 class="receipt-title">{{ selectedExpense.desc }}</h2>
+            <div class="receipt-amount-display">₫{{ formatNumber(selectedExpense.amount) }}</div>
+            <p class="receipt-date">{{ formatDate(selectedExpense.date) }} • {{ getCategoryLabel(selectedExpense.category || 'OTHER') }}</p>
           </div>
-        }
+          
+          <div class="receipt-divider"></div>
+          
+          <div class="receipt-pay-info">
+            <span class="receipt-label">Paid By</span>
+            <span class="receipt-value">{{ getPayerName(selectedExpense.payerId) }}</span>
+          </div>
+
+          <div class="receipt-split-section">
+            <h4 class="receipt-split-title">SPLIT BREAKDOWN</h4>
+            <div class="receipt-split-list">
+              @for (member of trip()!.members; track member.id) {
+                <!-- Calculate local share safely if splits is empty -->
+                @if ((selectedExpense.splits && selectedExpense.splits[member.id] > 0) || (!selectedExpense.splits && selectedExpense.amount > 0)) {
+                  <div class="receipt-split-item">
+                    <span class="split-person">{{ member.name }}</span>
+                    <span class="split-share">₫{{ formatNumber(selectedExpense.splits ? selectedExpense.splits[member.id] : getFallbackSplit(selectedExpense)) }}</span>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+
+          @if (isOwner() || selectedExpense.payerId === currentUserId()) {
+            <div class="receipt-divider"></div>
+            <div class="receipt-footer-actions">
+              <button class="receipt-action-btn edit" (click)="editExpense(selectedExpense)">
+                <div class="icon-circle">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                </div>
+                <span>Edit</span>
+              </button>
+              <button class="receipt-action-btn delete" (click)="deleteExpenseConfirm(selectedExpense.id)">
+                <div class="icon-circle">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="m19 6-.867 12.142A2 2 0 0 1 16.138 20H7.862a2 2 0 0 1-1.995-1.858L5 6m5 0V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/></svg>
+                </div>
+                <span>Delete</span>
+              </button>
+            </div>
+          }
+        </div>
+        
+        <button class="btn-receipt-close" (click)="selectedExpense = null">Close</button>
       </div>
     </div>
   }

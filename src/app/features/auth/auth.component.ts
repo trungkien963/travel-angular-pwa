@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
 import { SupabaseService } from '../../core/services/supabase.service';
+import { ToastService } from '../../core/services/toast.service';
 
 @Component({
   selector: 'app-auth',
@@ -14,6 +15,7 @@ export class AuthComponent {
   private fb = inject(FormBuilder);
   private supabaseService = inject(SupabaseService);
   private router = inject(Router);
+  private toastService = inject(ToastService);
 
   isLogin = signal(true);
   loading = signal(false);
@@ -40,13 +42,13 @@ export class AuthComponent {
         const { data, error } = await this.supabaseService.client.auth.signUp({ email, password });
         if (error) throw error;
         if (!data.session) {
-          alert('Please check your inbox for email verification!');
+          this.toastService.show('Please check your inbox for email verification!', 'info');
         } else {
           this.router.navigate(['/discover']);
         }
       }
     } catch (error: any) {
-      alert(error.message);
+      this.toastService.show(error.message, 'error');
     } finally {
       this.loading.set(false);
     }
@@ -61,7 +63,7 @@ export class AuthComponent {
       });
       if (error) throw error;
     } catch (error: any) {
-      alert(error.message);
+      this.toastService.show(error.message, 'error');
     } finally {
       this.loading.set(false);
     }

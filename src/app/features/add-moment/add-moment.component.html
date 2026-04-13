@@ -78,7 +78,7 @@
     </div>
 
     <!-- Trip Selector -->
-    <p class="field-label">SAVE TO TRIP</p>
+    <p class="field-label">SAVE TO TRIP <span class="req">*</span></p>
     <button class="trip-selector" (click)="showTripPicker = !showTripPicker" id="btn-trip-selector">
       <div class="trip-selector-left">
         <div class="trip-icon">
@@ -113,7 +113,7 @@
 
     <!-- Caption Input -->
     <div class="input-card">
-      <p class="field-label">WHAT WAS THIS FOR?</p>
+      <p class="field-label">WHAT WAS THIS FOR? @if (isExpenseMode()) { <span class="req">*</span> }</p>
       <textarea
         class="caption-input"
         placeholder="E.g., Dinner at the bay..."
@@ -179,9 +179,9 @@
               <span>{{ cat.icon }}</span> {{ cat.label }}
             </button>
           }
-        </div>
+        </div >
 
-        <p class="field-label" style="margin-top: 20px;">TOTAL PRICE</p>
+        <p class="field-label" style="margin-top: 20px;">TOTAL PRICE <span class="req">*</span></p>
         <div class="amount-row">
           <span class="currency-symbol">₫</span>
           <input 

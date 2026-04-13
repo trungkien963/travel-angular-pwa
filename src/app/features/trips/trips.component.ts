@@ -2,6 +2,7 @@ import { Component, inject, signal, computed, ElementRef, ViewChild, OnInit } fr
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TravelStore } from '../../core/store/travel.store';
+import { ToastService } from '../../core/services/toast.service';
 import { Trip } from '../../core/models/trip.model';
 
 @Component({
@@ -14,6 +15,7 @@ import { Trip } from '../../core/models/trip.model';
 export class TripsComponent implements OnInit {
   private router = inject(Router);
   private travelStore = inject(TravelStore);
+  private toastService = inject(ToastService);
 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
@@ -29,12 +31,16 @@ export class TripsComponent implements OnInit {
 
   // Form fields
   tripTitle = '';
+  tripLocation = '';
   startDate = new Date().toISOString().split('T')[0];
   endDate = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
   emailInput = '';
   readonly members = signal<string[]>([]);
   readonly coverImagePreview = signal<string | null>(null);
   private coverImageFile: File | null = null;
+  readonly locationSuggestions = signal<any[]>([]);
+  readonly isLocationLoading = signal(false);
+  private locationTimeout: any;
 
   // ─── Lifecycle ────────────────────────────────────────────────────────────
   async ngOnInit() {
@@ -66,19 +72,33 @@ export class TripsComponent implements OnInit {
 
   goToStep2() {
     if (!this.tripTitle.trim()) {
-      alert('Please enter a trip title!');
+      this.toastService.show('Please enter a trip title!', 'error');
       return;
     }
     if (this.startDate > this.endDate) {
-      alert('Start date must be before end date!');
+      this.toastService.show('Start date must be before end date!', 'error');
       return;
     }
     this.step.set(2);
   }
 
-  // ─── Image Handling ────────────────────────────────────────────────────────
+  // ─── Input Handling ────────────────────────────────────────────────────────
   triggerImageInput() {
     this.fileInput.nativeElement.click();
+  }
+
+  openDatePicker(event: Event, inputEl: HTMLInputElement) {
+    event.preventDefault();
+    event.stopPropagation();
+    try {
+      if (typeof inputEl.showPicker === 'function') {
+        inputEl.showPicker();
+      } else {
+        inputEl.click();
+      }
+    } catch (e) {
+      console.warn('Native date picker not supported or cannot be opened programmatically.', e);
+    }
   }
 
   onImageSelected(event: Event) {
@@ -91,6 +111,35 @@ export class TripsComponent implements OnInit {
       this.coverImagePreview.set(e.target?.result as string);
     };
     reader.readAsDataURL(file);
+  }
+
+  // ─── Location Search ────────────────────────────────────────────────────────
+  onLocationChange(query: string) {
+    clearTimeout(this.locationTimeout);
+    if (!query || query.trim().length < 2) {
+      this.locationSuggestions.set([]);
+      this.isLocationLoading.set(false);
+      return;
+    }
+    
+    this.isLocationLoading.set(true);
+    this.locationTimeout = setTimeout(async () => {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`);
+        const data = await res.json();
+        this.locationSuggestions.set(data);
+      } catch (err) {
+        console.error('Failed to fetch locations', err);
+        this.locationSuggestions.set([]);
+      } finally {
+        this.isLocationLoading.set(false);
+      }
+    }, 400); // 400ms debounce
+  }
+
+  selectLocation(loc: any) {
+    this.tripLocation = loc.display_name;
+    this.locationSuggestions.set([]);
   }
 
   // ─── Members ──────────────────────────────────────────────────────────────
@@ -172,6 +221,8 @@ export class TripsComponent implements OnInit {
       const { data, error } = await db.from('trips').insert({
         title: this.tripTitle || 'Untitled Trip',
         cover_image: finalCoverUrl,
+        location_name: this.tripLocation || null,
+        location_city: this.tripLocation || null,
         start_date: this.startDate,
         end_date: this.endDate,
         owner_id: authUser.id,
@@ -198,7 +249,7 @@ export class TripsComponent implements OnInit {
       this.closeModal();
       this.router.navigate(['/trip', newTrip.id]);
     } catch (err: any) {
-      alert(err.message || 'Failed to create trip. Please try again.');
+      this.toastService.show(err.message || 'Failed to create trip. Please try again.', 'error');
     } finally {
       this.isCreating.set(false);
       this.travelStore.setGlobalLoading(false);
@@ -218,12 +269,15 @@ export class TripsComponent implements OnInit {
 
   private resetForm() {
     this.tripTitle = '';
+    this.tripLocation = '';
     this.startDate = new Date().toISOString().split('T')[0];
     this.endDate = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
     this.emailInput = '';
     this.members.set([]);
     this.coverImagePreview.set(null);
     this.coverImageFile = null;
+    this.locationSuggestions.set([]);
+    this.isLocationLoading.set(false);
     this.emailError.set('');
     this.step.set(1);
   }
