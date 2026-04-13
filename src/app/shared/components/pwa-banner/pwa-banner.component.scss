@@ -1,0 +1,125 @@
+@keyframes slideDown {
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+
+.pwa-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  animation: slideDown 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  font-family: 'Inter', -apple-system, sans-serif;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+
+  &.install {
+    background: #1C1917;
+    color: white;
+  }
+
+  &.update {
+    background: #3B82F6;
+    color: white;
+  }
+}
+
+.banner-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.banner-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.update-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.banner-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: white;
+  margin: 0 0 2px;
+  white-space: nowrap;
+}
+
+.banner-sub {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-dismiss {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+
+  &:hover { background: rgba(255, 255, 255, 0.2); }
+}
+
+.btn-install {
+  background: #FFC800;
+  color: #1C1917;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+  transition: transform 0.1s ease;
+  white-space: nowrap;
+
+  &:hover { transform: scale(1.04); }
+}
+
+.btn-update {
+  background: white;
+  color: #3B82F6;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+  transition: transform 0.1s ease;
+  white-space: nowrap;
+
+  &:hover { transform: scale(1.04); }
+}

@@ -1,0 +1,31 @@
+@if (pwa.canInstall()) {
+  <div class="pwa-banner install" role="banner">
+    <div class="banner-left">
+      <img src="icons/icon-96x96.png" class="banner-icon" alt="WanderPool" />
+      <div>
+        <p class="banner-title">Add to Home Screen</p>
+        <p class="banner-sub">Install WanderPool for the best experience</p>
+      </div>
+    </div>
+    <div class="banner-actions">
+      <button class="btn-dismiss" (click)="dismiss()" aria-label="Dismiss">✕</button>
+      <button class="btn-install" (click)="install()" id="btn-pwa-install">Install</button>
+    </div>
+  </div>
+}
+
+@if (pwa.updateAvailable()) {
+  <div class="pwa-banner update" role="alert">
+    <div class="banner-left">
+      <span class="update-icon">🔄</span>
+      <div>
+        <p class="banner-title">Update Available</p>
+        <p class="banner-sub">A new version of WanderPool is ready</p>
+      </div>
+    </div>
+    <div class="banner-actions">
+      <button class="btn-dismiss" (click)="pwa.dismiss()" aria-label="Close">✕</button>
+      <button class="btn-update" (click)="update()" id="btn-pwa-update">Update Now</button>
+    </div>
+  </div>
+}
