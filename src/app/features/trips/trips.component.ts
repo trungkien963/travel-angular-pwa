@@ -4,11 +4,12 @@ import { Router } from '@angular/router';
 import { TravelStore } from '../../core/store/travel.store';
 import { ToastService } from '../../core/services/toast.service';
 import { Trip } from '../../core/models/trip.model';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-trips',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, TranslatePipe],
   templateUrl: './trips.component.html',
   styleUrl: './trips.component.scss'
 })

@@ -2,10 +2,13 @@ import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { TravelStore } from '../../core/store/travel.store';
 import { SupabaseService } from '../../core/services/supabase.service';
+import { TranslationService } from '../../core/i18n/translation.service';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
+  imports: [TranslatePipe],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss'
 })
@@ -13,6 +16,7 @@ export class ProfileComponent implements OnInit {
   private router = inject(Router);
   private supabaseService = inject(SupabaseService);
   private travelStore = inject(TravelStore);
+  translationService = inject(TranslationService);
 
   // ─── User info signals ────────────────────────────────────────────────────
   readonly displayName = signal('Nomad Explorer');

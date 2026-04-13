@@ -1,5 +1,6 @@
 import { Component, signal, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 interface Slide {
   id: string;
@@ -11,6 +12,7 @@ interface Slide {
 @Component({
   selector: 'app-landing',
   standalone: true,
+  imports: [TranslatePipe],
   templateUrl: './landing.component.html',
   styleUrl: './landing.component.scss'
 })

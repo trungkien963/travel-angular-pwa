@@ -1,6 +1,7 @@
 import { Component, inject, computed, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TravelStore } from '../../core/store/travel.store';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 interface FeedItem {
   id: string;
@@ -16,7 +17,7 @@ interface FeedItem {
 @Component({
   selector: 'app-discover',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, TranslatePipe],
   templateUrl: './discover.component.html',
   styleUrl: './discover.component.scss'
 })

@@ -2,7 +2,7 @@
 
   <!-- Header -->
   <header class="profile-header">
-    <h1 class="profile-header__title">Profile</h1>
+    <h1 class="profile-header__title">{{ 'profile.title' | translate }}</h1>
     <button class="btn-signout" (click)="signOut()" id="btn-signout" title="Sign Out">
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
@@ -26,31 +26,45 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
         </svg>
-        <span>EDIT</span>
+        <span>{{ 'profile.edit' | translate }}</span>
       </button>
     </div>
   </div>
 
   <!-- Milestones -->
-  <p class="section-label">MILESTONES</p>
+  <p class="section-label">{{ 'profile.milestones' | translate }}</p>
   <div class="stats-row">
     <div class="stat-box stat-box--green">
       <span class="stat-number">{{ formatStat(totalTrips()) }}</span>
-      <span class="stat-label">Trips</span>
+      <span class="stat-label">{{ 'profile.trips' | translate }}</span>
     </div>
     <div class="stat-box stat-box--yellow">
       <span class="stat-number">{{ formatStat(totalPosts()) }}</span>
-      <span class="stat-label">Moments</span>
+      <span class="stat-label">{{ 'profile.moments' | translate }}</span>
     </div>
     <div class="stat-box stat-box--gray">
       <span class="stat-number">{{ formatStat(totalMembers()) }}</span>
-      <span class="stat-label">Friends</span>
+      <span class="stat-label">{{ 'profile.friends' | translate }}</span>
     </div>
   </div>
 
   <!-- Settings -->
-  <p class="section-label">SETTINGS</p>
+  <p class="section-label">{{ 'profile.settings' | translate }}</p>
   <div class="settings-block">
+    <button class="setting-row" id="setting-language" (click)="translationService.toggleLang()">
+      <div class="setting-left">
+        <div class="setting-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+        </div>
+        <span class="setting-text">Language / Ngôn ngữ</span>
+      </div>
+      <span style="color: #888; font-size: 14px; font-weight: 500;">
+        {{ translationService.currentLang() === 'en' ? 'EN' : 'VI' }}
+      </span>
+    </button>
+
     <button class="setting-row" id="setting-preferences">
       <div class="setting-left">
         <div class="setting-icon">
@@ -58,7 +72,7 @@
             <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93 17.66 6.34A8 8 0 1 0 6.34 17.66l-1.41 1.41A10 10 0 1 1 19.07 4.93z"/>
           </svg>
         </div>
-        <span class="setting-text">Preferences</span>
+        <span class="setting-text">{{ 'profile.preferences' | translate }}</span>
       </div>
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D4D4D4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="m9 18 6-6-6-6"/>
@@ -72,7 +86,7 @@
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
           </svg>
         </div>
-        <span class="setting-text">Privacy &amp; Security</span>
+        <span class="setting-text">{{ 'profile.privacy' | translate }}</span>
       </div>
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D4D4D4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="m9 18 6-6-6-6"/>
@@ -86,7 +100,7 @@
             <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
           </svg>
         </div>
-        <span class="setting-text">Help Center</span>
+        <span class="setting-text">{{ 'profile.help' | translate }}</span>
       </div>
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D4D4D4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="m9 18 6-6-6-6"/>
@@ -95,6 +109,6 @@
   </div>
 
   <!-- App Version -->
-  <p class="app-version">WanderPool v1.0.0 · Made with ❤️</p>
+  <p class="app-version">{{ 'profile.madeWith' | translate }}</p>
 
 </div>
