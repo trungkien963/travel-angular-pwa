@@ -53,6 +53,12 @@ export class TripDetailComponent implements OnInit {
   commentText = '';
   readonly isSendingComment = signal(false);
 
+  // ─── Edit Post modal state ─────────────────────────────────────────────
+  readonly editPostOpen = signal(false);
+  editPostObj: Post | null = null;
+  editPostContent = '';
+  readonly isSavingPost = signal(false);
+
   // ─── Add Member modal state ───────────────────────────────────────────
   readonly addMemberOpen = signal(false);
   newMemberName = '';
@@ -60,6 +66,13 @@ export class TripDetailComponent implements OnInit {
   readonly isInviting = signal(false);
   readonly inviteStatus = signal('');
   readonly inviteSuccess = signal(false);
+
+  // ─── Edit Member modal state ──────────────────────────────────────────
+  readonly editMemberOpen = signal(false);
+  editingMember: Member | null = null;
+  editMemberName = '';
+  editMemberEmail = '';
+  readonly isSavingMember = signal(false);
 
   // Expense form state
   expForm: { desc: string; amount: number; category: string; payerId: string; date: string } = {
@@ -347,6 +360,61 @@ export class TripDetailComponent implements OnInit {
     }
   }
 
+  // ─── Edit Post ────────────────────────────────────────────────────────────
+  openEditPost(post: Post) {
+    this.editPostObj = post;
+    this.editPostContent = post.content || '';
+    this.editPostOpen.set(true);
+  }
+
+  async saveEditPost() {
+    if (!this.editPostObj) return;
+    const db = this.supabaseService.client;
+    this.isSavingPost.set(true);
+    this.travelStore.setGlobalLoading(true);
+
+    try {
+      const { error } = await db
+        .from('posts')
+        .update({ content: this.editPostContent })
+        .eq('id', this.editPostObj.id);
+
+      if (error) throw error;
+
+      this.travelStore.updatePost(this.editPostObj.id, { content: this.editPostContent });
+      this.editPostOpen.set(false);
+      this.editPostObj = null;
+    } catch (err: any) {
+      alert(err.message || 'Failed to edit post.');
+    } finally {
+      this.isSavingPost.set(false);
+      this.travelStore.setGlobalLoading(false);
+    }
+  }
+
+  // ─── Share Post ───────────────────────────────────────────────────────────
+  async sharePost(post: Post) {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `WanderPool Moment: ${post.authorName}`,
+          text: post.content || 'Check out this moment on WanderPool!',
+          url: window.location.href,
+        });
+      } catch (err) {
+        console.log('Share canceled or failed', err);
+      }
+    } else {
+      // Fallback for browsers that don't support the Web Share API (copy to clipboard)
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        alert('Link copied to clipboard!');
+      } catch (err) {
+        alert('Failed to copy link. Please manually copy the URL.');
+      }
+    }
+  }
+
   // ─── Expenses ──────────────────────────────────────────────────────────────
   openExpenseModal() {
     this.editingExpense = null;
@@ -517,6 +585,44 @@ export class TripDetailComponent implements OnInit {
   private setInviteError(msg: string) {
     this.inviteSuccess.set(false);
     this.inviteStatus.set(msg);
+  }
+
+  // ─── Edit Member ──────────────────────────────────────────────────────────
+  openEditMember(member: Member) {
+    this.editingMember = member;
+    this.editMemberName = member.name || '';
+    this.editMemberEmail = member.email || '';
+    this.editMemberOpen.set(true);
+  }
+
+  async saveEditMember() {
+    const name = this.editMemberName.trim();
+    const email = this.editMemberEmail.trim();
+
+    if (!name || !this.editingMember) return;
+    this.isSavingMember.set(true);
+    this.travelStore.setGlobalLoading(true);
+
+    const trip = this.trip();
+    if (!trip) return;
+
+    try {
+      const updatedMember: Member = { ...this.editingMember, name, email };
+      const newMembers = trip.members.map(m => m.id === updatedMember.id ? updatedMember : m);
+
+      const db = this.supabaseService.client;
+      const { error } = await db.from('trips').update({ members: newMembers }).eq('id', trip.id);
+      if (error) throw error;
+
+      this.travelStore.updateTrip(trip.id, { members: newMembers });
+      this.editMemberOpen.set(false);
+      this.editingMember = null;
+    } catch (err: any) {
+      alert(err.message || 'Failed to update member.');
+    } finally {
+      this.isSavingMember.set(false);
+      this.travelStore.setGlobalLoading(false);
+    }
   }
 
   async removeMember(memberId: string) {

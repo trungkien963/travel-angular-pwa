@@ -124,7 +124,18 @@
                   </svg>
                   <span>{{ post.comments.length }}</span>
                 </button>
+                <button class="post-action-btn post-action-share" (click)="sharePost(post)">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#78716C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                  </svg>
+                  <span>Share</span>
+                </button>
                 @if (isOwner() || post.authorId === currentUserId()) {
+                  <button class="post-action-btn post-action-edit" (click)="openEditPost(post)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                    </svg>
+                  </button>
                   <button class="post-action-btn post-action-delete" (click)="deletePost(post.id)">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <polyline points="3 6 5 6 21 6"/><path d="m19 6-.867 12.142A2 2 0 0 1 16.138 20H7.862a2 2 0 0 1-1.995-1.858L5 6m5 0V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/>
@@ -285,11 +296,18 @@
                   </div>
                 </div>
                 @if (isOwner() && member.id !== trip()!.ownerId) {
-                  <button class="btn-remove-member" (click)="removeMember(member.id)">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <polyline points="3 6 5 6 21 6"/><path d="m19 6-.867 12.142A2 2 0 0 1 16.138 20H7.862a2 2 0 0 1-1.995-1.858L5 6m5 0V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/>
-                    </svg>
-                  </button>
+                  <div class="member-actions-row">
+                    <button class="btn-remove-member btn-edit-member" (click)="openEditMember(member)">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                      </svg>
+                    </button>
+                    <button class="btn-remove-member" (click)="removeMember(member.id)">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"/><path d="m19 6-.867 12.142A2 2 0 0 1 16.138 20H7.862a2 2 0 0 1-1.995-1.858L5 6m5 0V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/>
+                      </svg>
+                    </button>
+                  </div>
                 }
               </div>
             }
@@ -491,7 +509,7 @@
           <input
             type="email"
             class="form-input"
-            placeholder="e.g. john&#64;example.com"
+            placeholder="e.g. john@example.com"
             [(ngModel)]="newMemberEmail"
             autocomplete="email"
             id="input-member-email"
@@ -514,6 +532,76 @@
           {{ isInviting() ? 'Adding...' : 'Add Member' }}
         </button>
 
+      </div>
+    </div>
+  }
+
+  <!-- ═══ EDIT MEMBER MODAL ═══ -->
+  @if (editMemberOpen()) {
+    <div class="modal-overlay" (click)="editMemberOpen.set(false)">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Edit Member</h3>
+          <button class="btn-close" (click)="editMemberOpen.set(false)" id="btn-close-edit-member">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A8A29E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+
+        <p class="member-invite-hint">
+          Update the display name or email for this member.
+        </p>
+
+        <div class="form-field mt-4">
+          <label>FULL NAME *</label>
+          <input type="text" class="form-input" [(ngModel)]="editMemberName" placeholder="Name" />
+        </div>
+
+        <div class="form-field mt-4">
+          <label>EMAIL ADDRESS</label>
+          <input type="email" class="form-input" [(ngModel)]="editMemberEmail" placeholder="Email" />
+        </div>
+
+        <button
+          class="btn-primary mt-6"
+          (click)="saveEditMember()"
+          [disabled]="isSavingMember()"
+        >
+          {{ isSavingMember() ? 'Saving...' : 'Save Changes' }}
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- ═══ EDIT POST MODAL ═══ -->
+  @if (editPostOpen()) {
+    <div class="modal-overlay" (click)="editPostOpen.set(false)">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Edit Post</h3>
+          <button class="btn-close" (click)="editPostOpen.set(false)" id="btn-close-edit-post">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A8A29E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+
+        <div class="form-field mt-4">
+          <label>CAPTION</label>
+          <textarea
+            class="form-input"
+            placeholder="Write a caption..."
+            [(ngModel)]="editPostContent"
+            rows="4"
+            id="input-edit-post"
+          ></textarea>
+        </div>
+
+        <button
+          class="btn-primary mt-6"
+          (click)="saveEditPost()"
+          [disabled]="isSavingPost()"
+          id="btn-save-edit-post"
+        >
+          {{ isSavingPost() ? 'Saving...' : 'Save Changes' }}
+        </button>
       </div>
     </div>
   }

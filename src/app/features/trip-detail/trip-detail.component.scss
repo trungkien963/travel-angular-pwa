@@ -892,4 +892,20 @@ $border: #F0F0F0;
   }
 }
 
+/* Utilities */
+.mt-4 { margin-top: 1rem; }
+.mt-6 { margin-top: 1.5rem; }
+
+/* Member Actions */
+.member-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-remove-member.btn-edit-member {
+  background: #EFF6FF;
+}
+
+
 
