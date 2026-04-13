@@ -6,6 +6,7 @@ import { Trip } from '../../core/models/trip.model';
 import { Expense, Member } from '../../core/models/expense.model';
 import { Post, Comment } from '../../core/models/social.model';
 import { SupabaseService } from '../../core/services/supabase.service';
+import { MomentsComponent } from '../moments/moments.component';
 
 export interface Debt {
   fromId: string; fromName: string;
@@ -26,7 +27,7 @@ const CATEGORY_META: Record<string, { emoji: string; label: string; color: strin
 @Component({
   selector: 'app-trip-detail',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, MomentsComponent],
   templateUrl: './trip-detail.component.html',
   styleUrl: './trip-detail.component.scss'
 })

@@ -2,7 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard, guestGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
-  // Root: guests see landing, logged-in users redirect to discover
+  // Root: guests see landing, logged-in users redirect to moments
   {
     path: '',
     canActivate: [guestGuard],
@@ -53,6 +53,7 @@ export const routes: Routes = [
         path: 'notifications',
         loadComponent: () => import('./features/notifications/notifications.component').then(m => m.NotificationsComponent)
       },
+      { path: '', redirectTo: 'discover', pathMatch: 'full' }
     ]
   },
 

@@ -69,53 +69,19 @@
 
         <!-- ═══ MOMENTS ═══ -->
         @if (activeTab === 'MOMENTS') {
-          <div class="section-header">
-            <h2 class="section-title">Timeline</h2>
-          </div>
-
-          @if (tripPostsGroups().length === 0) {
-            <div class="moments-empty">
-              <div class="moments-icon">📅</div>
-              <p>Tap the <strong>SOCIAL</strong> tab to add photos &amp; moments during your trip.</p>
+          <app-moments [tripId]="tripId()" (onTabSwitch)="setTab($event)"></app-moments>
+          
+          @if (isOwner()) {
+            <div class="owner-actions">
+              <button class="btn-publish" (click)="publishTrip()" id="btn-publish">🌍 Publish Trip</button>
+              <button class="btn-delete" (click)="confirmDelete()" id="btn-delete-trip">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"/><path d="m19 6-.867 12.142A2 2 0 0 1 16.138 20H7.862a2 2 0 0 1-1.995-1.858L5 6m5 0V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/>
+                </svg>
+                Delete Trip
+              </button>
             </div>
           }
-
-          <div class="timeline">
-            @for (group of tripPostsGroups(); track group.dateLabel) {
-              <div class="timeline-group">
-                <div class="timeline-date">
-                  <span class="timeline-date-label">{{ group.dateLabel }}</span>
-                  <div class="timeline-line"></div>
-                </div>
-
-                <div class="timeline-posts">
-                  @for (post of group.posts; track post.id) {
-                    <div class="timeline-post-card">
-                      <div class="timeline-author">
-                        <span class="author-avatar">{{ (post.authorName || '?').charAt(0).toUpperCase() }}</span>
-                        <span class="author-time">{{ formatRelative(post.timestamp) }}</span>
-                      </div>
-                      
-                      @if (post.images.length > 0) {
-                        <div class="timeline-images" [class.multiple]="post.images.length > 1">
-                          @for (img of post.images.slice(0, 4); track img) {
-                           <img [src]="img" class="timeline-img" loading="lazy" #imgRefTimeline (error)="imgRefTimeline.style.display='none'" />
-                          }
-                          @if (post.images.length > 4) {
-                            <div class="timeline-more-overlay">+{{ post.images.length - 4 }}</div>
-                          }
-                        </div>
-                      }
-                      
-                      @if (post.content) {
-                        <p class="timeline-caption">{{ post.content }}</p>
-                      }
-                    </div>
-                  }
-                </div>
-              </div>
-            }
-          </div>
         }
 
         <!-- ═══ SOCIAL ═══ -->
@@ -414,19 +380,6 @@
         }
 
       </div>
-
-      <!-- Owner Actions -->
-      @if (isOwner()) {
-        <div class="owner-actions">
-          <button class="btn-publish" (click)="publishTrip()" id="btn-publish">🌍 Publish Trip</button>
-          <button class="btn-delete" (click)="confirmDelete()" id="btn-delete-trip">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="3 6 5 6 21 6"/><path d="m19 6-.867 12.142A2 2 0 0 1 16.138 20H7.862a2 2 0 0 1-1.995-1.858L5 6m5 0V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/>
-            </svg>
-            Delete Trip
-          </button>
-        </div>
-      }
 
     </div>
   }

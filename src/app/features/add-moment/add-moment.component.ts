@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TravelStore } from '../../core/store/travel.store';
@@ -14,6 +14,13 @@ interface LocationResult {
   address: string;
 }
 
+export interface PhotoCapture {
+  id: string;
+  url: string;
+  file: File;
+  isDual: boolean;
+}
+
 @Component({
   selector: 'app-add-moment',
   standalone: true,
@@ -21,27 +28,78 @@ interface LocationResult {
   templateUrl: './add-moment.component.html',
   styleUrl: './add-moment.component.scss'
 })
-export class AddMomentComponent implements OnInit {
+export class AddMomentComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private travelStore = inject(TravelStore);
   private supabase = inject(SupabaseService);
 
+  @ViewChild('videoElement') videoElement?: ElementRef<HTMLVideoElement>;
+  @ViewChild('canvasElement') canvasElement?: ElementRef<HTMLCanvasElement>;
+
+  // ─── Camera state ────────────────────────────────────────────────────────
+  readonly isCameraActive = signal(true);
+  readonly facingMode = signal<'environment' | 'user'>('environment');
+  readonly isDualMode = signal(false);
+  private stream: MediaStream | null = null;
+  private dualFirstImage: HTMLImageElement | null = null;
+
   // ─── Image state ─────────────────────────────────────────────────────────
-  readonly previewUrl = signal<string | null>(null);
-  readonly previewUrl2 = signal<string | null>(null);
-  readonly isDual = signal(false);
-  private capturedFiles: File[] = [];
+  readonly photos = signal<PhotoCapture[]>([]);
+  readonly viewingPhotoId = signal<string | null>(null);
+
+  readonly viewingPhotoUrl = computed(() => {
+    const p = this.photos().find(x => x.id === this.viewingPhotoId());
+    return p ? p.url : null;
+  });
 
   // ─── Form state ──────────────────────────────────────────────────────────
   caption = '';
   expenseAmount = 0;
+  
+  get formattedTotalAmount(): string {
+    return this.expenseAmount ? this.formatNumber(this.expenseAmount) : '';
+  }
+
+  setTotalAmount(val: string) {
+    // Strip non-numeric except % if needed (but total amount shouldn't have %)
+    const parsed = parseInt(val.replace(/[^0-9]/g, ''), 10);
+    this.expenseAmount = isNaN(parsed) ? 0 : parsed;
+  }
+
   showTripPicker = false;
   readonly isExpenseMode = signal(false);
   readonly isSubmitting = signal(false);
+  
+  readonly canSubmit = computed(() => {
+    if (this.photos().length === 0) return false;
+    if (!this.selectedTripId()) return false;
+    if (!this.caption || !this.caption.trim()) return false;
+    
+    if (this.isExpenseMode()) {
+      if (!this.expenseAmount || this.expenseAmount <= 0) return false;
+      if (!this.paidById()) return false; 
+    }
+    return true;
+  });
+
   readonly selectedTripId = signal<string | null>(null);
+  
+  // Expense specific
   readonly paidById = signal('');
   readonly includedMembers = signal<Record<string, boolean>>({});
+  readonly lockedShares = signal<Record<string, number | null>>({});
+  readonly editingMemberId = signal<string | null>(null);
+  
+  readonly expenseCategories = [
+    { id: 'FOOD', icon: '🍔', label: 'Food' },
+    { id: 'TRANSPORT', icon: '🚕', label: 'Transport' },
+    { id: 'HOTEL', icon: '🏨', label: 'Hotel' },
+    { id: 'ACTIVITIES', icon: '🎯', label: 'Activities' },
+    { id: 'SHOPPING', icon: '🛍️', label: 'Shopping' },
+    { id: 'OTHER', icon: '💳', label: 'Other' }
+  ];
+  readonly selectedCategory = signal('FOOD');
 
   // ─── Location state ───────────────────────────────────────────────────────
   locationQuery = '';
@@ -52,31 +110,31 @@ export class AddMomentComponent implements OnInit {
 
   // ─── Derived ──────────────────────────────────────────────────────────────
   readonly trips = computed(() => this.travelStore.trips());
-
   readonly selectedTrip = computed<Trip | null>(() => {
     const id = this.selectedTripId();
     return id ? (this.trips().find(t => t.id === id) ?? null) : null;
   });
-
-  readonly currentTripMembers = computed(() => {
-    return this.selectedTrip()?.members ?? [];
-  });
+  readonly currentTripMembers = computed(() => this.selectedTrip()?.members ?? []);
 
   // ─── Lifecycle ────────────────────────────────────────────────────────────
   async ngOnInit() {
     if (this.travelStore.trips().length === 0) {
       await this.travelStore.initSupabase();
     }
-
-    // Auto-select trip from query param OR find today's active trip
     const paramTripId = this.route.snapshot.queryParamMap.get('tripId');
     if (paramTripId) {
       this.selectedTripId.set(paramTripId);
     } else {
       this.autoSelectTrip();
     }
-
     this.paidById.set(this.travelStore.currentUserId());
+    
+    // Start camera by default
+    setTimeout(() => this.startCamera(), 100);
+  }
+
+  ngOnDestroy() {
+    this.stopCamera();
   }
 
   private autoSelectTrip() {
@@ -97,11 +155,139 @@ export class AddMomentComponent implements OnInit {
     }
   }
 
-  // ─── Trip selector ────────────────────────────────────────────────────────
+  // ─── Native WebRTC Camera ─────────────────────────────────────────────────
+  async startCamera() {
+    this.stopCamera();
+    this.isCameraActive.set(true);
+    try {
+      this.stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: this.facingMode(), width: { ideal: 1080 }, height: { ideal: 1920 } },
+        audio: false
+      });
+      if (this.videoElement?.nativeElement) {
+        this.videoElement.nativeElement.srcObject = this.stream;
+        this.videoElement.nativeElement.play();
+      }
+    } catch (err) {
+      console.warn('Camera access denied or unavailable', err);
+    }
+  }
+
+  stopCamera() {
+    if (this.stream) {
+      this.stream.getTracks().forEach(t => t.stop());
+      this.stream = null;
+    }
+  }
+
+  toggleCamera() {
+    this.facingMode.update(m => m === 'environment' ? 'user' : 'environment');
+    this.startCamera();
+  }
+
+  toggleDualMode() {
+    this.isDualMode.update(v => !v);
+  }
+
+  async capturePhoto() {
+    if (!this.videoElement || !this.canvasElement) return;
+    const video = this.videoElement.nativeElement;
+    const canvas = this.canvasElement.nativeElement;
+    
+    canvas.width = video.videoWidth || 1080;
+    canvas.height = video.videoHeight || 1920;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    // Draw current frame
+    if (this.facingMode() === 'user') {
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+    }
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    if (this.isDualMode() && !this.dualFirstImage) {
+      // Step 1 of Dual: Save first frame, flip camera, capture step 2
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+      const img = new Image();
+      img.src = dataUrl;
+      img.onload = () => {
+        this.dualFirstImage = img;
+        this.toggleCamera(); // flip to the other side
+        // Auto capture second frame after 1.5s
+        setTimeout(() => {
+          this.capturePhoto();
+        }, 1500);
+      };
+      return;
+    }
+
+    if (this.isDualMode() && this.dualFirstImage) {
+      // Step 2 of Dual: Draw Pip
+      ctx.setTransform(1, 0, 0, 1, 0, 0); // reset transform
+      const pipW = canvas.width * 0.3;
+      const pipH = (this.dualFirstImage.height / this.dualFirstImage.width) * pipW;
+      
+      // Draw border mapping
+      ctx.lineWidth = 10;
+      ctx.strokeStyle = '#fff';
+      ctx.strokeRect(40, 40, pipW, pipH);
+      ctx.drawImage(this.dualFirstImage, 40, 40, pipW, pipH);
+      this.dualFirstImage = null; // reset
+    }
+
+    canvas.toBlob(blob => {
+      if (!blob) return;
+      const file = new File([blob], `capture_${Date.now()}.jpg`, { type: 'image/jpeg' });
+      const url = URL.createObjectURL(file);
+      const id = Date.now().toString();
+      
+      this.photos.update(p => [...p, { id, url, file, isDual: this.isDualMode() }]);
+      // Do not stop camera, always go back to new photo
+    }, 'image/jpeg', 0.9);
+  }
+
+  viewPhoto(id: string) {
+    this.viewingPhotoId.set(id);
+  }
+
+  closePreviewPopup() {
+    this.viewingPhotoId.set(null);
+  }
+
+  deleteCurrentPreview() {
+    const id = this.viewingPhotoId();
+    if (id) {
+       this.photos.update(arr => arr.filter(p => p.id !== id));
+       this.closePreviewPopup();
+    }
+  }
+
+  removePhoto(id: string, event: Event) {
+    event.stopPropagation();
+    this.photos.update(arr => arr.filter(p => p.id !== id));
+    if (this.viewingPhotoId() === id) {
+      this.closePreviewPopup();
+    }
+  }
+
+  // Gallery fallback
+  onFilePicked(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
+    Array.from(input.files).forEach(file => {
+      const url = URL.createObjectURL(file);
+      const id = Date.now().toString() + Math.random();
+      this.photos.update(p => [...p, { id, url, file, isDual: false }]);
+    });
+    // Do not stop camera
+    input.value = '';
+  }
+
+  // ─── Trip & Form ──────────────────────────────────────────────────────────
   selectTrip(id: string) {
     this.selectedTripId.set(id);
     this.showTripPicker = false;
-    // Reinitialize included members for this trip
     const members = this.trips().find(t => t.id === id)?.members ?? [];
     const included: Record<string, boolean> = {};
     members.forEach(m => included[m.id] = true);
@@ -109,7 +295,6 @@ export class AddMomentComponent implements OnInit {
     if (!this.paidById()) this.paidById.set(this.travelStore.currentUserId());
   }
 
-  // ─── Expense mode ─────────────────────────────────────────────────────────
   toggleExpenseMode() {
     this.isExpenseMode.update(v => !v);
     if (this.isExpenseMode()) {
@@ -122,63 +307,77 @@ export class AddMomentComponent implements OnInit {
 
   toggleMember(id: string) {
     this.includedMembers.update(m => ({ ...m, [id]: !m[id] }));
+    if (!this.includedMembers()[id]) {
+       this.lockedShares.update(m => ({ ...m, [id]: null })); // reset lock if excluded
+    }
+  }
+
+  startEdit(memberId: string) {
+    this.editingMemberId.set(memberId);
+  }
+
+  setLockedAmount(memberId: string, value: string) {
+    this.editingMemberId.set(null);
+    const val = value.trim();
+    if (!val) {
+      this.lockedShares.update(m => ({ ...m, [memberId]: null }));
+      return;
+    }
+    
+    let num = 0;
+    if (val.endsWith('%')) {
+      const pct = parseFloat(val) / 100;
+      num = (this.expenseAmount || 0) * pct;
+    } else {
+      // Allow for formatted values like 500,000
+      num = parseFloat(val.replace(/[^0-9.]/g, ''));
+    }
+    
+    if (isNaN(num)) {
+      this.lockedShares.update(m => ({ ...m, [memberId]: null }));
+    } else {
+      this.lockedShares.update(m => ({ ...m, [memberId]: Math.round(num) }));
+    }
   }
 
   calcShare(memberId: string): number {
     if (!this.includedMembers()[memberId]) return 0;
-    const total = this.expenseAmount || 0;
-    const count = Object.values(this.includedMembers()).filter(Boolean).length;
-    return count > 0 ? Math.round(total / count) : 0;
-  }
-
-  // ─── Image handling ───────────────────────────────────────────────────────
-  onCameraCapture(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
-    this.capturedFiles = [file];
-    this.previewUrl.set(URL.createObjectURL(file));
-    this.previewUrl2.set(null);
-    this.isDual.set(false);
-    input.value = '';
-  }
-
-  onFilePicked(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const files = Array.from(input.files ?? []);
-    if (!files.length) return;
-
-    this.capturedFiles = files.slice(0, 5); // max 5
-    this.previewUrl.set(URL.createObjectURL(files[0]));
-    if (files.length >= 2) {
-      this.previewUrl2.set(URL.createObjectURL(files[1]));
-      this.isDual.set(true);
-    } else {
-      this.isDual.set(false);
+    
+    const lockedAmount = this.lockedShares()[memberId];
+    if (lockedAmount !== undefined && lockedAmount !== null) {
+      return lockedAmount;
     }
-    input.value = '';
+
+    const total = this.expenseAmount || 0;
+    let totalLocked = 0;
+    let floatCount = 0;
+
+    Object.keys(this.includedMembers()).forEach(id => {
+      if (this.includedMembers()[id]) {
+        const l = this.lockedShares()[id];
+        if (l !== undefined && l !== null) {
+          totalLocked += l;
+        } else {
+          floatCount++;
+        }
+      }
+    });
+
+    let remainder = total - totalLocked;
+    if (remainder < 0) remainder = 0; 
+
+    return floatCount > 0 ? Math.round(remainder / floatCount) : 0;
   }
 
-  retake() {
-    this.previewUrl.set(null);
-    this.previewUrl2.set(null);
-    this.isDual.set(false);
-    this.capturedFiles = [];
-  }
-
-  // ─── Location search (Nominatim OSM) ─────────────────────────────────────
+  // ─── Location search ─────────────────────────────────────────────────────
   onLocationSearch() {
     if (this.locationTimer) clearTimeout(this.locationTimer);
     const q = this.locationQuery.trim();
     if (q.length < 2) { this.locationResults.set([]); return; }
-
     this.locationTimer = setTimeout(async () => {
       this.isSearching.set(true);
       try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5`,
-          { headers: { 'Accept-Language': 'en' } }
-        );
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5`, { headers: { 'Accept-Language': 'en' } });
         const data: any[] = await res.json();
         this.locationResults.set(data.map(d => ({
           placeId: d.place_id.toString(),
@@ -186,11 +385,7 @@ export class AddMomentComponent implements OnInit {
           city: d.display_name.split(',').slice(1, 3).join(',').trim(),
           address: d.display_name
         })));
-      } catch {
-        this.locationResults.set([]);
-      } finally {
-        this.isSearching.set(false);
-      }
+      } catch { this.locationResults.set([]); } finally { this.isSearching.set(false); }
     }, 400);
   }
 
@@ -205,10 +400,14 @@ export class AddMomentComponent implements OnInit {
     this.locationQuery = '';
   }
 
-  // ─── Submit ───────────────────────────────────────────────────────────────
+  // ─── Submit ──────────────────────────────────────────────────────────
   async submit() {
     const tripId = this.selectedTripId();
     if (!tripId) { alert('Please select a trip first.'); return; }
+    
+    if (this.photos().length === 0 && !this.caption) {
+      alert('Chưa có nội dung hoặc hình ảnh.'); return;
+    }
 
     this.isSubmitting.set(true);
     const db = this.supabase.client;
@@ -216,96 +415,83 @@ export class AddMomentComponent implements OnInit {
     const trip = this.selectedTrip();
 
     try {
-      // Upload images if present
       const uploadedUrls: string[] = [];
-      for (const file of this.capturedFiles) {
-        const path = `posts/${uid}/${Date.now()}_${file.name}`;
-        const { data } = await db.storage.from('nomadsync-media').upload(path, file, { upsert: true });
+      let isAnyDual = false;
+      for (const p of this.photos()) {
+        const path = `posts/${uid}/${p.id}_${p.file.name}`;
+        const { data } = await db.storage.from('nomadsync-media').upload(path, p.file, { upsert: true });
         if (data) {
           const { data: urlData } = db.storage.from('nomadsync-media').getPublicUrl(path);
           uploadedUrls.push(urlData.publicUrl);
+          if (p.isDual) isAnyDual = true;
         }
       }
 
       if (this.isExpenseMode() && this.expenseAmount > 0) {
-        // Save as Expense
         const splits: Record<string, number> = {};
-        this.currentTripMembers().forEach(m => {
-          splits[m.id] = this.calcShare(m.id);
+        let totalAssigned = 0;
+        let lastMemberId: string | null = null;
+        
+        this.currentTripMembers().forEach(m => { 
+          if (this.includedMembers()[m.id]) {
+            const share = this.calcShare(m.id);
+            splits[m.id] = share;
+            totalAssigned += share;
+            lastMemberId = m.id;
+          }
         });
+        
+        // Zero-sum Validation: Absorb penny-drop rounding error into the last person's share
+        if (lastMemberId && totalAssigned !== this.expenseAmount) {
+           splits[lastMemberId] += (this.expenseAmount - totalAssigned);
+        }
 
         const payload = {
-          trip_id: tripId,
-          desc: this.caption || 'Untitled Expense',
-          amount: this.expenseAmount,
-          category: 'OTHER',
-          payer_id: this.paidById(),
-          date: new Date().toISOString().split('T')[0],
-          splits,
-          receipt_urls: uploadedUrls
+          trip_id: tripId, description: this.caption || 'Untitled Expense', amount: this.expenseAmount,
+          category: this.selectedCategory(), payer_id: this.paidById(), date: new Date().toISOString().split('T')[0],
+          splits, receipt_urls: uploadedUrls
         };
         const { data } = await db.from('expenses').insert(payload).select().single();
         if (data) {
           this.travelStore.upsertExpense({
-            id: data['id'], tripId: data['trip_id'],
-            desc: data['desc'], amount: data['amount'],
-            category: data['category'], payerId: data['payer_id'],
-            date: data['date'], splits: data['splits']
+            id: data['id'], tripId: data['trip_id'], desc: data['description'], amount: data['amount'],
+            category: data['category'], payerId: data['payer_id'], date: data['date'], splits: data['splits']
           } as Expense);
         }
         this.router.navigate(['/trip', tripId], { queryParams: { tab: 'EXPENSES' } });
       } else {
-        // Save as Post
-        if (!this.caption && uploadedUrls.length === 0) {
-          alert('Add a photo or write something!');
-          this.isSubmitting.set(false);
-          return;
-        }
-
         const member = trip?.members.find(m => m.id === uid);
         const authorName = this.travelStore.currentUserProfile()?.name || member?.name || 'Traveler';
 
         const payload = {
-          trip_id: tripId,
-          user_id: uid,
-          content: this.caption,
-          image_urls: uploadedUrls,
-          is_dual_camera: this.isDual(),
-          location_name: this.selectedLocation?.name ?? null,
-          location_city: this.selectedLocation?.city ?? null,
-          likes: [],
-          comments: []
+          trip_id: tripId, user_id: uid, content: this.caption, image_urls: uploadedUrls,
+          is_dual_camera: isAnyDual, location_name: this.selectedLocation?.name ?? null,
+          location_city: this.selectedLocation?.city ?? null, likes: [], comments: []
         };
         const { data } = await db.from('posts').insert(payload).select().single();
         if (data) {
           this.travelStore.addPost({
-            id: data['id'], tripId: data['trip_id'],
-            authorId: uid, authorName,
-            content: data['content'],
-            images: data['image_urls'] ?? [],
-            isDual: data['is_dual_camera'],
-            timestamp: data['created_at'],
-            date: data['created_at']?.split('T')[0],
+            id: data['id'], tripId: data['trip_id'], authorId: uid, authorName,
+            content: data['content'], images: data['image_urls'] ?? [], isDual: data['is_dual_camera'],
+            timestamp: data['created_at'], date: data['created_at']?.split('T')[0],
             likes: 0, hasLiked: false, comments: []
           } as Post);
         }
         this.router.navigate(['/trip', tripId], { queryParams: { tab: 'SOCIAL' } });
       }
     } catch (err: any) {
-      alert(err.message || 'Failed to save. Please try again.');
+      alert(err.message || 'Lỗi khi upload.');
       this.isSubmitting.set(false);
     }
   }
 
-  // ─── Close ────────────────────────────────────────────────────────────────
   handleClose() {
-    if (this.previewUrl() || this.caption) {
-      if (!confirm('Discard your edits?')) return;
+    if (this.photos().length > 0 || this.caption) {
+      if (!confirm('Hủy bỏ bài đăng này?')) return;
     }
     history.length > 1 ? history.back() : this.router.navigate(['/discover']);
   }
 
-  // ─── Helpers ──────────────────────────────────────────────────────────────
   formatDate(dateStr: string): string {
     if (!dateStr) return '';
     return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });

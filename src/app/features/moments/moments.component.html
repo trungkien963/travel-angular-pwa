@@ -1,0 +1,125 @@
+<div class="moments-page">
+  
+  <!-- Calendar Header -->
+  <header class="calendar-header">
+    <div class="calendar-title">
+      <h1 class="month-name">{{ currentDate() | date:'MMMM' }}</h1>
+      <span class="year-num">{{ currentDate() | date:'yyyy' }}</span>
+    </div>
+    <div class="calendar-nav">
+      <button class="nav-btn" (click)="prevMonth()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m15 18-6-6 6-6"/>
+        </svg>
+      </button>
+      <button class="nav-btn" (click)="nextMonth()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m9 18 6-6-6-6"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Weekdays -->
+  <div class="weekdays-row">
+    @for (day of weekdays; track $index) {
+      <div class="weekday">{{ day }}</div>
+    }
+  </div>
+
+  <!-- Calendar Grid -->
+  <div class="calendar-grid" [ngClass]="slideDirection()" (touchstart)="onTouchStart($event)" (touchend)="onTouchEnd($event)">
+    @for (cell of calendarGrid(); track cell.date.getTime()) {
+      <div 
+        class="calendar-cell"
+        [class.is-current-month]="cell.isCurrentMonth"
+        [class.is-today]="cell.isToday"
+        [class.is-selected]="selectedDate()?.getTime() === cell.date.getTime()"
+        [class.is-in-trip]="cell.isInTrip"
+        [class.is-trip-start]="cell.isTripStart"
+        [class.is-trip-end]="cell.isTripEnd"
+        [class.has-image]="!!cell.momentImage"
+        (click)="selectDate(cell)"
+      >
+        <!-- Trip Highlighting Background Pill -->
+        @if (cell.isInTrip) {
+          <div class="trip-bg" 
+               [class.trip-bg-start]="cell.isTripStart" 
+               [class.trip-bg-end]="cell.isTripEnd">
+          </div>
+        }
+
+        <!-- Number or Image -->
+        <div class="cell-content">
+          @if (cell.momentImage) {
+            <img [src]="cell.momentImage" alt="" class="cell-image" #imgRef (error)="imgRef.style.display='none'">
+            <span class="cell-day-overlay">{{ cell.day }}</span>
+            @if (cell.hasMultipleMoments) {
+              <div class="multiple-indicator"></div>
+            }
+          } @else {
+            <span class="cell-day">{{ cell.day }}</span>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="calendar-divider"></div>
+
+  <!-- Highlights Section -->
+  <section class="highlights-section">
+    <div class="highlights-header">
+      <h2 class="section-title">
+        @if (selectedDate()) {
+          Moments of {{ selectedDate() | date:'MMM d' }}
+        } @else {
+          Recent Highlights
+        }
+      </h2>
+      
+      <div class="header-actions">
+        @if (selectedDate() && totalDailyExpense() > 0) {
+          <div class="daily-expense-badge" (click)="viewExpenses()" title="Click to view expenses">
+            <span class="expense-amount">💸 ₫{{ totalDailyExpense() | number }}</span>
+          </div>
+        }
+        <span class="total-count">{{ highlights().length }} TOTAL</span>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    @if (isSelectionEmpty) {
+      <div class="empty-state">
+        <div class="empty-icon">✈️</div>
+        <p>No moments recorded on this day. Time to plan your next memory!</p>
+      </div>
+    } @else {
+      <!-- Highlights List / Grid -->
+      <div class="highlights-grid">
+        @for (item of highlights(); track item.id) {
+          <div class="highlight-item" (click)="viewPost(item)" title="View Post">
+            <img [src]="item.imageUrl" alt="" class="highlight-img" #hlImgRef (error)="hlImgRef.style.display='none'">
+            @if (item.location || item.expense) {
+              <div class="highlight-overlay">
+                @if (item.location) {
+                  <span class="hl-location">{{ item.location }}</span>
+                }
+                @if (item.expense) {
+                  <span class="hl-expense">${{ item.expense }}</span>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+      
+      @if (selectedDate() && highlights().length > 0) {
+        <button class="btn-trip-detail" (click)="viewPost(highlights()[0])">
+          Explore Post Details ➔
+        </button>
+      }
+    }
+  </section>
+
+</div>
