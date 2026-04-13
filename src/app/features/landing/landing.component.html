@@ -1,0 +1,69 @@
+<div class="landing">
+
+  <!-- Slides -->
+  <div class="slides-container">
+    @for (slide of slides; track slide.id; let i = $index) {
+      <div
+        class="slide"
+        [class.active]="currentIndex() === i"
+        [style.background-image]="'url(' + slide.image + ')'"
+      >
+        <!-- Gradient overlay (hidden on last slide) -->
+        <div class="gradient-overlay" [class.hidden]="currentIndex() === slides.length - 1"></div>
+
+        <!-- Slide text (hidden on last slide) -->
+        @if (slide.title && currentIndex() !== slides.length - 1) {
+          <div class="slide-text" [class.visible]="currentIndex() === i && currentIndex() !== slides.length - 1">
+            <h2 class="slide-title">{{ slide.title }}</h2>
+            <p class="slide-desc">{{ slide.description }}</p>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Skip button (visible on slides 1–4) -->
+  @if (currentIndex() < slides.length - 1) {
+    <button class="btn-skip" (click)="goToAuth()" id="btn-skip">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+      </svg>
+    </button>
+  }
+
+  <!-- Bottom nav: dots + FAB (visible on slides 1–4) -->
+  @if (currentIndex() < slides.length - 1) {
+    <div class="bottom-nav">
+      <!-- Dots -->
+      <div class="pagination">
+        @for (slide of slides; track slide.id; let i = $index) {
+          <div class="dot" [class.active]="currentIndex() === i"></div>
+        }
+      </div>
+      <!-- FAB Next -->
+      <button class="fab-next" (click)="nextSlide()" id="btn-next-slide">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m9 18 6-6-6-6"/>
+        </svg>
+      </button>
+    </div>
+  }
+
+  <!-- Auth Glass Card (visible on last slide only) -->
+  @if (currentIndex() === slides.length - 1) {
+    <div class="auth-card" [class.visible]="currentIndex() === slides.length - 1">
+      <h1 class="auth-title">Your Journey Awaits ✈️</h1>
+      <p class="auth-sub">The world is vast and beautiful. Choose how you want to dive in.</p>
+
+      <button class="btn-get-started" (click)="goToAuth()" id="btn-get-started">
+        Get Started
+      </button>
+
+      <p class="terms-text">
+        By continuing, you agree to our Terms of Service &amp; Privacy Policy.
+      </p>
+    </div>
+  }
+
+</div>
+

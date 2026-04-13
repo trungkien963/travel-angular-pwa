@@ -2,7 +2,12 @@ import { Routes } from '@angular/router';
 import { authGuard, guestGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'discover', pathMatch: 'full' },
+  // Root: guests see landing, logged-in users redirect to discover
+  {
+    path: '',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./features/landing/landing.component').then(m => m.LandingComponent)
+  },
 
   // Guest-only routes
   {
