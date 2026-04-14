@@ -49,7 +49,160 @@
     />
   </head>
   <body>
-    <app-root></app-root>
+    <app-root>
+      <style>
+        body, html {
+          margin: 0;
+          padding: 0;
+          width: 100%;
+          height: 100%;
+          background: #FAFAFA;
+        }
+        .splash-container {
+          position: fixed;
+          inset: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          background: radial-gradient(circle at center, #ffffff 0%, #f3f4f6 100%);
+          z-index: 99999;
+          font-family: 'Inter', sans-serif;
+          overflow: hidden;
+        }
+        
+        /* Interactive Liquid Orbs */
+        .splash-orbs {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          z-index: 1;
+        }
+        .s-orb {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(60px);
+          opacity: 0.55;
+          animation: splash-float 8s infinite alternate ease-in-out;
+        }
+        .s-orb-1 {
+          width: 320px; height: 320px;
+          background: #FFC800; /* WanderPool Yellow */
+          top: -120px; right: -80px;
+          animation-delay: 0s;
+        }
+        .s-orb-2 {
+          width: 280px; height: 280px;
+          background: #FF5A5F; /* Coral / Pinkish */
+          bottom: -80px; left: -120px;
+          animation-delay: -3s;
+        }
+        
+        @keyframes splash-float {
+          0% { transform: translate(0, 0) scale(1); }
+          100% { transform: translate(40px, 50px) scale(1.15); }
+        }
+
+        /* Glassmorphism Card */
+        .splash-glass {
+          position: relative;
+          z-index: 2;
+          background: rgba(255, 255, 255, 0.65);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.6);
+          border-radius: 36px;
+          padding: 48px 40px;
+          box-shadow: 
+            0 24px 48px -12px rgba(0,0,0,0.08),
+            inset 0 0 0 1px rgba(255,255,255,0.5);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        /* App Icon spinning */
+        .splash-icon {
+          width: 72px;
+          height: 72px;
+          background: linear-gradient(135deg, #FFC800 0%, #FF8A00 100%);
+          border-radius: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 36px;
+          box-shadow: 0 16px 32px rgba(255, 200, 0, 0.35);
+          animation: pulse-icon 2s infinite ease-in-out;
+          margin-bottom: 24px;
+        }
+        
+        @keyframes pulse-icon {
+          0% { transform: scale(1); box-shadow: 0 16px 32px rgba(255, 200, 0, 0.35); }
+          50% { transform: scale(1.08); box-shadow: 0 24px 48px rgba(255, 200, 0, 0.5); }
+          100% { transform: scale(1); box-shadow: 0 16px 32px rgba(255, 200, 0, 0.35); }
+        }
+
+        /* Logo Text */
+        .splash-title {
+          font-size: 28px;
+          font-weight: 800;
+          letter-spacing: -0.5px;
+          margin: 0 0 8px 0;
+          background: linear-gradient(to right, #1f2937, #4b5563);
+          -webkit-background-clip: text;
+          color: transparent;
+        }
+
+        /* Subtitle */
+        .splash-subtitle {
+          font-size: 15px;
+          font-weight: 500;
+          color: #6b7280;
+          margin: 0 0 36px 0;
+        }
+
+        /* Custom Modern Loader */
+        .splash-loader {
+          display: flex;
+          gap: 6px;
+        }
+        .splash-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #FFC800;
+          animation: dot-bounce 1.4s infinite ease-in-out both;
+        }
+        .splash-dot:nth-child(1) { animation-delay: -0.32s; }
+        .splash-dot:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes dot-bounce {
+          0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+          40% { transform: scale(1); opacity: 1; }
+        }
+      </style>
+
+      <div class="splash-container">
+        <!-- Floating Ambient Background -->
+        <div class="splash-orbs">
+          <div class="s-orb s-orb-1"></div>
+          <div class="s-orb s-orb-2"></div>
+        </div>
+
+        <!-- Glass Content -->
+        <div class="splash-glass">
+          <div class="splash-icon">🏖️</div>
+          <h1 class="splash-title">WanderPool</h1>
+          <p class="splash-subtitle">Preparing your adventure...</p>
+          
+          <div class="splash-loader">
+            <div class="splash-dot"></div>
+            <div class="splash-dot"></div>
+            <div class="splash-dot"></div>
+          </div>
+        </div>
+      </div>
+    </app-root>
     <noscript>Please enable JavaScript to continue using WanderPool.</noscript>
   </body>
 </html>
