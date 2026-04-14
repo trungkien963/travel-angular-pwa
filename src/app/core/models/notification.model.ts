@@ -1,4 +1,4 @@
-export type NotificationType = 'TRIP_INVITE' | 'EXPENSE_ADDED' | 'POST_COMMENT' | 'POST_NEW' | 'POST_LIKE';
+export type NotificationType = 'TRIP_INVITE' | 'EXPENSE_ADDED' | 'POST_COMMENT' | 'POST_NEW' | 'POST_LIKE' | 'TRIP_LIKE' | 'TRIP_COMMENT';
 
 export interface AppNotification {
   id: string;

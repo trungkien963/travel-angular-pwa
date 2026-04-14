@@ -221,7 +221,13 @@ export class TravelStore {
           isPrivate: t['is_private'],
           members: typeof t['members'] === 'string'
             ? JSON.parse(t['members'])
-            : (Array.isArray(t['members']) ? t['members'] : [])
+            : (Array.isArray(t['members']) ? t['members'] : []),
+          likes: typeof t['likes'] === 'string'
+            ? JSON.parse(t['likes'])
+            : (Array.isArray(t['likes']) ? t['likes'] : []),
+          comments: typeof t['comments'] === 'string'
+            ? JSON.parse(t['comments'])
+            : (Array.isArray(t['comments']) ? t['comments'] : [])
         }));
 
         // Fetch posts

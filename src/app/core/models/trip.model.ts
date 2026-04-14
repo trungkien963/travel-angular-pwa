@@ -11,4 +11,6 @@ export interface Trip {
   ownerId: string;
   members: Member[];
   isPrivate: boolean;
+  likes?: string[];
+  comments?: any[];
 }

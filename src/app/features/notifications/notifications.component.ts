@@ -9,6 +9,8 @@ const ICON_BACKGROUNDS: Record<string, string> = {
   POST_COMMENT:   '#FFFBEB',
   POST_LIKE:      '#FEF2F2',
   POST_NEW:       '#F5F3FF',
+  TRIP_LIKE:      '#FEF2F2',
+  TRIP_COMMENT:   '#FFFBEB',
 };
 
 @Component({
