@@ -1,4 +1,4 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { TravelStore } from '../../core/store/travel.store';
 import { AppNotification } from '../../core/models/notification.model';
@@ -19,11 +19,22 @@ const ICON_BACKGROUNDS: Record<string, string> = {
   templateUrl: './notifications.component.html',
   styleUrl: './notifications.component.scss'
 })
-export class NotificationsComponent {
+export class NotificationsComponent implements OnInit {
   private router = inject(Router);
   private travelStore = inject(TravelStore);
 
   readonly notifications = computed(() => this.travelStore.notifications());
+  readonly hasUnread = computed(() => this.notifications().some(n => !n.isRead));
+
+  async ngOnInit() {
+    // If not already synced or syncing, initialize Supabase to fetch notifications
+    if (!this.travelStore.isSyncing() && this.travelStore.currentUserId() === '') {
+      await this.travelStore.initSupabase();
+    } else {
+      // Force refresh just in case we are missing recent notifications
+      await this.travelStore.refreshData();
+    }
+  }
 
   // ─── Navigation ───────────────────────────────────────────────────────────
   goBack() {
@@ -45,6 +56,10 @@ export class NotificationsComponent {
     if (item.tripId) {
       this.router.navigate(['/trip', item.tripId]);
     }
+  }
+
+  markAllAsRead() {
+    this.travelStore.markAllNotificationsAsRead();
   }
 
   handleAccept(item: AppNotification) {

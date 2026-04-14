@@ -162,6 +162,23 @@ export class TravelStore {
     }
   }
 
+  async markAllNotificationsAsRead() {
+    this.notifications.update(list =>
+      list.map(n => ({ ...n, isRead: true }))
+    );
+    try {
+      const userId = this.currentUserId();
+      if (userId) {
+        await this.supabase.client.from('notifications')
+          .update({ is_read: true })
+          .eq('user_id', userId)
+          .eq('is_read', false);
+      }
+    } catch (err) {
+      console.error('Failed to mark all notifications as read', err);
+    }
+  }
+
   // ─── Supabase Init & Sync ─────────────────────────────────────────────────
   async initSupabase() {
     this.isSyncing.set(true);
