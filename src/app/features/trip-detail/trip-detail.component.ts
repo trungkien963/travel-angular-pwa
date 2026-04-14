@@ -537,7 +537,7 @@ export class TripDetailComponent implements OnInit {
         const expense: Expense = {
           id: row.id,
           tripId: row.trip_id,
-          desc: row.desc,
+          desc: row.description,
           amount: row.amount,
           category: row.category,
           payerId: row.payer_id,

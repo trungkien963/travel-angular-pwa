@@ -580,25 +580,31 @@ export class AddMomentComponent implements OnInit, OnDestroy {
             category: data['category'], payerId: data['payer_id'], date: data['date'], splits: data['splits']
           } as Expense);
         }
+      }
+      
+      // Always create a post so it shows up in the SOCIAL feed
+      const member = trip?.members.find(m => m.id === uid);
+      const authorName = this.travelStore.currentUserProfile()?.name || member?.name || 'Traveler';
+
+      const postPayload = {
+        trip_id: tripId, user_id: uid, content: this.caption, image_urls: uploadedUrls,
+        is_dual_camera: isAnyDual, location_name: this.selectedLocation?.name ?? null,
+        location_city: this.selectedLocation?.city ?? null, likes: [], comments: []
+      };
+      const { data: postData } = await db.from('posts').insert(postPayload).select().single();
+      if (postData) {
+        this.travelStore.addPost({
+          id: postData['id'], tripId: postData['trip_id'], authorId: uid, authorName,
+          content: postData['content'], images: postData['image_urls'] ?? [], isDual: postData['is_dual_camera'],
+          timestamp: postData['created_at'], date: postData['created_at']?.split('T')[0],
+          likes: 0, hasLiked: false, comments: []
+        } as Post);
+      }
+
+      // Navigate appropriately based on whether it was an expense
+      if (this.isExpenseMode() && this.expenseAmount > 0) {
         this.router.navigate(['/trip', tripId], { queryParams: { tab: 'EXPENSES' } });
       } else {
-        const member = trip?.members.find(m => m.id === uid);
-        const authorName = this.travelStore.currentUserProfile()?.name || member?.name || 'Traveler';
-
-        const payload = {
-          trip_id: tripId, user_id: uid, content: this.caption, image_urls: uploadedUrls,
-          is_dual_camera: isAnyDual, location_name: this.selectedLocation?.name ?? null,
-          location_city: this.selectedLocation?.city ?? null, likes: [], comments: []
-        };
-        const { data } = await db.from('posts').insert(payload).select().single();
-        if (data) {
-          this.travelStore.addPost({
-            id: data['id'], tripId: data['trip_id'], authorId: uid, authorName,
-            content: data['content'], images: data['image_urls'] ?? [], isDual: data['is_dual_camera'],
-            timestamp: data['created_at'], date: data['created_at']?.split('T')[0],
-            likes: 0, hasLiked: false, comments: []
-          } as Post);
-        }
         this.router.navigate(['/trip', tripId], { queryParams: { tab: 'SOCIAL' } });
       }
     } catch (err: any) {
