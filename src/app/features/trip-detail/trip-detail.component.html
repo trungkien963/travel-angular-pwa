@@ -65,7 +65,8 @@
       </div>
 
       <!-- Tab Content -->
-      <div class="tab-content">
+      <div class="tab-content" (touchstart)="onTouchStart($event)" (touchend)="onTouchEnd($event)">
+        <div [class]="'pane-animator ' + (animationTrigger ? animationDirection : '')">
 
         <!-- ═══ MOMENTS ═══ -->
         @if (activeTab === 'MOMENTS') {
@@ -164,7 +165,7 @@
                 <!-- IG Images Carousel -->
                 @if (post.images.length > 0) {
                   <div class="ig-carousel-container">
-                    <div class="ig-images" [class.dual]="post.isDual" (scroll)="onImageScroll(post.id, $event)">
+                    <div class="ig-images" [class.dual]="post.isDual" (scroll)="onImageScroll(post.id, $event)" (touchstart)="$event.stopPropagation()" (touchend)="$event.stopPropagation()">
                       @for (img of post.images; track img) {
                         <img [src]="img" [alt]="post.content" class="ig-img" loading="lazy" #imgRefPost (error)="imgRefPost.style.display='none'" />
                       }
@@ -413,6 +414,7 @@
           </div>
         }
 
+        </div>
       </div>
 
     </div>

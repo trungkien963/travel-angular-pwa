@@ -600,9 +600,65 @@ export class TripDetailComponent implements OnInit {
 
   // ─── Navigation ───────────────────────────────────────────────────────────
   goBack() { this.router.navigate(['/trips']); }
-  setTab(tab: string) { this.activeTab = tab; }
+
+  animationDirection = 'slide-fade-in';
+  animationTrigger = true;
+
+  setTab(tab: string) { 
+    const currentIndex = this.tabs.indexOf(this.activeTab);
+    const nextIndex = this.tabs.indexOf(tab);
+    if (currentIndex === nextIndex) return;
+
+    this.animationDirection = nextIndex > currentIndex ? 'slide-left' : 'slide-right';
+    this.animationTrigger = false;
+    this.activeTab = tab; 
+
+    // small delay to force DOM reflow and restart CSS animation
+    setTimeout(() => {
+      this.animationTrigger = true;
+    }, 10);
+  }
+
   navigateToAddMoment() {
     this.router.navigate(['/add-moment'], { queryParams: { tripId: this.tripId() } });
+  }
+
+  // ─── Swipe Gestures ────────────────────────────────────────────────────────
+  touchStartX = 0;
+  touchEndX = 0;
+  touchStartY = 0;
+  touchEndY = 0;
+  
+  onTouchStart(e: TouchEvent) {
+    this.touchStartX = e.changedTouches[0].screenX;
+    this.touchStartY = e.changedTouches[0].screenY;
+  }
+  
+  onTouchEnd(e: TouchEvent) {
+    this.touchEndX = e.changedTouches[0].screenX;
+    this.touchEndY = e.changedTouches[0].screenY;
+    this.handleSwipe();
+  }
+  
+  handleSwipe() {
+    const swipeDistanceX = this.touchEndX - this.touchStartX;
+    const swipeDistanceY = this.touchEndY - this.touchStartY;
+    
+    // Only register as horizontal swipe if distance X is greater than Y and meets threshold
+    if (Math.abs(swipeDistanceX) > 60 && Math.abs(swipeDistanceX) > Math.abs(swipeDistanceY)) {
+      const currentIndex = this.tabs.indexOf(this.activeTab);
+      if (swipeDistanceX < 0) {
+        // swipe left -> next tab
+        if (currentIndex < this.tabs.length - 1) {
+          this.setTab(this.tabs[currentIndex + 1]);
+        }
+      } else {
+        // swipe right -> prev tab
+        if (currentIndex > 0) {
+          this.setTab(this.tabs[currentIndex - 1]);
+        }
+      }
+    }
   }
 
   // ─── Social ───────────────────────────────────────────────────────────────
