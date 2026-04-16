@@ -3,41 +3,82 @@ $text-dark: #1C1917;
 $text-muted: #78716C;
 $text-inactive: #A8A29E;
 $bg: #FAFAFA; // Very light gray to make white cards pop
+$border: rgba(0, 0, 0, 0.05);
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 .discover {
-  background: $bg;
-  min-height: 100%;
+  background-color: #F4F4F5; // Zinc 100 for high contrast with white cards
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(255, 200, 0, 0.12) 0px, transparent 60%),
+    radial-gradient(at 100% 0%, rgba(255, 255, 255, 0.9) 0px, transparent 60%),
+    radial-gradient(at 100% 100%, rgba(255, 200, 0, 0.05) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(255, 255, 255, 0.9) 0px, transparent 50%);
+  min-height: 100vh;
   font-family: 'Inter', -apple-system, sans-serif;
-  padding-top: 56px; // Safe area for status bar
   padding-bottom: 80px;
+  position: relative;
+}
+
+// ─── Minimalist Nav Tabs ──────────────────────────────────────────
+.nav-tabs {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 24px;
+}
+
+.nav-tab-btn {
+  background: none;
+  border: none;
+  padding: 0 0 8px 0;
+  font-weight: 600; // Reduced from 800
+  font-size: 13px;  // Reduced from 15px
+  color: #A1A1AA;   // Zinc 400 (softer inactive state)
+  position: relative;
+  cursor: pointer;
+  transition: color 0.3s ease;
+  letter-spacing: 0.8px; // Increased tracking for elegance
+
+  &.active {
+    color: #18181B; // Zinc 900 (stronger charcoal black for active)
+    font-weight: 700; // Slight bump when active
+  }
+
+  .tab-indicator {
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%) scaleX(0);
+    width: 32px;
+    height: 4px;
+    border-radius: 4px;
+    background-color: $primary;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  &.active .tab-indicator {
+    opacity: 1;
+    transform: translateX(-50%) scaleX(1);
+    box-shadow: 0 2px 8px rgba(255, 200, 0, 0.6);
+  }
 }
 
 // ─── Header ──────────────────────────────────────────────────────────────────
 .discover-header {
-  padding: 16px 24px 24px;
+  padding: 56px 24px 8px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: linear-gradient(180deg, rgba(250,250,250,0.95) 0%, rgba(250,250,250,0.75) 80%, rgba(250,250,250,0) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  &.header-hidden {
+    transform: translateY(-120%);
+  }
 }
 
-.header-content {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.header-title {
-  font-size: 32px;
-  font-weight: 700;
-  color: $text-dark;
-  letter-spacing: -0.2px;
-  margin: 0;
-}
-
-.header-subtitle {
-  font-size: 15px;
-  color: $text-muted;
-  margin: 0;
-  line-height: 1.4;
-}
 
 .search-bar {
   margin-top: 24px;
@@ -47,11 +88,12 @@ $bg: #FAFAFA; // Very light gray to make white cards pop
   position: relative;
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 20px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
-  padding: 14px 16px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  border-radius: 32px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  padding: 12px 16px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .search-icon {
@@ -82,7 +124,58 @@ $bg: #FAFAFA; // Very light gray to make white cards pop
   padding: 0 20px 24px;
 }
 
-// ─── Feed Card ────────────────────────────────────────────────────────────────
+// ─── Feed Card ──────────────────────────────────────────
+.editorial-grid {
+  display: flex;
+  gap: 4px;
+  height: 280px;
+  border-radius: 20px;
+  overflow: hidden;
+  margin: 16px;
+  background: #E5E5E5; // Skeleton background before load
+  
+  img {
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+    display: block; // eliminate ghost margin
+  }
+}
+
+.grid-main {
+  flex: 2;
+  height: 100%;
+}
+
+.grid-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.grid-sub {
+  flex: 1;
+  height: calc(50% - 2px); // accounting for gap
+  
+  &.relative {
+    position: relative;
+  }
+}
+
+.more-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-size: 20px;
+  font-weight: 800;
+}
+
 .feed-card {
   background: #FFFFFF;
   border-radius: 32px;
@@ -93,109 +186,15 @@ $bg: #FAFAFA; // Very light gray to make white cards pop
   border: 1px solid rgba(0, 0, 0, 0.03); /* Viền mỏng tang */
 }
 
-.photo-stack-container {
-  width: 100%;
-  height: 280px;
-  position: relative;
-  background: #FFFFFF; /* Cùng tông nền trắng liền mạch với khu vực nội dung (content) */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  border-radius: 32px 32px 0 0;
-  border-bottom: 1px solid rgba(0,0,0,0.03);
-}
 
-.location-pill {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.9);
-  padding: 8px 14px;
-  border-radius: 100px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  z-index: 10;
-  max-width: 65%; /* Không cho dài quá 65% width của card */
-
-  span {
-    font-size: 13px;
-    font-weight: 800;
-    color: $text-dark;
-    white-space: nowrap;      /* Ép văn bản nằm trên 1 dòng */
-    overflow: hidden;         /* Ẩn phần thừa */
-    text-overflow: ellipsis;  /* Hiện dấu ... khi bị cắt */
-  }
-}
-
-.stack-img {
-  position: absolute;
-  object-fit: cover;
-  border-radius: 20px;
-  border: 4px solid #FFFFFF;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
-  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-
-  .feed-card:hover & {
-    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.16);
-  }
-}
-
-.img-back-left {
-  width: 35%; /* Thu nhỏ thêm tí xíu */
-  aspect-ratio: 1 / 1.05;
-  top: 10%;
-  left: 10%; /* Kéo sâu vào trong để cách xa viền trái */
-  transform: rotate(-12deg);
-  z-index: 1;
-  .feed-card:hover & { transform: rotate(-16deg) translateX(-10px) translateY(-5px) scale(1.02); }
-}
-
-.img-back-right {
-  width: 35%;
-  aspect-ratio: 1 / 1.05;
-  top: 6%;
-  right: 10%; /* Kéo sâu vào trong để cách xa viền phải */
-  transform: rotate(10deg);
-  z-index: 2;
-  .feed-card:hover & { transform: rotate(14deg) translateX(10px) translateY(-5px) scale(1.02); }
-}
-
-.img-front {
-  width: 40%; /* Giảm độ bự của em này xuống chừa chỗ thở */
-  aspect-ratio: 1 / 1.05;
-  bottom: 8%; /* Nhấc lên trên, không cho chạm sát mép dưới nữa */
-  left: 30%; /* Canh giữa hoàn hảo (100 - 40) / 2 */
-  transform: rotate(-2deg);
-  z-index: 3;
-  .feed-card:hover & { transform: rotate(0deg) translateY(5px) scale(1.04); }
-}
-
-.more-photos-badge {
-  position: absolute;
-  bottom: 16px;
-  right: 16px;
-  z-index: 10;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  padding: 8px 16px;
-  border-radius: 100px;
-  font-weight: 800;
-  font-size: 14px;
-  color: $text-dark;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-}
 
 // ─── Single Cover Layout (Fallback) ──────────────────────────────────────────
 .card-img-wrapper {
   position: relative;
-  width: 100%;
-  aspect-ratio: 4 / 3.2; // roughly matches the image aspect ratio
+  height: 280px;
+  margin: 16px;
+  border-radius: 20px;
+  overflow: hidden;
 }
 
 .card-img {
@@ -227,51 +226,58 @@ $bg: #FAFAFA; // Very light gray to make white cards pop
 }
 
 .card-meta {
-  padding: 24px;
+  padding: 0 16px 24px 16px;
 }
 
 .card-title {
   font-size: 24px;
   font-weight: 800;
   color: $text-dark;
-  margin: 0 0 4px;
+  margin: 0 0 8px;
   letter-spacing: -0.5px;
 }
 
-.card-details-row {
+.card-minimal-meta {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-}
-
-.card-price {
-  background: rgba($primary, 0.15);
-  padding: 6px 14px;
-  border-radius: 12px;
-  
-  .price-val {
-    font-size: 15px;
-    font-weight: 800;
-    color: #A37A00; /* Đậm hơn để dễ đọc rách rệt ngoài trời */
-  }
-}
-
-.card-date {
-  display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
-  color: #A8A29E;
-
-  span {
-    font-size: 16px;
-    font-weight: 600;
-    color: #78716C;
+  font-size: 13px;
+  font-weight: 600;
+  color: $text-inactive;
+  
+  .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    
+    &.location {
+      color: $text-dark;
+      svg { stroke: $primary; flex-shrink: 0; }
+      
+      /* Truncate super long addresses */
+      max-width: 140px; 
+      
+      .location-text {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: block; // Needed for ellipsis
+      }
+    }
+    
+    &.price {
+      color: $text-dark;
+      font-weight: 700;
+    }
   }
   
-  svg {
-    color: #A8A29E;
+  .meta-dot {
+    color: rgba(0,0,0,0.4);
   }
 }
+
+
 
 .card-actions {
   display: flex;
@@ -319,22 +325,31 @@ $bg: #FAFAFA; // Very light gray to make white cards pop
 
 .filter-pill {
   flex-shrink: 0;
-  padding: 8px 18px;
-  border-radius: 20px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  background: white;
-  color: $text-muted;
-  font-size: 14px;
-  font-weight: 600;
-  font-family: 'Inter', sans-serif;
+  padding: 8px 0;
+  margin-right: 24px;
+  border: none;
+  background: transparent;
+  color: #A1A1AA;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
   cursor: pointer;
   transition: all 0.2s ease;
+  position: relative;
   
   &.active {
-    background: $primary; /* Đổi về màu vàng chủ đạo */
-    color: $text-dark !important; /* Chữ màu tối nhìn sang và dễ đọc */
-    border-color: $primary;
-    box-shadow: 0 4px 12px rgba(255, 200, 0, 0.2); /* Tạo hiệu ứng nổi bong bóng nhẹ */
+    color: $text-dark;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 2px;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background-color: $primary;
+      border-radius: 4px;
+    }
   }
 }
 
@@ -760,3 +775,263 @@ $bg: #FAFAFA; // Very light gray to make white cards pop
   letter-spacing: 1px;
 }
 
+
+
+// ─── Instagram Style Feed ──────────────────────────────────────────────────────
+.ig-feed {
+  display: flex;
+  flex-direction: column;
+  margin: 16px -24px 0;
+  z-index: 10;
+  position: relative;
+}
+
+.ig-post {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 1);
+  box-shadow: 
+    0 16px 40px rgba(0, 0, 0, 0.06),
+    inset 0 2px 16px rgba(255, 255, 255, 1);
+  border-radius: 32px;
+  margin: 0 20px 28px;
+  animation: fadeIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  padding-bottom: 24px;
+  overflow: hidden;
+}
+
+.ig-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+}
+
+.ig-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ig-avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: #F3F4F6;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+.ig-avatar-img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+
+.ig-avatar-initial {
+  font-size: 16px; font-weight: 800; color: $text-dark;
+}
+
+.ig-user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.ig-author {
+  font-size: 14px; font-weight: 700; color: $text-dark;
+}
+
+.ig-time {
+  font-size: 12px; color: $text-inactive;
+}
+
+.ig-options {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.ig-icon-btn, .ig-more {
+  background: none; border: none; cursor: pointer; padding: 4px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+}
+
+.ig-dropdown-menu {
+  position: absolute;
+  top: 100%; right: 0;
+  margin-top: 4px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  border: 1px solid $border;
+  padding: 8px 0;
+  min-width: 140px;
+  z-index: 100;
+  animation: fadeIn 0.15s ease;
+}
+
+.ig-dropdown-item {
+  width: 100%;
+  padding: 10px 16px;
+  background: none; border: none; cursor: pointer;
+  text-align: left;
+  font-size: 14px; font-weight: 600; color: $text-dark;
+  font-family: inherit;
+  transition: background 0.1s ease;
+  
+  &:hover { background: #F9F9F9; }
+  &.delete-item { color: #DC2626; }
+}
+
+.ig-images {
+  width: 100%;
+  padding: 0 16px;
+  margin-bottom: 12px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+  &::-webkit-scrollbar { display: none; }
+
+  &.dual {
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 4px;
+    overflow-x: hidden;
+  }
+}
+
+.ig-img {
+  width: 100%;
+  flex: 0 0 calc(100% - 32px);
+  scroll-snap-align: center;
+  height: auto;
+  max-height: 480px;
+  object-fit: cover;
+  border-radius: 24px;
+  display: block;
+}
+
+.ig-images.dual .ig-img {
+  flex: unset;
+  width: 100%;
+}
+
+.ig-carousel-container {
+  position: relative;
+}
+
+.ig-carousel-badge {
+  position: absolute;
+  top: 12px;
+  right: 28px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 12px;
+  pointer-events: none;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.ig-carousel-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 16px 12px;
+}
+
+.ig-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #E5E7EB;
+  transition: all 0.2s ease;
+
+  &.active {
+    background: $primary;
+    width: 6px;
+    height: 6px;
+  }
+}
+
+.ig-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 24px 8px;
+}
+
+.ig-actions-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ig-action-btn {
+  background: none; border: none; cursor: pointer; padding: 4px 0;
+  display: flex; align-items: center; justify-content: center;
+  color: $text-dark;
+  transition: opacity 0.15s ease;
+  
+  &:hover { opacity: 0.7; }
+}
+
+.ig-likes-count {
+  padding: 0 24px;
+  font-size: 14px;
+  color: $text-dark;
+  margin-bottom: 6px;
+}
+
+.ig-caption {
+  padding: 0 24px;
+  font-size: 14px;
+  color: $text-dark;
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+
+.ig-caption-author {
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+.ig-comments-link {
+  padding: 0 24px;
+  font-size: 14px;
+  color: $text-inactive;
+  cursor: pointer;
+  margin-bottom: 6px;
+  
+  &:hover { text-decoration: underline; }
+}
+
+.ig-comment-preview {
+  padding: 0 24px;
+  font-size: 14px;
+  color: $text-dark;
+}
+
+@keyframes popHeartAnim {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+  25% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.9; }
+  50% { transform: translate(-50%, -50%) scale(0.95); opacity: 0.9; }
+  100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+}
+
+.pop-heart-anim {
+  pointer-events: none;
+}

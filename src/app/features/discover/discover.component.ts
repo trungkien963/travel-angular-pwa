@@ -1,4 +1,4 @@
-import { Component, inject, computed, OnInit, signal } from '@angular/core';
+import { Component, inject, computed, OnInit, signal, OnDestroy, HostListener, AfterViewInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TravelStore } from '../../core/store/travel.store';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
@@ -29,7 +29,7 @@ interface FeedItem {
   templateUrl: './discover.component.html',
   styleUrl: './discover.component.scss'
 })
-export class DiscoverComponent implements OnInit {
+export class DiscoverComponent implements OnInit, OnDestroy {
   private travelStore = inject(TravelStore);
   private toastService = inject(ToastService);
   private router = inject(Router);
@@ -58,6 +58,15 @@ export class DiscoverComponent implements OnInit {
   readonly searchQuery = signal('');
   readonly activeFilter = signal('All');
   readonly filters = ['All', 'Trending', 'Vietnam', 'Japan', 'Beach', 'Camping'];
+  
+  readonly currentTab = signal<'CATCH_UP' | 'COMMUNITY'>('CATCH_UP');
+  
+  readonly catchUpPosts = computed(() => {
+    const myTripIds = this.travelStore.myTrips().map(t => t.id);
+    return this.travelStore.posts()
+      .filter(p => p.tripId && myTripIds.includes(p.tripId))
+      .slice(0, 20);
+  });
   
   readonly isLoading = computed(() => this.travelStore.isSyncing() || this.travelStore.trips().length === 0);
 
@@ -165,6 +174,36 @@ export class DiscoverComponent implements OnInit {
       await this.travelStore.initSupabase();
     }
   }
+
+  ngAfterViewInit() {
+    this.scrollContainer = document.querySelector('.shell-content') as HTMLElement;
+    if (this.scrollContainer) {
+      this.scrollContainer.addEventListener('scroll', this.onScroll, { passive: true });
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.scrollContainer) {
+      this.scrollContainer.removeEventListener('scroll', this.onScroll);
+    }
+  }
+
+  // ─── Dynamic Header Scroll ───
+  readonly headerHidden = signal(false);
+  private lastScrollTop = 0;
+  private scrollContainer: HTMLElement | null = null;
+  private scrollThreshold = 100; // Increased threshold for less twitchy header
+
+  onScroll = () => {
+    if (!this.scrollContainer) return;
+    const st = this.scrollContainer.scrollTop;
+    if (st > this.lastScrollTop && st > this.scrollThreshold) {
+      this.headerHidden.set(true); // scrolling down
+    } else if (st < this.lastScrollTop || st < this.scrollThreshold) {
+      this.headerHidden.set(false); // scrolling up or near top
+    }
+    this.lastScrollTop = Math.max(0, st);
+  };
 
   async onLikeClick(event: Event, item: FeedItem) {
     event.stopPropagation();
@@ -393,5 +432,226 @@ export class DiscoverComponent implements OnInit {
     } else {
       carousel.scrollTo({ left: carousel.clientWidth * (this.viewerImages().length - 1), behavior: 'smooth' });
     }
+  }
+
+  // ─── Feed Methods ───
+  getTripDetails(tripId?: string) {
+    if (!tripId) return undefined;
+    return this.travelStore.myTrips().find(t => t.id === tripId);
+  }
+
+  goToTrip(id?: string) {
+    if (!id) return;
+    this.router.navigate(['/trip', id]);
+  }
+
+  // ─── Post Actions (Catch Up Feed) ───
+  async togglePostLike(postId: string) {
+    const db = this.supabaseService.client;
+    const uid = this.currentUserId();
+    const post = this.travelStore.posts().find(p => p.id === postId);
+    if (!post) return;
+
+    const newLiked = !post.hasLiked;
+    const newLikes = newLiked ? post.likes + 1 : Math.max(0, post.likes - 1);
+    this.travelStore.updatePost(postId, { hasLiked: newLiked, likes: newLikes });
+
+    try {
+      const { data, error } = await db.from('posts').select('likes').eq('id', postId).single();
+      if (error) throw error;
+
+      let currentLikes: string[] = [];
+      if (data && data['likes']) {
+        const raw = data['likes'];
+        if (Array.isArray(raw)) currentLikes = raw;
+        else if (typeof raw === 'string') {
+          try { currentLikes = JSON.parse(raw); } catch(e){}
+        }
+      }
+      
+      const userIndex = currentLikes.indexOf(uid);
+      let updatedLikes: string[];
+
+      if (newLiked) {
+        updatedLikes = userIndex === -1 ? [...currentLikes, uid] : currentLikes;
+      } else {
+        updatedLikes = currentLikes.filter(id => id !== uid);
+      }
+
+      await db.from('posts').update({ likes: updatedLikes }).eq('id', postId);
+      this.travelStore.updatePost(postId, { hasLiked: updatedLikes.includes(uid), likes: updatedLikes.length });
+    } catch (err: any) {
+      this.travelStore.updatePost(postId, { hasLiked: post.hasLiked, likes: post.likes });
+    }
+  }
+
+  private tapTimers = new Map<string, number>();
+
+  onImageTap(event: Event, post: Post) {
+    const target = event.currentTarget as HTMLElement | null;
+    if (target) {
+      if (event.type === 'touchstart') {
+        (target as any)._hasTouch = true;
+      } else if (event.type === 'click' && (target as any)._hasTouch) {
+        return; // Skip click if handled by touch
+      }
+    }
+
+    const now = Date.now();
+    const lastTap = this.tapTimers.get(post.id) || 0;
+    
+    if (now - lastTap > 0 && now - lastTap < 500) { // 500ms allows easier tap
+      this.handleDoubleTapAnimation(event, post);
+      this.tapTimers.set(post.id, 0); // reset
+    } else {
+      this.tapTimers.set(post.id, now);
+    }
+  }
+
+  handleDoubleTapAnimation(event: Event, post: Post) {
+    event.preventDefault();
+    
+    // Only like if not already liked
+    if (!post.hasLiked) {
+      this.togglePostLike(post.id);
+    }
+    
+    // Create animated heart
+    const target = event.currentTarget as HTMLElement;
+    const heart = document.createElement('div');
+    heart.innerHTML = '<svg fill="#EF4444" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>';
+    heart.className = 'pop-heart-anim';
+    
+    // Styles for popping animation
+    heart.style.position = 'absolute';
+    heart.style.top = '50%';
+    heart.style.left = '50%';
+    heart.style.transform = 'translate(-50%, -50%) scale(0)';
+    heart.style.width = '100px';
+    heart.style.height = '100px';
+    heart.style.pointerEvents = 'none';
+    heart.style.zIndex = '10';
+    heart.style.animation = 'popHeartAnim 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+    heart.style.opacity = '0.9';
+    heart.style.filter = 'drop-shadow(0 4px 12px rgba(0,0,0,0.15))';
+    
+    target.style.position = 'relative'; 
+    target.appendChild(heart);
+    
+    setTimeout(() => {
+      if (heart.parentNode === target) {
+        target.removeChild(heart);
+      }
+    }, 850);
+  }
+
+  readonly commentPostId = signal<string | null>(null);
+  
+  readonly activeCommentPost = computed(() => {
+    const id = this.commentPostId();
+    if (!id) return null;
+    return this.travelStore.posts().find(p => p.id === id) || null;
+  });
+  
+  openPostComments(post: Post) {
+    this.commentPostId.set(post.id);
+    this.commentText = '';
+  }
+
+  closePostComments() {
+    this.commentPostId.set(null);
+    this.commentText = '';
+  }
+
+  async sendPostComment() {
+    const text = this.commentText.trim();
+    const activePost = this.activeCommentPost();
+    if (!text || !activePost) return;
+    
+    this.isSendingComment.set(true);
+    
+    try {
+      const uid = this.travelStore.currentUserId();
+      const profile = this.travelStore.currentUserProfile();
+      const authorName = profile?.name || 'Traveler';
+      
+      const newComment: Comment = {
+        id: crypto.randomUUID(),
+        authorId: uid,
+        authorName,
+        authorAvatar: profile?.avatar || undefined,
+        text,
+        timestamp: new Date().toISOString()
+      };
+      
+      const existingComments = Array.isArray(activePost.comments) ? activePost.comments : [];
+      const updatedComments = [...existingComments, newComment];
+      
+      // Optimistic upate (local)
+      this.travelStore.updatePost(activePost.id, { comments: updatedComments });
+      this.commentText = '';
+      
+      // Update Supabase using RPC to avoid race conditions on JSONB arrays
+      const db = this.supabaseService.client;
+      const { error } = await db.rpc('add_post_comment', {
+        p_post_id: activePost.id,
+        p_comment: newComment
+      });
+      
+      if (error) {
+        console.warn('RPC failed, falling back to full array replace:', error);
+        const { data: freshPost } = await db.from('posts').select('comments').eq('id', activePost.id).single();
+        let freshComments: any[] = [];
+        if (freshPost && freshPost.comments) {
+            const raw = freshPost.comments;
+            if (Array.isArray(raw)) freshComments = raw;
+            else if (typeof raw === 'string') {
+              try { freshComments = JSON.parse(raw); } catch(e){}
+            }
+        }
+        const safelyMerged = [...freshComments, newComment];
+        await db.from('posts').update({ comments: safelyMerged }).eq('id', activePost.id);
+      }
+      
+    } catch(err: any) {
+      this.toastService.show(err.message || 'Failed to send comment', 'error');
+    } finally {
+      this.isSendingComment.set(false);
+    }
+  }
+
+  sharePost(post: Post) {
+    const url = window.location.origin + '/trip/' + post.tripId;
+    if (navigator.share) {
+      navigator.share({
+        title: 'Check this moment!',
+        text: `See this amazing moment by ${post.authorName} on WanderPool!`,
+        url: url
+      }).catch(console.error);
+    } else {
+      navigator.clipboard.writeText(url).then(() => {
+        this.toastService.show('Link copied to clipboard!', 'success');
+      }).catch(() => {
+        this.toastService.show('Failed to copy link', 'error');
+      });
+    }
+  }
+
+  // ─── Post Image Carousel ───
+  activePostImageIndex = signal<Record<string, number>>({});
+
+  onPostImageScroll(postId: string, event: Event) {
+    const target = event.target as HTMLElement;
+    const scrollLeft = target.scrollLeft;
+    const clientWidth = target.clientWidth;
+    const index = Math.round(scrollLeft / (clientWidth - 32));
+    const current = this.activePostImageIndex()[postId] || 0;
+    if (current !== index) {
+      this.activePostImageIndex.update(m => ({ ...m, [postId]: index }));
+    }
+  }
+
+  getPostActiveImageIndex(postId: string): number {
+    return this.activePostImageIndex()[postId] || 0;
   }
 }
