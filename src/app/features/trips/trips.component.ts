@@ -23,7 +23,7 @@ export class TripsComponent implements OnInit {
   readonly defaultCover = 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?q=80&w=1000';
 
   // ─── State ────────────────────────────────────────────────────────────────
-  readonly trips = computed(() => this.travelStore.trips());
+  readonly trips = computed(() => this.travelStore.myTrips());
   readonly isLoading = signal(false);
   readonly modalOpen = signal(false);
   readonly step = signal<1 | 2>(1);
@@ -45,7 +45,7 @@ export class TripsComponent implements OnInit {
 
   // ─── Lifecycle ────────────────────────────────────────────────────────────
   async ngOnInit() {
-    if (this.travelStore.trips().length === 0) {
+    if (this.travelStore.myTrips().length === 0) {
       this.isLoading.set(true);
       await this.travelStore.initSupabase();
       this.isLoading.set(false);
@@ -205,17 +205,29 @@ export class TripsComponent implements OnInit {
         avatar: authUser.user_metadata?.['avatar_url'] || null
       };
 
-      // Invite guests via Edge Function
       const guestMembers = await Promise.all(
         this.members().map(async (email) => {
-          let userId = `guest-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+          let userId: string | null = null;
+          let userName = email.split('@')[0];
+          let userAvatar: string | undefined = undefined;
+          
           try {
             const { data, error } = await db.functions.invoke('invite-member', { body: { email } });
-            if (!error && data?.userId) userId = data.userId;
+            if (!error && data?.userId) {
+              userId = data.userId;
+              try {
+                const { data: userData } = await db.from('users').select('full_name, avatar_url').eq('id', userId).maybeSingle();
+                if (userData?.['full_name']) userName = userData['full_name'];
+                if (userData?.['avatar_url']) userAvatar = userData['avatar_url'];
+              } catch(e) {}
+            }
           } catch (err) {
             console.warn('invite-member failed for', email, err);
           }
-          return { id: userId, name: email.split('@')[0], email, isMe: false };
+          
+          if (!userId) userId = crypto.randomUUID();
+          
+          return { id: userId, name: userName, email, isMe: false, avatar: userAvatar };
         })
       );
 

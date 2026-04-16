@@ -93,6 +93,97 @@ export class AddMomentComponent implements OnInit, OnDestroy {
   showTripPicker = false;
   readonly isExpenseMode = signal(false);
   readonly isSubmitting = signal(false);
+
+  readonly pendingReceipts = signal<{url: string, file?: File}[]>([]);
+  readonly lightboxImages = signal<string[]>([]);
+  readonly lightboxIndex = signal<number | null>(null);
+  readonly lightboxContext = signal<'PENDING' | 'SAVED' | 'PENDING_PHOTO' | null>(null);
+
+  onReceiptSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files?.length) {
+      const arr = [...this.pendingReceipts()];
+      for (let i = 0; i < input.files.length; i++) {
+        arr.push({
+           url: URL.createObjectURL(input.files[i]),
+           file: input.files[i]
+        });
+      }
+      this.pendingReceipts.set(arr);
+    }
+    input.value = '';
+  }
+
+  removeReceipt(index: number, event: Event) {
+    event.stopPropagation();
+    const arr = [...this.pendingReceipts()];
+    arr.splice(index, 1);
+    this.pendingReceipts.set(arr);
+  }
+
+  openLightbox(images: string[], index: number, context: 'PENDING' | 'SAVED' | 'PENDING_PHOTO' = 'SAVED') {
+    this.lightboxImages.set(images);
+    this.lightboxIndex.set(index);
+    this.lightboxContext.set(context);
+    setTimeout(() => {
+      const container = document.querySelector('.lightbox-scroll') as HTMLElement;
+      if (container) {
+        container.scrollTo({ left: window.innerWidth * index, behavior: 'instant' });
+      }
+    }, 10);
+  }
+  
+  openPendingReceiptViewer(index: number) {
+    const urls = this.pendingReceipts().map(r => r.url);
+    this.openLightbox(urls, index, 'PENDING');
+  }
+
+  removeCurrentLightboxImage() {
+    const idx = this.lightboxIndex();
+    const ctx = this.lightboxContext();
+    if (idx === null || (ctx !== 'PENDING' && ctx !== 'PENDING_PHOTO')) return;
+    
+    if (ctx === 'PENDING') {
+      const arr = [...this.pendingReceipts()];
+      arr.splice(idx, 1);
+      this.pendingReceipts.set(arr);
+      
+      const newUrls = arr.map(r => r.url);
+      if (newUrls.length === 0) {
+        this.lightboxIndex.set(null);
+        this.lightboxImages.set([]);
+      } else {
+        this.lightboxImages.set(newUrls);
+        const nextIdx = Math.min(idx, newUrls.length - 1);
+        this.lightboxIndex.set(nextIdx);
+      }
+    } else if (ctx === 'PENDING_PHOTO') {
+      const arr = [...this.photos()];
+      arr.splice(idx, 1);
+      this.photos.set(arr);
+      
+      const newUrls = arr.map(r => r.url);
+      if (newUrls.length === 0) {
+        this.lightboxIndex.set(null);
+        this.lightboxImages.set([]);
+      } else {
+        this.lightboxImages.set(newUrls);
+        const nextIdx = Math.min(idx, newUrls.length - 1);
+        this.lightboxIndex.set(nextIdx);
+      }
+    }
+  }
+
+  onLightboxScroll(event: Event) {
+    const el = event.target as HTMLElement;
+    const idx = Math.round(el.scrollLeft / window.innerWidth);
+    const imgs = this.lightboxImages();
+    if (imgs && idx >= 0 && idx < imgs.length) {
+      if (this.lightboxIndex() !== idx) {
+        this.lightboxIndex.set(idx);
+      }
+    }
+  }
   
   canSubmit(): boolean {
     if (this.photos().length === 0) return false;
@@ -140,7 +231,7 @@ export class AddMomentComponent implements OnInit, OnDestroy {
   private locationTimer: ReturnType<typeof setTimeout> | null = null;
 
   // ─── Derived ──────────────────────────────────────────────────────────────
-  readonly trips = computed(() => this.travelStore.trips());
+  readonly trips = computed(() => this.travelStore.myTrips());
   readonly selectedTrip = computed<Trip | null>(() => {
     const id = this.selectedTripId();
     return id ? (this.trips().find(t => t.id === id) ?? null) : null;
@@ -152,7 +243,7 @@ export class AddMomentComponent implements OnInit, OnDestroy {
 
   // ─── Lifecycle ────────────────────────────────────────────────────────────
   async ngOnInit() {
-    if (this.travelStore.trips().length === 0) {
+    if (this.travelStore.myTrips().length === 0) {
       await this.travelStore.initSupabase();
     }
     const paramTripId = this.route.snapshot.queryParamMap.get('tripId');
@@ -213,7 +304,7 @@ export class AddMomentComponent implements OnInit, OnDestroy {
     if (this.currentCameraId && this.facingMode() === 'environment') {
       constraints.deviceId = { exact: this.currentCameraId };
     } else {
-      constraints.facingMode = this.facingMode();
+      constraints.facingMode = { ideal: this.facingMode() };
     }
 
     try {
@@ -221,19 +312,33 @@ export class AddMomentComponent implements OnInit, OnDestroy {
         video: constraints,
         audio: false
       });
-      
-      // Update devices after granting permission
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      this.videoDevices = devices.filter(d => d.kind === 'videoinput');
-
-      this.applyFlash();
-
-      if (this.videoElement?.nativeElement) {
-        this.videoElement.nativeElement.srcObject = this.stream;
-        this.videoElement.nativeElement.play();
+      this.onStreamActive();
+    } catch (err: any) {
+      if (err.name === 'OverconstrainedError' || err.name === 'ConstraintNotSatisfiedError') {
+        // Fallback if specific camera/mode fails
+        console.warn('Camera constraint failed, falling back to any device');
+        try {
+          this.stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          this.onStreamActive();
+        } catch (e2) {
+          console.error('Fallback camera failed', e2);
+        }
+      } else {
+        console.warn('Camera access denied or unavailable', err);
       }
-    } catch (err) {
-      console.warn('Camera access denied or unavailable', err);
+    }
+  }
+
+  private async onStreamActive() {
+    // Update devices after granting permission
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    this.videoDevices = devices.filter(d => d.kind === 'videoinput');
+
+    this.applyFlash();
+
+    if (this.videoElement?.nativeElement) {
+      this.videoElement.nativeElement.srcObject = this.stream;
+      this.videoElement.nativeElement.play().catch((e: any) => console.warn('Play interrupted', e));
     }
   }
 
@@ -276,7 +381,7 @@ export class AddMomentComponent implements OnInit, OnDestroy {
       try {
         track.applyConstraints({
           advanced: [{ torch: this.isFlashOn() } as any]
-        });
+        }).catch(err => console.warn('Torch constraint rejected:', err));
       } catch (e) {
         console.warn('Torch not supported');
       }
@@ -378,13 +483,17 @@ export class AddMomentComponent implements OnInit, OnDestroy {
       const url = URL.createObjectURL(file);
       const id = Date.now().toString();
       
-      this.photos.update(p => [...p, { id, url, file, isDual: this.isDualMode() }]);
+      this.photos.update(p => [{ id, url, file, isDual: this.isDualMode() }, ...p]);
       // Do not stop camera, always go back to new photo
     }, 'image/webp', 0.9);
   }
 
   viewPhoto(id: string) {
-    this.viewingPhotoId.set(id);
+    const arr = this.photos();
+    const idx = arr.findIndex(p => p.id === id);
+    if (idx >= 0) {
+      this.openLightbox(arr.map(p => p.url), idx, 'PENDING_PHOTO');
+    }
   }
 
   goToDetails() {
@@ -487,7 +596,7 @@ export class AddMomentComponent implements OnInit, OnDestroy {
                  if (blob) {
                     const croppedFile = new File([blob], `gallery_${Date.now()}.webp`, { type: 'image/webp' });
                     const url = URL.createObjectURL(croppedFile);
-                    this.photos.update(p => [...p, { id: cropState.id, url, file: croppedFile, isDual: false }]);
+                    this.photos.update(p => [{ id: cropState.id, url, file: croppedFile, isDual: false }, ...p]);
                  }
                  URL.revokeObjectURL(cropState.url);
                  this.cropQueue.update(q => q.slice(1)); // Chuyển sang ảnh tiếp theo
@@ -816,10 +925,25 @@ export class AddMomentComponent implements OnInit, OnDestroy {
            splits[lastMemberId] += (this.expenseAmount - totalAssigned);
         }
 
+        let finalReceiptUrls: string[] = [];
+        const currentReceipts = this.pendingReceipts();
+        for (const rec of currentReceipts) {
+           if (rec.file) {
+              const rPath = `receipts/${uid}/${Date.now()}_${rec.file.name.replace(/[^a-zA-Z0-9.\-]/g,'_')}`;
+              const { data: rData } = await db.storage.from('nomadsync-media').upload(rPath, rec.file, { upsert: true });
+              if (rData) {
+                 const { data: rUrlData } = db.storage.from('nomadsync-media').getPublicUrl(rPath);
+                 finalReceiptUrls.push(rUrlData.publicUrl);
+              }
+           } else {
+              finalReceiptUrls.push(rec.url);
+           }
+        }
+
         const payload = {
           trip_id: tripId, description: this.caption || 'Untitled Expense', amount: this.expenseAmount,
           category: this.selectedCategory(), payer_id: this.paidById(),
-          splits, receipt_urls: uploadedUrls
+          splits, receipt_urls: finalReceiptUrls
         };
         const { data } = await db.from('expenses').insert(payload).select().single();
         if (data) {

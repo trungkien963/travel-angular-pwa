@@ -18,6 +18,7 @@ export interface Expense {
   splits?: Record<string, number>;
   receipts?: string[];
   receipt?: string;
+  createdAt?: string;
   category?: ExpenseCategory;
 }
 

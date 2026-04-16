@@ -432,6 +432,42 @@
         </div>
 
         <div class="input-card" style="margin-top:20px;">
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+             <p class="field-label" style="margin: 0;">ADD RECEIPT (OPTIONAL)</p>
+             @if (pendingReceipts().length > 0) {
+               <span style="font-size: 12px; color: #666; font-weight: 500;">{{ pendingReceipts().length }} selected</span>
+             }
+          </div>
+          
+          <div class="receipt-picker" style="border-radius: 12px; background: #fafafa; border: 2px dashed #e5e5e5; display: flex; flex-direction:column; padding: 16px; margin-bottom: 24px; gap: 16px;">
+             <!-- Image Previews -->
+             @if (pendingReceipts().length > 0) {
+               <div style="display:flex; gap:12px; overflow-x:auto; padding-bottom:4px; max-width: 100%; -webkit-overflow-scrolling: touch;">
+                  @for (rec of pendingReceipts(); track rec.url; let i = $index) {
+                     <div style="position:relative; width: 80px; height: 80px; flex-shrink:0; border-radius:8px; overflow:hidden; border:1px solid #e5e5e5; cursor:pointer;" (click)="openPendingReceiptViewer(i)">
+                        <img [src]="rec.url" style="width:100%; height:100%; object-fit:cover;" />
+                        <button (click)="removeReceipt(i, $event)" style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.6); color:white; border:none; border-radius:50%; width:22px; height:22px; font-size:12px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:10;">✕</button>
+                     </div>
+                  }
+               </div>
+             }
+             
+             <!-- Buttons horizontally -->
+             <div style="display:flex; width: 100%; gap:12px;">
+               <label style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 16px; background: white; border: 1px solid #e5e5e5; border-radius: 12px; gap:8px; cursor: pointer; position: relative;">
+                 <input type="file" accept="image/*" multiple style="position:absolute; width:1px; height:1px; opacity:0; overflow:hidden;" (change)="onReceiptSelected($event)" />
+                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                 <span style="font-size:12px; font-weight:600; color:#666;">Upload Files</span>
+               </label>
+               <label style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 16px; background: white; border: 1px solid #e5e5e5; border-radius: 12px; gap:8px; cursor: pointer; position: relative;">
+                 <input type="file" accept="image/*" capture="environment" style="position:absolute; width:1px; height:1px; opacity:0; overflow:hidden;" (change)="onReceiptSelected($event)" />
+                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                 <span style="font-size:12px; font-weight:600; color:#666;">Take Photo</span>
+               </label>
+             </div>
+          </div>
+
           <!-- Category picker -->
           <p class="field-label">CATEGORY</p>
           <div class="category-scroll">
@@ -456,7 +492,7 @@
           <!-- Paid By -->
           <p class="field-label" style="margin-top: 24px;">PAID BY</p>
           <div class="paidby-row">
-            @for (member of trip()?.members ?? []; track member.id) {
+            @for (member of currentTripMembersForSplit(); track member.id) {
               <button class="member-pill" [class.active]="expForm.payerId === member.id" (click)="expForm.payerId = member.id">{{ member.name }}</button>
             }
           </div>
@@ -470,7 +506,7 @@
           <!-- Split Logic UI (Hybrid Lock & Float) -->
           <p class="field-label" style="margin-top: 24px; margin-bottom: 8px;">SPLIT DETAILS</p>
           <div class="split-list">
-          @for (member of trip()!.members; track member.id) {
+          @for (member of currentTripMembersForSplit(); track member.id) {
             <div class="split-row" [class.excluded]="!includedMembers()[member.id]">
               <div class="split-left" (click)="toggleMember(member.id)">
                 <button class="split-check">
@@ -492,14 +528,14 @@
                     [value]="lockedShares()[member.id] != null ? formatNumber(lockedShares()[member.id]!) : ''"
                     inputmode="text"
                     placeholder="{{ formatNumber(calcShare(member.id)) }}"
-                    (input)="onInputSplitAmount($event)"
+                    (input)="onInputSplitAmount(member.id, $event)"
                     (blur)="setLockedAmount(member.id, amtInput.value)"
                     (keydown.enter)="setLockedAmount(member.id, amtInput.value)"
                     (click)="$event.stopPropagation()"
                   />
                 } @else {
-                  <div class="amount-val" [class.is-locked]="lockedShares()[member.id] != null">
-                    @if (lockedShares()[member.id] != null) {
+                  <div class="amount-val" [class.is-locked]="lockedShares()[member.id] != null && activeMemberCount() > 1">
+                    @if (lockedShares()[member.id] != null && activeMemberCount() > 1) {
                       <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="lock-icon"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     }
                     ₫{{ formatNumber(calcShare(member.id)) }}
@@ -509,10 +545,24 @@
             </div>
           }
         </div>
+        
+        <!-- Quick add member -->
+        <div class="quick-add-member">
+          <input type="email" [(ngModel)]="newMemberEmail" placeholder="Missing someone? Email them" class="quick-add-input" (keyup.enter)="quickInviteMember()" />
+          <button class="btn-quick-add" [disabled]="isInviting() || !newMemberEmail.trim()" (click)="quickInviteMember()">
+             @if (isInviting()) {<div class="spinner-sm"></div>} @else {<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFC800" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>}
+          </button>
+        </div>
         </div> <!-- Close input-card -->
         
-        <button class="btn-receipt-close" (click)="saveExpense()" [disabled]="isSavingExpense() || !expForm.desc || expForm.amount <= 0" style="margin-top: 16px; background: #FFF; width: 100%; border:none; padding:18px; border-radius:100px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); font-size:16px; font-weight:800;">
-          {{ isSavingExpense() ? 'Saving...' : (editingExpense ? 'Update' : 'Log Expense') }}
+        <button class="btn-receipt-close" (click)="saveExpense()" [disabled]="isSavingExpense() || !expForm.desc || expForm.amount <= 0 || newMemberEmail.trim().length > 0" [class.btn-warning]="newMemberEmail.trim().length > 0" style="margin-top: 16px; width: 100%; border:none; padding:18px; border-radius:100px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); font-size:16px; font-weight:800; cursor:pointer;" [style.background]="(isSavingExpense() || !expForm.desc || expForm.amount <= 0 || newMemberEmail.trim().length > 0) ? '#F5F5F5' : '#FFF'" [style.color]="newMemberEmail.trim().length > 0 ? '#854D0E' : '#1C1917'">
+          @if (isSavingExpense()) {
+            Saving...
+          } @else if (newMemberEmail.trim().length > 0) {
+            ☝️ Tap '+' to add this person first
+          } @else {
+            {{ editingExpense ? 'Update' : 'Log Expense' }}
+          }
         </button>
 
       </div>
@@ -559,6 +609,20 @@
             </div>
           </div>
 
+          @if (selectedExpense.receipts && selectedExpense.receipts.length > 0) {
+            <div class="receipt-divider"></div>
+            <div class="receipt-attachments">
+              <h4 class="receipt-split-title">ATTACHED RECEIPTS</h4>
+              <div style="display:flex; gap:12px; overflow-x:auto; padding-top:8px;">
+                @for (imgUrl of selectedExpense.receipts; track imgUrl; let i = $index) {
+                  <div (click)="openLightbox(selectedExpense.receipts, i)" style="width: 60px; height: 60px; flex-shrink: 0; border-radius: 8px; overflow: hidden; border: 1px solid #e5e5e5; cursor: pointer;">
+                    <img [src]="imgUrl" style="width: 100%; height: 100%; object-fit: cover;" />
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
           @if (isOwner() || selectedExpense.payerId === currentUserId()) {
             <div class="receipt-divider"></div>
             <div class="receipt-footer-actions">
@@ -579,6 +643,33 @@
         </div>
         
         <button class="btn-receipt-close" (click)="selectedExpense = null">Close</button>
+      </div>
+    </div>
+  }
+
+  <!-- Fullscreen Lightbox Overlay -->
+  @if (lightboxIndex() !== null && lightboxImages().length > 0) {
+    <div class="modal-overlay receipt-viewer" style="z-index: 1000; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+      <button style="position: absolute; top: 24px; right: 24px; background: rgba(255,255,255,0.2); border: none; width: 40px; height: 40px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 1001;" (click)="lightboxIndex.set(null)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+
+      @if (lightboxContext() === 'PENDING') {
+        <button style="position: absolute; bottom: max(48px, calc(env(safe-area-inset-bottom, 24px) + 24px)); left: 50%; transform: translateX(-50%); background: rgba(239, 68, 68, 0.4); border: none; width: 56px; height: 56px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 1001; box-shadow: 0 4px 12px rgba(0,0,0,0.5);" (click)="removeCurrentLightboxImage(); $event.stopPropagation()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+        </button>
+      }
+
+      <div class="receipt-carousel-badge" style="position:absolute; top:32px; left:24px; background:rgba(255,255,255,0.2); color:white; padding:4px 10px; border-radius:12px; font-size:14px; font-weight:600; z-index:1001;">
+        {{ lightboxIndex()! + 1 }} / {{ lightboxImages().length }}
+      </div>
+
+      <div class="receipt-fullscreen-scroll lightbox-scroll" style="display:flex; width:100vw; height:100vh; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scroll-behavior:smooth;" (scroll)="onLightboxScroll($event)">
+        @for (img of lightboxImages(); track img) {
+          <div style="width:100vw; height:100vh; flex-shrink:0; scroll-snap-align:center; display:flex; align-items:center; justify-content:center; padding: 20px;">
+            <img [src]="img" style="max-width: 100%; max-height: 85vh; object-fit: contain; border-radius: 8px;" (click)="$event.stopPropagation()" />
+          </div>
+        }
       </div>
     </div>
   }

@@ -646,6 +646,12 @@ $border: #E5E5E5;
 
   &:hover:not(:disabled) { transform: scale(1.02); }
   &:disabled { opacity: 0.5; cursor: not-allowed; }
+  
+  &.btn-warning:disabled {
+    opacity: 0.8;
+    background: #FEF08A; // lighter yellow
+    color: #854D0E; // dark warning text
+  }
 }
 
 // ─── Invite Step ──────────────────────────────────────────────────────────────
@@ -695,9 +701,23 @@ $border: #E5E5E5;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
 
   &:hover { background: rgba(255, 200, 0, 0.3); }
+
+  &.highlight {
+    background: #FFC800;
+    box-shadow: 0 0 0 0 rgba(255, 200, 0, 0.4);
+    animation: pulse-add 1.5s infinite;
+
+    path { stroke: #1C1917; }
+  }
+}
+
+@keyframes pulse-add {
+  0% { box-shadow: 0 0 0 0 rgba(255, 200, 0, 0.4); }
+  70% { box-shadow: 0 0 0 8px rgba(255, 200, 0, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 200, 0, 0); }
 }
 
 .email-error {

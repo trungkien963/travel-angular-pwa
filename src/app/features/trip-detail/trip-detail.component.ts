@@ -60,6 +60,7 @@ export class TripDetailComponent implements OnInit {
   private editLocationTimeout: any;
   readonly isSavingTrip = signal(false);
   @ViewChild('editFileInput') editFileInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('receiptScrollContainer') receiptScrollContainer!: ElementRef<HTMLDivElement>;
 
   openEditTrip() {
     const t = this.trip();
@@ -217,6 +218,33 @@ export class TripDetailComponent implements OnInit {
   readonly expenseModalOpen = signal(false);
   readonly isSavingExpense = signal(false);
   editingExpense: Expense | null = null;
+  
+  readonly pendingReceipts = signal<{url: string, file?: File}[]>([]);
+  readonly lightboxImages = signal<string[]>([]);
+  readonly lightboxIndex = signal<number | null>(null);
+  readonly lightboxContext = signal<'PENDING' | 'SAVED' | null>(null);
+
+  onReceiptSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files?.length) {
+      const arr = [...this.pendingReceipts()];
+      for (let i = 0; i < input.files.length; i++) {
+        arr.push({
+           url: URL.createObjectURL(input.files[i]),
+           file: input.files[i]
+        });
+      }
+      this.pendingReceipts.set(arr);
+    }
+    input.value = '';
+  }
+
+  removeReceipt(index: number, event: Event) {
+    event.stopPropagation();
+    const arr = [...this.pendingReceipts()];
+    arr.splice(index, 1);
+    this.pendingReceipts.set(arr);
+  }
 
   // ─── Comments modal state ──────────────────────────────────────────────
   readonly commentPostId = signal<string | null>(null);
@@ -287,8 +315,17 @@ export class TripDetailComponent implements OnInit {
   
   // Split logic state
   readonly includedMembers = signal<Record<string, boolean>>({});
+  readonly activeMemberCount = computed(() => {
+    const inc = this.includedMembers();
+    return Object.values(inc).filter(v => v).length;
+  });
   readonly lockedShares = signal<Record<string, number | null>>({});
   readonly editingMemberId = signal<string | null>(null);
+
+  readonly pendingNewMembers = signal<any[]>([]);
+  readonly currentTripMembersForSplit = computed(() => {
+    return [...(this.trip()?.members ?? []), ...this.pendingNewMembers()];
+  });
 
   get formattedTotalAmount(): string {
     return this.expForm.amount ? this.formatNumber(this.expForm.amount) : '';
@@ -304,6 +341,23 @@ export class TripDetailComponent implements OnInit {
     if (!this.includedMembers()[id]) {
        this.lockedShares.update(m => ({ ...m, [id]: null })); 
     }
+    
+    this.lockedShares.update(locks => {
+      const newLocks = { ...locks };
+      const inc = this.includedMembers();
+      const active = Object.keys(inc).filter(k => inc[k]);
+      
+      if (active.length <= 1) {
+         active.forEach(k => newLocks[k] = null);
+         return newLocks;
+      }
+
+      const floats = active.filter(k => newLocks[k] == null);
+      if (active.length > 0 && floats.length === 0) {
+        active.forEach(k => newLocks[k] = null);
+      }
+      return newLocks;
+    });
   }
 
   startEdit(memberId: string) {
@@ -312,26 +366,50 @@ export class TripDetailComponent implements OnInit {
 
   setLockedAmount(memberId: string, value: string) {
     this.editingMemberId.set(null);
+    this.updateLockedValue(memberId, value);
+  }
+
+  updateLockedValue(memberId: string, value: string) {
     const val = value.trim();
-    if (!val) {
+    const inc = this.includedMembers();
+    const active = Object.keys(inc).filter(k => inc[k]);
+
+    if (!val || active.length <= 1) {
       this.lockedShares.update(m => ({ ...m, [memberId]: null }));
       return;
     }
+
     let num = 0;
     if (val.endsWith('%')) {
       num = (this.expForm.amount || 0) * (parseFloat(val) / 100);
     } else {
       num = parseFloat(val.replace(/[^0-9.]/g, ''));
     }
+
     if (isNaN(num)) {
       this.lockedShares.update(m => ({ ...m, [memberId]: null }));
     } else {
-      this.lockedShares.update(m => ({ ...m, [memberId]: Math.round(num) }));
+      this.lockedShares.update(locks => {
+        const newLocks = { ...locks, [memberId]: Math.round(num) };
+        const floats = active.filter(k => newLocks[k] == null);
+        if (active.length > 0 && floats.length === 0) {
+          active.forEach(k => {
+            if (k !== memberId) newLocks[k] = null;
+          });
+        }
+        return newLocks;
+      });
     }
   }
 
   calcShare(memberId: string): number {
     if (!this.includedMembers()[memberId]) return 0;
+
+    // Safety: If only 1 member is active, they mathematically must pay the full amount.
+    if (this.activeMemberCount() === 1) {
+      return this.expForm.amount || 0;
+    }
+
     const lockedAmount = this.lockedShares()[memberId];
     if (lockedAmount !== undefined && lockedAmount !== null) return lockedAmount;
 
@@ -351,15 +429,48 @@ export class TripDetailComponent implements OnInit {
     return floatCount > 0 ? Math.round(Math.max(0, remainder) / floatCount) : 0;
   }
 
-  onInputSplitAmount(event: Event) {
+  onInputSplitAmount(memberId: string, event: Event) {
     const input = event.target as HTMLInputElement;
-    const raw = input.value.replace(/[^0-9]/g, '');
-    const num = parseInt(raw, 10);
-    if (!isNaN(num)) {
-      input.value = num.toLocaleString('en-US');
+    const val = input.value.trim();
+    if (val.endsWith('%')) {
+      // let it be
     } else {
-      input.value = '';
+      const raw = val.replace(/[^0-9]/g, '');
+      const num = parseInt(raw, 10);
+      if (!isNaN(num)) {
+        input.value = num.toLocaleString('en-US');
+      } else {
+        input.value = '';
+      }
     }
+    this.updateLockedValue(memberId, input.value);
+  }
+
+  // ─── Direct Member Invite ──────────────────────────────────────────────────
+  async quickInviteMember() {
+    const email = this.newMemberEmail.trim();
+    if (!email) return;
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      this.toastService.show('Invalid email format.', 'error');
+      return;
+    }
+
+    const trip = this.trip();
+    if (!trip) return;
+
+    if (trip.members.some(m => m.email === email) || this.pendingNewMembers().some(m => m.email === email)) {
+      this.toastService.show('Member already in trip or pending.', 'error');
+      return;
+    }
+
+    const tempId = `pending-${Date.now()}-${Math.random().toString(36).substring(2,7)}`;
+    const newMember = { id: tempId, name: email.split('@')[0], email, isMe: false, avatar: undefined };
+    
+    this.pendingNewMembers.update(list => [...list, newMember]);
+    this.includedMembers.update(m => ({ ...m, [tempId]: true }));
+    this.newMemberEmail = '';
   }
 
   readonly categories = Object.entries(CATEGORY_META).map(([id, v]) => ({
@@ -372,7 +483,14 @@ export class TripDetailComponent implements OnInit {
 
   readonly trip = computed<Trip | null>(() => {
     const id = this.tripId();
-    return this.travelStore.trips().find(t => t.id === id) ?? null;
+    const t = this.travelStore.trips().find(t => t.id === id) ?? null;
+    if (t && t.isPrivate) {
+      const uid = this.currentUserId();
+      if (!t.members?.some(m => m.id === uid)) {
+        return null;
+      }
+    }
+    return t;
   });
 
   readonly isOwner = computed(() => {
@@ -386,9 +504,16 @@ export class TripDetailComponent implements OnInit {
     return t.members?.some(m => m.id === this.currentUserId()) ?? false;
   });
 
-  readonly tripExpenses = computed<Expense[]>(() =>
-    this.travelStore.expenses().filter(e => e['tripId'] === this.tripId())
-  );
+  readonly tripExpenses = computed<Expense[]>(() => {
+    return this.travelStore.expenses()
+      .filter(e => e['tripId'] === this.tripId())
+      .sort((a, b) => {
+        // Sort by createdAt if available, otherwise by date descending
+        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : new Date(a.date).getTime();
+        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : new Date(b.date).getTime();
+        return timeB - timeA;
+      });
+  });
 
   readonly tripPosts = computed<Post[]>(() =>
     this.travelStore.posts().filter(p => p.tripId === this.tripId())
@@ -542,7 +667,9 @@ export class TripDetailComponent implements OnInit {
           category: row.category,
           payerId: row.payer_id,
           date: row.date,
-          splits: row.splits || {}
+          createdAt: row.created_at,
+          splits: row.splits || {},
+          receipts: row.receipt_urls || []
         };
         this.travelStore.upsertExpense(expense);
       });
@@ -889,7 +1016,59 @@ export class TripDetailComponent implements OnInit {
     if (trip) trip.members.forEach(m => inc[m.id] = true);
     this.includedMembers.set(inc);
     this.lockedShares.set({});
+    this.lockedShares.set({});
+    this.pendingReceipts.set([]);
     this.expenseModalOpen.set(true);
+  }
+
+  openLightbox(images: string[], index: number, context: 'PENDING' | 'SAVED' = 'SAVED') {
+    this.lightboxImages.set(images);
+    this.lightboxIndex.set(index);
+    this.lightboxContext.set(context);
+    setTimeout(() => {
+      const container = document.querySelector('.lightbox-scroll') as HTMLElement;
+      if (container) {
+        container.scrollTo({ left: window.innerWidth * index, behavior: 'instant' });
+      }
+    }, 10);
+  }
+  
+  openPendingReceiptViewer(index: number) {
+    const urls = this.pendingReceipts().map(r => r.url);
+    this.openLightbox(urls, index, 'PENDING');
+  }
+
+  removeCurrentLightboxImage() {
+    const idx = this.lightboxIndex();
+    const ctx = this.lightboxContext();
+    if (idx === null || ctx !== 'PENDING') return;
+    
+    // Remove from pendingReceipts
+    const arr = [...this.pendingReceipts()];
+    arr.splice(idx, 1);
+    this.pendingReceipts.set(arr);
+    
+    // Update lightbox images
+    const newUrls = arr.map(r => r.url);
+    if (newUrls.length === 0) {
+      this.lightboxIndex.set(null);
+      this.lightboxImages.set([]);
+    } else {
+      this.lightboxImages.set(newUrls);
+      const nextIdx = Math.min(idx, newUrls.length - 1);
+      this.lightboxIndex.set(nextIdx);
+    }
+  }
+
+  onLightboxScroll(event: Event) {
+    const el = event.target as HTMLElement;
+    const idx = Math.round(el.scrollLeft / window.innerWidth);
+    const imgs = this.lightboxImages();
+    if (imgs && idx >= 0 && idx < imgs.length) {
+      if (this.lightboxIndex() !== idx) {
+        this.lightboxIndex.set(idx);
+      }
+    }
   }
 
   openExpenseDetail(exp: Expense) { this.selectedExpense = exp; }
@@ -919,22 +1098,98 @@ export class TripDetailComponent implements OnInit {
     this.includedMembers.set(inc);
     this.lockedShares.set(lock);
     this.selectedExpense = null;
+    this.selectedExpense = null;
+    const urls = exp.receipts || [];
+    this.pendingReceipts.set(urls.map(url => ({ url })));
     this.expenseModalOpen.set(true);
   }
 
   async saveExpense() {
     if (!this.expForm.desc || !this.expForm.amount) return;
+    const trip = this.trip();
+    if (!trip) return;
+    const db = this.supabaseService.client;
+
+    const pending = this.pendingNewMembers().filter(p => this.includedMembers()[p.id]);
+    let idMap: Record<string, string> = {};
+    if (pending.length > 0) {
+      const emailListHtml = pending.map(p => `• <strong>${p.email}</strong>`).join('<br>');
+      const msgHtml = `Có <b>${pending.length}</b> người mới vừa được thêm vào chưa nhận được thư mời:<br><br>${emailListHtml}<br><br>Bạn có muốn gửi lời mời cho họ tham gia trip này?`;
+      
+      const confirmed = await this.confirmService.confirm(
+        msgHtml,
+        'Mời người mới?',
+        'Yes, Invite',
+        'Huỷ bỏ'
+      );
+      if (!confirmed) return;
+      
+      this.isSavingExpense.set(true);
+      try {
+        const resolvedMembers: any[] = [];
+        for (const p of pending) {
+          let userId: string | null = null;
+          let userName = p.name;
+          let userAvatar: string | undefined = p.avatar;
+          
+          try {
+            const { data, error } = await db.functions.invoke('invite-member', { body: { email: p.email } });
+            if (!error && data?.userId) {
+              userId = data.userId;
+              try {
+                const { data: userData } = await db.from('users').select('full_name, avatar_url').eq('id', userId).maybeSingle();
+                if (userData?.['full_name']) userName = userData['full_name'];
+                if (userData?.['avatar_url']) userAvatar = userData['avatar_url'];
+              } catch(e) {}
+            }
+          } catch(err) { console.warn('Invite fail', p.email, err); }
+          
+          if (!userId) userId = crypto.randomUUID();
+          
+          idMap[p.id] = userId;
+          resolvedMembers.push({ ...p, id: userId, name: userName, avatar: userAvatar });
+        }
+        
+        const updatedTripMembers = [...trip.members, ...resolvedMembers];
+        await db.from('trips').update({ members: updatedTripMembers }).eq('id', trip.id);
+        this.travelStore.updateTrip(trip.id, { members: updatedTripMembers });
+        
+        const newIncludes: Record<string, boolean> = {};
+        const newLocks: Record<string, number | null> = {};
+        
+        Object.keys(this.includedMembers()).forEach(k => {
+          const mapId = idMap[k] || k;
+          newIncludes[mapId] = this.includedMembers()[k];
+        });
+        Object.keys(this.lockedShares()).forEach(k => {
+          const mapId = idMap[k] || k;
+          newLocks[mapId] = this.lockedShares()[k];
+        });
+
+        if (idMap[this.expForm.payerId]) {
+          this.expForm.payerId = idMap[this.expForm.payerId];
+        }
+        
+        this.includedMembers.set(newIncludes);
+        this.lockedShares.set(newLocks);
+        this.pendingNewMembers.set([]);
+      } catch (err) {
+        this.toastService.show('Lỗi khi mời member', 'error');
+        this.isSavingExpense.set(false);
+        return;
+      }
+    }
+
+    this.pendingNewMembers.set([]);
     this.isSavingExpense.set(true);
     this.travelStore.setGlobalLoading(true);
 
-    const db = this.supabaseService.client;
     const splits: Record<string, number> = {};
     let totalAssigned = 0;
     let lastMemberId: string | null = null;
-    const trip = this.trip();
     
-    if (trip) {
-      trip.members.forEach(m => {
+    try {
+      this.currentTripMembersForSplit().forEach(m => {
         if (this.includedMembers()[m.id]) {
           const share = this.calcShare(m.id);
           splits[m.id] = share;
@@ -942,34 +1197,53 @@ export class TripDetailComponent implements OnInit {
           lastMemberId = m.id;
         }
       });
-    }
 
-    if (lastMemberId && totalAssigned !== this.expForm.amount) {
-       splits[lastMemberId] += (this.expForm.amount - totalAssigned);
-    }
+      if (lastMemberId && totalAssigned !== this.expForm.amount) {
+         splits[lastMemberId] += (this.expForm.amount - totalAssigned);
+      }
 
-    const payload: any = {
-      trip_id: this.tripId(),
-      description: this.expForm.desc,
-      amount: this.expForm.amount,
-      category: this.expForm.category,
-      payer_id: this.expForm.payerId,
-      splits
-    };
-    
-    if (this.expForm.date) {
-      // Append time so it's a valid timestamp
-      payload.created_at = new Date(this.expForm.date).toISOString();
-    }
+      const payload: any = {
+        trip_id: this.tripId(),
+        description: this.expForm.desc,
+        amount: this.expForm.amount,
+        category: this.expForm.category,
+        payer_id: this.expForm.payerId,
+        splits
+      };
+      
+      if (this.expForm.date) {
+        try {
+          payload.created_at = new Date(this.expForm.date).toISOString();
+        } catch(e) {
+          console.warn('Invalid date string');
+        }
+      }
 
-    try {
+      let finalReceiptUrls: string[] = [];
+      const currentReceipts = this.pendingReceipts();
+      for (const rec of currentReceipts) {
+         if (rec.file) {
+            const uid = this.currentUserId();
+            const rPath = `receipts/${uid}/${Date.now()}_${rec.file.name.replace(/[^a-zA-Z0-9.\-]/g,'_')}`;
+            const { data: rData, error: uploadErr } = await db.storage.from('nomadsync-media').upload(rPath, rec.file, { upsert: true });
+            if (rData) {
+               const { data: rUrlData } = db.storage.from('nomadsync-media').getPublicUrl(rPath);
+               finalReceiptUrls.push(rUrlData.publicUrl);
+            }
+         } else {
+            finalReceiptUrls.push(rec.url);
+         }
+      }
+
+      payload.receipt_urls = finalReceiptUrls.length > 0 ? finalReceiptUrls : null;
+
       if (this.editingExpense) {
         const { data, error } = await db.from('expenses').update(payload).eq('id', this.editingExpense.id).select().single();
         if (error) throw error;
         if (data) this.travelStore.upsertExpense({
           id: data['id'], tripId: data['trip_id'], desc: data['description'],
           amount: data['amount'], category: data['category'],
-          payerId: data['payer_id'], date: data['date'], splits: data['splits']
+          payerId: data['payer_id'], date: data['date'], createdAt: data['created_at'], splits: data['splits'], receipts: data['receipt_urls']
         } as Expense);
       } else {
         const { data, error } = await db.from('expenses').insert(payload).select().single();
@@ -977,7 +1251,7 @@ export class TripDetailComponent implements OnInit {
         if (data) this.travelStore.upsertExpense({
           id: data['id'], tripId: data['trip_id'], desc: data['description'],
           amount: data['amount'], category: data['category'],
-          payerId: data['payer_id'], date: data['date'], splits: data['splits']
+          payerId: data['payer_id'], date: data['date'], createdAt: data['created_at'], splits: data['splits'], receipts: data['receipt_urls']
         } as Expense);
       }
       this.expenseModalOpen.set(false);

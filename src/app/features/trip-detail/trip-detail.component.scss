@@ -1545,3 +1545,47 @@ $border: #F0F0F0;
     transform: scale(1.05);
   }
 }
+
+// ─── Quick Add Member ────────────────────────────────────────────────────────
+.quick-add-member {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #F9F9F9;
+  border-radius: 12px;
+  padding: 8px 12px;
+  border: 1px dashed rgba(168, 162, 158, 0.4);
+  margin-top: 16px;
+  transition: border-color 0.2s ease;
+
+  &:focus-within { border-color: rgba(255, 200, 0, 0.5); background: #FFFFFF; }
+}
+
+.quick-add-input {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1C1917;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+
+  &::placeholder { color: #A8A29E; }
+}
+
+.btn-quick-add {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(255, 200, 0, 0.15);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+
+  &:hover:not(:disabled) { background: rgba(255, 200, 0, 0.3); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}

@@ -24,12 +24,12 @@ export class ProfileComponent implements OnInit {
   readonly avatarUrl = signal<string | null>(null);
 
   // ─── Real stats from store ────────────────────────────────────────────────
-  readonly totalTrips = computed(() => this.travelStore.trips().length);
+  readonly totalTrips = computed(() => this.travelStore.myTrips().length);
   readonly totalPosts = computed(() => this.travelStore.posts().length);
   readonly totalMembers = computed(() => {
     const uid = this.travelStore.currentUserId();
     const seen = new Set<string>();
-    this.travelStore.trips().forEach(t => {
+    this.travelStore.myTrips().forEach(t => {
       t.members?.forEach(m => { if (m.id !== uid) seen.add(m.id); });
     });
     return seen.size;
@@ -46,7 +46,7 @@ export class ProfileComponent implements OnInit {
       this.avatarUrl.set(meta?.['avatar_url'] || meta?.['picture'] || null);
     }
 
-    if (this.travelStore.trips().length === 0) {
+    if (this.travelStore.myTrips().length === 0) {
       await this.travelStore.initSupabase();
     }
   }

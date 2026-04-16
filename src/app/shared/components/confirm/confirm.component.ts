@@ -13,7 +13,7 @@ import { ConfirmService } from '../../../core/services/confirm.service';
       >
         <div class="confirm-modal" (click)="$event.stopPropagation()">
           <h3 class="confirm-title">{{ confirmService.currentConfirm()?.title }}</h3>
-          <p class="confirm-message">{{ confirmService.currentConfirm()?.message }}</p>
+          <p class="confirm-message" [innerHTML]="confirmService.currentConfirm()?.message"></p>
           <div class="confirm-actions">
             <button class="btn-cancel" (click)="confirmService.respond(false)">
               {{ confirmService.currentConfirm()?.cancelText }}

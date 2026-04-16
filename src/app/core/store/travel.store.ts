@@ -4,6 +4,7 @@ import { Expense } from '../models/expense.model';
 import { Post } from '../models/social.model';
 import { AppNotification } from '../models/notification.model';
 import { SupabaseService } from '../services/supabase.service';
+import { ToastService } from '../services/toast.service';
 
 interface UserProfile {
   name: string;
@@ -22,6 +23,7 @@ interface UserProfile {
 @Injectable({ providedIn: 'root' })
 export class TravelStore {
   private supabase = inject(SupabaseService);
+  private toastService = inject(ToastService);
 
   // ─── State Signals (equivalent to Zustand state) ─────────────────────────
   readonly currentUserId = signal<string>('');
@@ -311,6 +313,7 @@ export class TravelStore {
               amount: e['amount'],
               desc: e['description'] || '',
               date: e['created_at'] ? e['created_at'].split('T')[0] : new Date().toISOString().split('T')[0],
+              createdAt: e['created_at'],
               payerId: e['payer_id'] || 'Traveler',
               category: e['category'] || 'OTHER',
               splits: parsedSplits,
@@ -394,6 +397,13 @@ export class TravelStore {
           } catch (e) {
             console.warn('Web Push failed:', e);
           }
+        }
+
+        // Show in-app Toast Notification for invitations or other events
+        if (n.type === 'invite' || (n.message && n.message.toLowerCase().includes('invite'))) {
+          this.toastService.show(`💌 ${n.message}`, 'success');
+        } else {
+          this.toastService.show(`🔔 ${n.message}`, 'info');
         }
       })
 
