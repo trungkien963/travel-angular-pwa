@@ -42,6 +42,7 @@ export class AddMomentComponent implements OnInit, OnDestroy {
   @ViewChild('canvasElement') canvasElement?: ElementRef<HTMLCanvasElement>;
 
   // ─── Camera state ────────────────────────────────────────────────────────
+  readonly cameraPhase = signal<'capture' | 'details'>('capture');
   readonly isCameraActive = signal(true);
   readonly facingMode = signal<'environment' | 'user'>('user');
   readonly isDualMode = signal(false);
@@ -59,6 +60,16 @@ export class AddMomentComponent implements OnInit, OnDestroy {
   // ─── Image state ─────────────────────────────────────────────────────────
   readonly photos = signal<PhotoCapture[]>([]);
   readonly viewingPhotoId = signal<string | null>(null);
+
+  // Crop Interactive State
+  readonly cropQueue = signal<{id: string, url: string, file: File}[]>([]);
+  readonly cropTotal = signal(0);
+  readonly currentCropIndex = computed(() => this.cropTotal() - this.cropQueue().length + 1);
+  readonly currentCrop = computed(() => this.cropQueue()[0] || null);
+  readonly isCropLandscape = signal(false);
+
+  @ViewChild('cropperScrollArea') cropperScrollArea?: ElementRef<HTMLDivElement>;
+  @ViewChild('cropperImgElement') cropperImgElement?: ElementRef<HTMLImageElement>;
 
   readonly viewingPhotoUrl = computed(() => {
     const p = this.photos().find(x => x.id === this.viewingPhotoId());
@@ -100,8 +111,16 @@ export class AddMomentComponent implements OnInit, OnDestroy {
   // Expense specific
   readonly paidById = signal('');
   readonly includedMembers = signal<Record<string, boolean>>({});
+  readonly activeMemberCount = computed(() => {
+    const inc = this.includedMembers();
+    return Object.values(inc).filter(v => v).length;
+  });
   readonly lockedShares = signal<Record<string, number | null>>({});
   readonly editingMemberId = signal<string | null>(null);
+
+  // Directly add members
+  newMemberEmail = '';
+  readonly isInviting = signal(false);
   
   readonly expenseCategories = [
     { id: 'FOOD', icon: '🍔', label: 'Food' },
@@ -126,7 +145,10 @@ export class AddMomentComponent implements OnInit, OnDestroy {
     const id = this.selectedTripId();
     return id ? (this.trips().find(t => t.id === id) ?? null) : null;
   });
-  readonly currentTripMembers = computed(() => this.selectedTrip()?.members ?? []);
+  readonly pendingNewMembers = signal<any[]>([]);
+  readonly currentTripMembers = computed(() => {
+    return [...(this.selectedTrip()?.members ?? []), ...this.pendingNewMembers()];
+  });
 
   // ─── Lifecycle ────────────────────────────────────────────────────────────
   async ngOnInit() {
@@ -365,6 +387,14 @@ export class AddMomentComponent implements OnInit, OnDestroy {
     this.viewingPhotoId.set(id);
   }
 
+  goToDetails() {
+    this.cameraPhase.set('details');
+  }
+
+  goToCapture() {
+    this.cameraPhase.set('capture');
+  }
+
   closePreviewPopup() {
     this.viewingPhotoId.set(null);
   }
@@ -389,13 +419,84 @@ export class AddMomentComponent implements OnInit, OnDestroy {
   onFilePicked(event: Event) {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
-    Array.from(input.files).forEach(file => {
-      const url = URL.createObjectURL(file);
-      const id = Date.now().toString() + Math.random();
-      this.photos.update(p => [...p, { id, url, file, isDual: false }]);
-    });
-    // Do not stop camera
+    
+    // Đẩy toàn bộ ảnh vào hàng đợi (queue) để crop thủ công
+    const arr = Array.from(input.files).map(file => ({
+       file: file,
+       url: URL.createObjectURL(file), // Temp URL for cropping
+       id: Date.now().toString() + Math.random()
+    }));
+    
+    this.cropTotal.set(arr.length);
+    this.cropQueue.set(arr);
+    this.goToCapture(); // Đảm bảo đang ở màn Camera
     input.value = '';
+  }
+
+  onCropImgLoad(event: Event) {
+    const img = event.target as HTMLImageElement;
+    this.isCropLandscape.set(img.naturalWidth > img.naturalHeight);
+    
+    // Căn giữa vị trí Scroll ngay khi load ảnh
+    setTimeout(() => {
+        const scrollArea = this.cropperScrollArea?.nativeElement;
+        if (scrollArea) {
+           scrollArea.scrollLeft = (scrollArea.scrollWidth - scrollArea.clientWidth) / 2;
+           scrollArea.scrollTop = (scrollArea.scrollHeight - scrollArea.clientHeight) / 2;
+        }
+    }, 50);
+  }
+
+  skipCrop() {
+    const cropState = this.currentCrop();
+    if (cropState) {
+       URL.revokeObjectURL(cropState.url);
+    }
+    this.cropQueue.update(q => q.slice(1));
+  }
+
+  abortCropSession() {
+    this.cropQueue().forEach(c => URL.revokeObjectURL(c.url));
+    this.cropQueue.set([]);
+    this.cropTotal.set(0);
+  }
+
+  confirmCrop() {
+    const cropState = this.currentCrop();
+    if (!cropState) return;
+
+    const scrollEl = this.cropperScrollArea?.nativeElement;
+    const imgEl = this.cropperImgElement?.nativeElement;
+    if (!scrollEl || !imgEl) return;
+
+    const img = new Image();
+    img.onload = () => {
+        const scale = img.naturalWidth / imgEl.offsetWidth; 
+        
+        const sx = scrollEl.scrollLeft * scale;
+        const sy = scrollEl.scrollTop * scale;
+        const size = scrollEl.clientWidth * scale; // 1:1 ratio
+
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+            ctx.drawImage(img, sx, sy, size, size, 0, 0, size, size);
+            canvas.toBlob(blob => {
+                 if (blob) {
+                    const croppedFile = new File([blob], `gallery_${Date.now()}.webp`, { type: 'image/webp' });
+                    const url = URL.createObjectURL(croppedFile);
+                    this.photos.update(p => [...p, { id: cropState.id, url, file: croppedFile, isDual: false }]);
+                 }
+                 URL.revokeObjectURL(cropState.url);
+                 this.cropQueue.update(q => q.slice(1)); // Chuyển sang ảnh tiếp theo
+            }, 'image/webp', 0.9);
+        } else {
+             this.cropQueue.update(q => q.slice(1));
+        }
+    };
+    img.src = cropState.url;
   }
 
   // ─── Trip & Form ──────────────────────────────────────────────────────────
@@ -419,8 +520,25 @@ export class AddMomentComponent implements OnInit, OnDestroy {
   toggleMember(id: string) {
     this.includedMembers.update(m => ({ ...m, [id]: !m[id] }));
     if (!this.includedMembers()[id]) {
-       this.lockedShares.update(m => ({ ...m, [id]: null })); // reset lock if excluded
+       this.lockedShares.update(m => ({ ...m, [id]: null })); 
     }
+    
+    this.lockedShares.update(locks => {
+      const newLocks = { ...locks };
+      const inc = this.includedMembers();
+      const active = Object.keys(inc).filter(k => inc[k]);
+      
+      if (active.length <= 1) {
+         active.forEach(k => newLocks[k] = null);
+         return newLocks;
+      }
+
+      const floats = active.filter(k => newLocks[k] == null);
+      if (active.length > 0 && floats.length === 0) {
+        active.forEach(k => newLocks[k] = null);
+      }
+      return newLocks;
+    });
   }
 
   startEdit(memberId: string) {
@@ -429,8 +547,15 @@ export class AddMomentComponent implements OnInit, OnDestroy {
 
   setLockedAmount(memberId: string, value: string) {
     this.editingMemberId.set(null);
+    this.updateLockedValue(memberId, value);
+  }
+
+  updateLockedValue(memberId: string, value: string) {
     const val = value.trim();
-    if (!val) {
+    const inc = this.includedMembers();
+    const active = Object.keys(inc).filter(k => inc[k]);
+
+    if (!val || active.length <= 1) {
       this.lockedShares.update(m => ({ ...m, [memberId]: null }));
       return;
     }
@@ -440,20 +565,32 @@ export class AddMomentComponent implements OnInit, OnDestroy {
       const pct = parseFloat(val) / 100;
       num = (this.expenseAmount || 0) * pct;
     } else {
-      // Allow for formatted values like 500,000
       num = parseFloat(val.replace(/[^0-9.]/g, ''));
     }
     
     if (isNaN(num)) {
       this.lockedShares.update(m => ({ ...m, [memberId]: null }));
     } else {
-      this.lockedShares.update(m => ({ ...m, [memberId]: Math.round(num) }));
+      this.lockedShares.update(locks => {
+        const newLocks = { ...locks, [memberId]: Math.round(num) };
+        const floats = active.filter(k => newLocks[k] == null);
+        if (active.length > 0 && floats.length === 0) {
+          active.forEach(k => {
+            if (k !== memberId) newLocks[k] = null;
+          });
+        }
+        return newLocks;
+      });
     }
   }
 
   calcShare(memberId: string): number {
     if (!this.includedMembers()[memberId]) return 0;
     
+    if (this.activeMemberCount() === 1) {
+      return this.expenseAmount || 0;
+    }
+
     const lockedAmount = this.lockedShares()[memberId];
     if (lockedAmount !== undefined && lockedAmount !== null) {
       return lockedAmount;
@@ -480,15 +617,48 @@ export class AddMomentComponent implements OnInit, OnDestroy {
     return floatCount > 0 ? Math.round(remainder / floatCount) : 0;
   }
 
-  onInputSplitAmount(event: Event) {
+  onInputSplitAmount(memberId: string, event: Event) {
     const input = event.target as HTMLInputElement;
-    const raw = input.value.replace(/[^0-9]/g, '');
-    const num = parseInt(raw, 10);
-    if (!isNaN(num)) {
-      input.value = num.toLocaleString('en-US');
+    const val = input.value.trim();
+    if (val.endsWith('%')) {
+      // let it be
     } else {
-      input.value = '';
+      const raw = val.replace(/[^0-9]/g, '');
+      const num = parseInt(raw, 10);
+      if (!isNaN(num)) {
+        input.value = num.toLocaleString('en-US');
+      } else {
+        input.value = '';
+      }
     }
+    this.updateLockedValue(memberId, input.value);
+  }
+
+  // ─── Direct Member Invite ──────────────────────────────────────────────────
+  async quickInviteMember() {
+    const email = this.newMemberEmail.trim();
+    if (!email) return;
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      this.toastService.show('Invalid email format.', 'error');
+      return;
+    }
+
+    const trip = this.selectedTrip();
+    if (!trip) return;
+
+    if (trip.members.some(m => m.email === email) || this.pendingNewMembers().some(m => m.email === email)) {
+      this.toastService.show('Member already in trip or pending.', 'error');
+      return;
+    }
+
+    const tempId = `pending-${Date.now()}-${Math.random().toString(36).substring(2,7)}`;
+    const newMember = { id: tempId, name: email.split('@')[0], email, isMe: false, avatar: undefined };
+    
+    this.pendingNewMembers.update(list => [...list, newMember]);
+    this.includedMembers.update(m => ({ ...m, [tempId]: true }));
+    this.newMemberEmail = '';
   }
 
   // ─── Location search ─────────────────────────────────────────────────────
@@ -531,10 +701,88 @@ export class AddMomentComponent implements OnInit, OnDestroy {
       this.toastService.show('Chưa có nội dung hoặc hình ảnh.', 'error'); return;
     }
 
-    this.isSubmitting.set(true);
     const db = this.supabase.client;
     const uid = this.travelStore.currentUserId();
     const trip = this.selectedTrip();
+    if (!trip) return;
+
+    // Process pending members before submitting
+    const pending = this.pendingNewMembers().filter(p => this.includedMembers()[p.id]);
+    let idMap: Record<string, string> = {}; // maps tempId -> realId
+    if (pending.length > 0) {
+      const emailListHtml = pending.map(p => `• <strong>${p.email}</strong>`).join('<br>');
+      const msgHtml = `Có <b>${pending.length}</b> người mới vừa được thêm vào chưa nhận được thư mời:<br><br>${emailListHtml}<br><br>Bạn có muốn gửi lời mời cho họ tham gia trip này?`;
+      
+      const confirmed = await this.confirmService.confirm(
+        msgHtml,
+        'Mời người mới?',
+        'Yes, Invite',
+        'Huỷ bỏ'
+      );
+      if (!confirmed) {
+        return; // Abort submission
+      }
+      this.isSubmitting.set(true);
+      try {
+        // Prepare to invite
+        const resolvedMembers: any[] = [];
+        for (const p of pending) {
+          let userId: string | null = null;
+          let userName = p.name;
+          let userAvatar: string | undefined = p.avatar;
+          
+          try {
+            const { data, error } = await db.functions.invoke('invite-member', { body: { email: p.email } });
+            if (!error && data?.userId) {
+              userId = data.userId;
+              try {
+                const { data: userData } = await db.from('users').select('full_name, avatar_url').eq('id', userId).maybeSingle();
+                if (userData?.['full_name']) userName = userData['full_name'];
+                if (userData?.['avatar_url']) userAvatar = userData['avatar_url'];
+              } catch(e) {}
+            }
+          } catch(err) { console.warn('Invite fail', p.email, err); }
+          
+          if (!userId) userId = crypto.randomUUID();
+          
+          idMap[p.id] = userId;
+          resolvedMembers.push({ ...p, id: userId, name: userName, avatar: userAvatar });
+        }
+        
+        // Update Trip in DB
+        const updatedTripMembers = [...trip.members, ...resolvedMembers];
+        await db.from('trips').update({ members: updatedTripMembers }).eq('id', trip.id);
+        this.travelStore.updateTrip(trip.id, { members: updatedTripMembers });
+        
+        // Map local toggle state logic to the new real IDs
+        const newIncludes: Record<string, boolean> = {};
+        const newLocks: Record<string, number | null> = {};
+        
+        Object.keys(this.includedMembers()).forEach(k => {
+          const mapId = idMap[k] || k;
+          newIncludes[mapId] = this.includedMembers()[k];
+        });
+        Object.keys(this.lockedShares()).forEach(k => {
+          const mapId = idMap[k] || k;
+          newLocks[mapId] = this.lockedShares()[k];
+        });
+
+        // if paidById was a pending user, update it
+        if (idMap[this.paidById()]) {
+          this.paidById.set(idMap[this.paidById()]);
+        }
+        
+        this.includedMembers.set(newIncludes);
+        this.lockedShares.set(newLocks);
+      } catch (err) {
+        this.toastService.show('Lỗi khi mời thành viên mới.', 'error');
+        this.isSubmitting.set(false);
+        return;
+      }
+    }
+
+    this.pendingNewMembers.set([]);
+    this.isSubmitting.set(true);
 
     try {
       const uploadedUrls: string[] = [];
