@@ -106,10 +106,10 @@ $border: #F0F0F0;
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2); // White Glass
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.15);
+  border: none; // remove heavy borders
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -118,7 +118,7 @@ $border: #F0F0F0;
   text-decoration: none;
   transition: all 0.2s ease;
 
-  &:hover { background: rgba(255, 255, 255, 0.35); }
+  &:hover { background: rgba(255, 255, 255, 0.25); }
   
   svg {
     stroke: #FFFFFF;
@@ -131,9 +131,8 @@ $border: #F0F0F0;
   }
 
   &.active {
-    background: #FFC800 !important;
+    background: #FFFFFF !important;
     color: #1C1917 !important;
-    border-color: #FFC800 !important;
     svg { stroke: #1C1917 !important; }
   }
 }
@@ -180,7 +179,6 @@ $border: #F0F0F0;
   position: relative;
   overflow: hidden;
   border-radius: 40px;
-  box-shadow: inset 0 0 40px rgba(0,0,0,0.5);
   flex-shrink: 1;
 }
 
@@ -323,12 +321,15 @@ $border: #F0F0F0;
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  border: 4px solid rgba(255,255,255,0.8);
+  border: 4px solid #FFFFFF;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.2); /* Enhance Shutter visibility */
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
   transition: transform 0.1s ease;
+  background: transparent;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
 
   &:active { transform: scale(0.94); }
 }
@@ -337,7 +338,7 @@ $border: #F0F0F0;
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.85);
+  background: #FFFFFF;
 }
 
 // ─── Video & Canvas ────────────────────────────────────────────────────────
@@ -369,8 +370,8 @@ $border: #F0F0F0;
   inset: 0;
   pointer-events: none;
   z-index: 5;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 15%, transparent 80%, rgba(0,0,0,0.5) 100%);
   border-radius: inherit;
+  // Removed heavy vignette gradient
 }
 
 // ─── Photos Tray ──────────────────────────────────────────────────────────
@@ -426,22 +427,22 @@ $border: #F0F0F0;
 .filter-pill {
   padding: 8px 16px;
   border-radius: 100px;
-  background: rgba(255, 255, 255, 0.2); // White Glass
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  color: #FFFFFF !important;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: #E5E5E5 !important;
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
   font-family: inherit;
   transition: all 0.15s ease;
 
   &.active {
-    background: #FFC800 !important;
+    background: #FFFFFF !important;
     color: #1C1917 !important;
-    border-color: #FFC800 !important;
+    font-weight: 800;
   }
 }
 
@@ -450,7 +451,7 @@ $border: #F0F0F0;
   flex-direction: column;
   justify-content: center;
   gap: 20px;
-  padding: 16px 0 calc(env(safe-area-inset-bottom, 24px) + 24px);
+  padding: 16px 0;
   z-index: 25;
   flex-shrink: 0;
 }
@@ -486,16 +487,17 @@ $border: #F0F0F0;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 0 40px;
+  padding: 16px 20px calc(env(safe-area-inset-bottom, 32px) + 24px);
   transition: all 0.3s ease;
   opacity: 0;
   pointer-events: none;
-  transform: translateX(20px);
+  transform: translateY(20px);
+  z-index: 50;
 
   &.has-photos {
     opacity: 1;
     pointer-events: auto;
-    transform: translateX(0);
+    transform: translateY(0);
   }
 }
 
@@ -532,17 +534,16 @@ $border: #F0F0F0;
 }
 
 .tray-item {
-  width: 64px;
-  height: 64px;
+  width: 80px;
+  height: 80px;
   border-radius: 16px;
-  /* Removed overflow: hidden to allow delete button to pop out */
   position: relative;
   flex-shrink: 0;
   background: #E5E5E5;
   border: 2px solid transparent;
   
   &.active-thumb {
-    border-color: #FFC800;
+    border-color: #FFFFFF;
   }
 
   img {
