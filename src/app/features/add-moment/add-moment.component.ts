@@ -24,10 +24,12 @@ export interface PhotoCapture {
   isDual: boolean;
 }
 
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
+
 @Component({
   selector: 'app-add-moment',
   standalone: true,
-  imports: [FormsModule, CalculatorInputComponent],
+  imports: [FormsModule, CalculatorInputComponent, TranslatePipe],
   templateUrl: './add-moment.component.html',
   styleUrl: './add-moment.component.scss'
 })

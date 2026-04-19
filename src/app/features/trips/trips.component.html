@@ -99,7 +99,7 @@
             </svg>
           </button>
           }
-          <h3 class="modal-title">{{ step() === 1 ? 'New Adventure' : 'Invite Crew' }}</h3>
+          <h3 class="modal-title">{{ step() === 1 ? ('trip.new' | translate) : ('trip.invite' | translate) }}</h3>
         </div>
         <button class="btn-close" (click)="closeModal()" id="btn-close-modal">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -122,7 +122,7 @@
             <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
             <circle cx="12" cy="13" r="3" />
           </svg>
-          <span>Retake</span>
+          <span>{{ 'trip.retake' | translate }}</span>
         </div>
         } @else {
         <div class="cover-placeholder">
@@ -133,8 +133,8 @@
               <circle cx="12" cy="13" r="3" />
             </svg>
           </div>
-          <p class="cover-label">Add a Vibe Check</p>
-          <p class="cover-sub">Tap to set trip cover</p>
+          <p class="cover-label">{{ 'trip.addVibe' | translate }}</p>
+          <p class="cover-sub">{{ 'trip.tapCover' | translate }}</p>
         </div>
         }
         <input #fileInput type="file" accept="image/*" style="display:none" (change)="onImageSelected($event)" />
@@ -142,7 +142,7 @@
 
       <!-- Trip Title -->
       <div class="title-field">
-        <input type="text" [(ngModel)]="tripTitle" placeholder="Trip Name *" class="title-input"
+        <input type="text" [(ngModel)]="tripTitle" [placeholder]="'trip.nameLabel' | translate" class="title-input"
           id="input-trip-title" />
       </div>
 
@@ -155,7 +155,7 @@
             <circle cx="12" cy="10" r="3" />
           </svg>
           <input type="text" [(ngModel)]="tripLocation" (ngModelChange)="onLocationChange($event)"
-            placeholder="Where to next?" class="location-input" id="input-trip-location" autocomplete="off" />
+            [placeholder]="'trip.where' | translate" class="location-input" id="input-trip-location" autocomplete="off" />
         </div>
 
         @if (isLocationLoading() || locationSuggestions().length > 0) {
@@ -189,25 +189,25 @@
       <!-- Dates -->
       <div class="date-row">
         <label class="date-field" for="input-start-date" (click)="openDatePicker($event, startDateInput)">
-          <span class="date-label">FROM</span>
+          <span class="date-label">{{ 'trip.from' | translate }}</span>
           <input #startDateInput type="date" [(ngModel)]="startDate" class="date-input" id="input-start-date"
             (click)="openDatePicker($event, startDateInput)" />
         </label>
         <label class="date-field" for="input-end-date" (click)="openDatePicker($event, endDateInput)">
-          <span class="date-label">TO</span>
+          <span class="date-label">{{ 'trip.to' | translate }}</span>
           <input #endDateInput type="date" [(ngModel)]="endDate" class="date-input" id="input-end-date"
             (click)="openDatePicker($event, endDateInput)" />
         </label>
       </div>
 
       <button class="btn-primary" (click)="goToStep2()" id="btn-next-step">
-        Next: Add Members →
+        {{ 'trip.nextMembers' | translate }}
       </button>
       }
 
       <!-- STEP 2: Invite Members -->
       @if (step() === 2) {
-      <p class="invite-desc">Invite travel companions via email to share expenses and memories.</p>
+      <p class="invite-desc">{{ 'trip.inviteHint' | translate }}</p>
 
       <!-- Email Input -->
       <div class="email-input-row" [class.has-error]="emailError()">
@@ -235,10 +235,10 @@
         <!-- Owner -->
         <div class="member-tag member-tag--owner">
           <div class="member-tag__avatar member-tag__avatar--me">ME</div>
-          <span>You (Owner)</span>
+          <span>{{ 'trip.owner' | translate }}</span>
         </div>
         @if (members().length === 0) {
-        <span class="member-empty">No other members added.</span>
+        <span class="member-empty">{{ 'trip.noMembers' | translate }}</span>
         }
         @for (email of members(); track email) {
         <div class="member-tag">
@@ -257,11 +257,11 @@
 
       <button class="btn-primary" [disabled]="isCreating() || emailInput.trim().length > 0" (click)="createTrip()" id="btn-create-trip" [class.btn-warning]="emailInput.trim().length > 0">
         @if (isCreating()) { 
-          Creating... 
+          {{ 'trip.creating' | translate }} 
         } @else if (emailInput.trim().length > 0) { 
-          ☝️ Click '+' to add email first 
+          {{ 'trip.addEmailFirst' | translate }} 
         } @else { 
-          🚀 Create Adventure 
+          {{ 'trip.launch' | translate }} 
         }
       </button>
       }

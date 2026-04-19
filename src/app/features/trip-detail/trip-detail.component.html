@@ -83,19 +83,19 @@
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>
                   </svg>
-                  Publish Trip
+                  {{ 'detail.publish' | translate }}
                 } @else {
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>
                   </svg>
-                  Unpublish
+                  {{ 'detail.unpublish' | translate }}
                 }
               </button>
               <button class="btn-delete" (click)="confirmDelete()" id="btn-delete-trip">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="3 6 5 6 21 6"/><path d="m19 6-.867 12.142A2 2 0 0 1 16.138 20H7.862a2 2 0 0 1-1.995-1.858L5 6m5 0V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/>
                 </svg>
-                Delete Trip
+                {{ 'detail.delete' | translate }}
               </button>
             </div>
           }
@@ -104,20 +104,20 @@
         <!-- ═══ SOCIAL ═══ -->
         <div class="tab-pane">
           <div class="section-header">
-            <h2 class="section-title">Trip Diary</h2>
+            <h2 class="section-title">{{ 'detail.diary' | translate }}</h2>
             @if (isMember()) {
               <button class="btn-action" (click)="navigateToAddMoment()" id="btn-add-post">
                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
                   <circle cx="12" cy="13" r="3"/>
                 </svg>
-                Chụp Ảnh
+                {{ 'expense.takePhoto' | translate }}
               </button>
             }
           </div>
 
           @if (tripPosts().length === 0) {
-            <div class="empty-card">No posts yet. Be the first to share a moment!</div>
+            <div class="empty-card">{{ 'detail.emptyPosts' | translate }}</div>
           }
 
           <div class="ig-feed">
@@ -152,8 +152,8 @@
                         <div class="menu-backdrop" (click)="activeMenuId.set(null); $event.stopPropagation()"></div>
                         <!-- Dropdown -->
                         <div class="ig-dropdown-menu">
-                          <button class="ig-dropdown-item" (click)="openEditPost(post); activeMenuId.set(null); $event.stopPropagation()">Edit</button>
-                          <button class="ig-dropdown-item delete-item" (click)="deletePost(post.id); activeMenuId.set(null); $event.stopPropagation()">Delete</button>
+                          <button class="ig-dropdown-item" (click)="openEditPost(post); activeMenuId.set(null); $event.stopPropagation()">{{ 'action.edit' | translate }}</button>
+                          <button class="ig-dropdown-item delete-item" (click)="deletePost(post.id); activeMenuId.set(null); $event.stopPropagation()">{{ 'action.delete' | translate }}</button>
                         </div>
                       }
                     } @else {
@@ -231,7 +231,7 @@
                 <!-- IG Comments Preview -->
                 @if (post.comments.length > 0) {
                   <div class="ig-comments-link" (click)="openComments(post)">
-                    View all {{ post.comments.length }} comments
+                    {{ 'comment.viewAll' | translate }} {{ post.comments.length }} {{ 'comment.comments' | translate | lowercase }}
                   </div>
                   <div class="ig-comment-preview">
                     <span class="ig-caption-author">{{ post.comments[post.comments.length - 1].authorName }}</span>
@@ -249,29 +249,29 @@
           <!-- Summary Cards -->
           <div class="summary-row">
             <div class="summary-black" (click)="setTab('BALANCES')" style="cursor: pointer;">
-              <span class="summary-label">YOU HAVE SPENT</span>
+              <span class="summary-label">{{ 'detail.spent' | translate }}</span>
               <span class="summary-value-white">{{ formatCurrency(yourShare()) }}</span>
             </div>
             <div class="summary-white">
-              <span class="summary-label">TOTAL TRIP</span>
+              <span class="summary-label">{{ 'detail.total' | translate }}</span>
               <span class="summary-value-dark">{{ formatCurrency(totalTripCost()) }}</span>
             </div>
           </div>
 
           <div class="section-header">
-            <h2 class="section-title">Transactions</h2>
+            <h2 class="section-title">{{ 'detail.transactions' | translate }}</h2>
             @if (isMember()) {
               <button class="btn-action btn-action--primary" (click)="openExpenseModal()" id="btn-log-expense">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M5 12h14"/><path d="M12 5v14"/>
                 </svg>
-                Log Expense
+                {{ 'detail.logExpense' | translate }}
               </button>
             }
           </div>
 
           @if (tripExpenses().length === 0) {
-            <div class="empty-card">No expenses logged yet.</div>
+            <div class="empty-card">{{ 'detail.emptyExpenses' | translate }}</div>
           }
 
           <div class="expense-list">
@@ -286,7 +286,7 @@
                     <p class="expense-meta">
                       {{ formatDate(exp.date) || 'No Date' }}
                       @if (isMember()) {
-                        • Paid by {{ getPayerName(exp.payerId) }}
+                        • {{ 'expense.paidBy' | translate | lowercase }} {{ getPayerName(exp.payerId) }}
                       }
                     </p>
                   </div>
@@ -301,7 +301,7 @@
         <div class="tab-pane">
           @if (totalTripCost() > 0) {
             <div class="chart-card">
-              <h3 class="chart-title">SPENDING BREAKDOWN</h3>
+              <h3 class="chart-title">{{ 'detail.spendingBreakdown' | translate }}</h3>
               <div class="chart-bar">
                 @for (seg of chartData(); track seg.category; let i = $index) {
                   <div class="chart-segment"
@@ -327,17 +327,17 @@
           }
 
           <div class="section-header">
-            <h2 class="section-title">Balances &amp; Debts</h2>
+            <h2 class="section-title">{{ 'detail.balances' | translate }}</h2>
             <button class="btn-export" (click)="exportExcel()" id="btn-export">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
               </svg>
-              Export CSV
+              {{ 'detail.export' | translate }}
             </button>
           </div>
 
           @if (debts().length === 0) {
-            <div class="empty-card">Everyone is fully settled up! 🎉</div>
+            <div class="empty-card">{{ 'detail.settled' | translate }}</div>
           }
 
           <div class="expense-list">
@@ -354,7 +354,7 @@
                     }
                   </div>
                   <div class="expense-info">
-                    <p class="expense-desc">{{ debt.fromId === currentUserId() ? 'You owe' : debt.fromName + ' owes' }}</p>
+                    <p class="expense-desc">{{ debt.fromId === currentUserId() ? ('detail.youOwe' | translate) : (debt.fromName + ' ' + ('detail.owes' | translate)) }}</p>
                     <p class="expense-meta">{{ debt.fromId === currentUserId() ? debt.toName : (debt.toId === currentUserId() ? 'you' : debt.toName) }}</p>
                   </div>
                 </div>
@@ -371,13 +371,13 @@
         <!-- ═══ MEMBERS ═══ -->
         <div class="tab-pane">
           <div class="section-header">
-            <h2 class="section-title">Trip Members</h2>
+            <h2 class="section-title">{{ 'detail.members' | translate }}</h2>
             @if (isOwner()) {
               <button class="btn-action btn-action--primary" (click)="openAddMemberModal()" id="btn-add-member">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M5 12h14"/><path d="M12 5v14"/>
                 </svg>
-                Add Member
+                {{ 'detail.addMember' | translate }}
               </button>
             }
           </div>
@@ -428,7 +428,7 @@
     <div class="modal-overlay" (click)="closeExpenseModal()">
       <div class="modal" (click)="$event.stopPropagation()" appSwipeToClose (swipeClose)="closeExpenseModal()">
         <div class="modal-header">
-          <h3>{{ editingExpense ? 'Edit Expense' : 'Log Expense' }}</h3>
+          <h3>{{ editingExpense ? ('detail.editExpense' | translate) : ('detail.logExpense' | translate) }}</h3>
           <button class="btn-close" (click)="closeExpenseModal()">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
           </button>
@@ -437,7 +437,7 @@
         <div class="input-card" style="margin-top:20px;">
           
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-             <p class="field-label" style="margin: 0;">ADD RECEIPT (OPTIONAL)</p>
+             <p class="field-label" style="margin: 0;">{{ 'expense.addReceipt' | translate }}</p>
              @if (pendingReceipts().length > 0) {
                <span style="font-size: 12px; color: #666; font-weight: 500;">{{ pendingReceipts().length }} selected</span>
              }
@@ -461,18 +461,18 @@
                <label style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 16px; background: white; border: 1px solid #e5e5e5; border-radius: 12px; gap:8px; cursor: pointer; position: relative;">
                  <input type="file" accept="image/*" multiple style="position:absolute; width:1px; height:1px; opacity:0; overflow:hidden;" (change)="onReceiptSelected($event)" />
                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-                 <span style="font-size:12px; font-weight:600; color:#666;">Upload Files</span>
+                 <span style="font-size:12px; font-weight:600; color:#666;">{{ 'expense.upload' | translate }}</span>
                </label>
                <label style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 16px; background: white; border: 1px solid #e5e5e5; border-radius: 12px; gap:8px; cursor: pointer; position: relative;">
                  <input type="file" accept="image/*" capture="environment" style="position:absolute; width:1px; height:1px; opacity:0; overflow:hidden;" (change)="onReceiptSelected($event)" />
                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-                 <span style="font-size:12px; font-weight:600; color:#666;">Take Photo</span>
+                 <span style="font-size:12px; font-weight:600; color:#666;">{{ 'expense.takePhoto' | translate }}</span>
                </label>
              </div>
           </div>
 
           <!-- Category picker -->
-          <p class="field-label">CATEGORY</p>
+          <p class="field-label">{{ 'expense.category' | translate }}</p>
           <div class="category-scroll">
             @for (cat of categories; track cat.id) {
               <button class="category-pill" [class.active]="expForm.category === cat.id" (click)="expForm.category = cat.id" [id]="'cat-' + cat.id">
@@ -482,18 +482,18 @@
           </div>
 
           <!-- Description -->
-          <p class="field-label" style="margin-top: 24px;">WHAT WAS THIS FOR? <span class="req">*</span></p>
+          <p class="field-label" style="margin-top: 24px;">{{ 'expense.whatFor' | translate }} <span class="req">*</span></p>
           <input type="text" [(ngModel)]="expForm.desc" placeholder="e.g. Lunch at beachside..." class="caption-input" id="exp-desc" />
           
           <!-- Amount -->
-          <p class="field-label" style="margin-top: 24px;">TOTAL PRICE <span class="req">*</span></p>
+          <p class="field-label" style="margin-top: 24px;">{{ 'expense.totalPrice' | translate }} <span class="req">*</span></p>
           <div class="amount-row">
             <span class="currency-symbol">₫</span>
             <app-calculator-input [(amount)]="expForm.amount" placeholder="0" class="amount-input" id="exp-amount"></app-calculator-input>
           </div>
 
           <!-- Paid By -->
-          <p class="field-label" style="margin-top: 24px;">PAID BY</p>
+          <p class="field-label" style="margin-top: 24px;">{{ 'expense.paidBy' | translate }}</p>
           <div class="paidby-row">
             @for (member of currentTripMembersForSplit(); track member.id) {
               <button class="member-pill" [class.active]="expForm.payerId === member.id" (click)="expForm.payerId = member.id">{{ member.name }}</button>
@@ -501,13 +501,13 @@
           </div>
 
           <!-- Date -->
-          <p class="field-label" style="margin-top: 24px;">DATE</p>
+          <p class="field-label" style="margin-top: 24px;">{{ 'expense.date' | translate }}</p>
           <div class="date-row">
             <input type="date" [(ngModel)]="expForm.date" class="caption-input" id="exp-date" />
           </div>
 
           <!-- Split Logic UI (Hybrid Lock & Float) -->
-          <p class="field-label" style="margin-top: 24px; margin-bottom: 8px;">SPLIT DETAILS</p>
+          <p class="field-label" style="margin-top: 24px; margin-bottom: 8px;">{{ 'expense.splitDetails' | translate }}</p>
           <div class="split-list">
           @for (member of currentTripMembersForSplit(); track member.id) {
             <div class="split-row" [class.excluded]="!includedMembers()[member.id]">
@@ -542,7 +542,7 @@
           
           <!-- Quick add member -->
           <div class="quick-add-member">
-            <input type="email" [(ngModel)]="newMemberEmail" placeholder="Missing someone? Email them" class="quick-add-input" (keyup.enter)="quickInviteMember()" />
+            <input type="email" [(ngModel)]="newMemberEmail" [placeholder]="'expense.emailPrompt' | translate" class="quick-add-input" (keyup.enter)="quickInviteMember()" />
             <button class="btn-quick-add" [disabled]="isInviting() || !newMemberEmail.trim()" (click)="quickInviteMember()">
                @if (isInviting()) {<div class="spinner-sm"></div>} @else {<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFC800" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>}
             </button>
@@ -550,7 +550,7 @@
           
           @if (isSplitExceedingTotal()) {
             <div style="color: #DC2626; font-size: 13px; font-weight: 700; text-align: center; margin-top: 16px;">
-              ⚠ Assigned amounts exceed the Total Price.
+              ⚠ {{ 'expense.exceeds' | translate }}
             </div>
           }
           
@@ -558,13 +558,13 @@
         
         <button class="btn-receipt-close" (click)="saveExpense()" [disabled]="isSavingExpense() || isSplitExceedingTotal() || !expForm.desc || expForm.amount <= 0 || newMemberEmail.trim().length > 0" [class.btn-warning]="newMemberEmail.trim().length > 0" style="margin-top: 16px; width: 100%; border:none; padding:18px; border-radius:100px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); font-size:16px; font-weight:800; cursor:pointer;" [style.background]="(isSavingExpense() || isSplitExceedingTotal() || !expForm.desc || expForm.amount <= 0 || newMemberEmail.trim().length > 0) ? '#F5F5F5' : '#FFC800'" [style.color]="(isSavingExpense() || isSplitExceedingTotal() || !expForm.desc || expForm.amount <= 0 || newMemberEmail.trim().length > 0) ? '#A8A29E' : '#1C1917'">
           @if (isSavingExpense()) {
-            Saving...
+            {{ 'expense.saving' | translate }}
           } @else if (newMemberEmail.trim().length > 0) {
-            ☝️ Tap '+' to add this person first
+            {{ 'trip.addEmailFirst' | translate }}
           } @else if (isSplitExceedingTotal()) {
-            Fix split amounts
+            {{ 'expense.fixSplit' | translate }}
           } @else {
-            {{ editingExpense ? 'Update' : 'Log Expense' }}
+            {{ editingExpense ? ('expense.update' | translate) : ('detail.logExpense' | translate) }}
           }
         </button>
 
@@ -596,12 +596,12 @@
           <div class="receipt-divider"></div>
           
           <div class="receipt-pay-info">
-            <span class="receipt-label">Paid By</span>
+            <span class="receipt-label">{{ 'expense.paidBy' | translate | lowercase }}</span>
             <span class="receipt-value">{{ getPayerName(selectedExpense.payerId) }}</span>
           </div>
 
           <div class="receipt-split-section">
-            <h4 class="receipt-split-title">SPLIT BREAKDOWN</h4>
+            <h4 class="receipt-split-title">{{ 'expense.splitDetails' | translate }}</h4>
             <div class="receipt-split-list">
               @for (member of trip()!.members; track member.id) {
                 <!-- Calculate local share safely if splits is empty -->
@@ -636,19 +636,19 @@
                 <div class="icon-circle">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
                 </div>
-                <span>Edit</span>
+                <span>{{ 'action.edit' | translate }}</span>
               </button>
               <button class="receipt-action-btn delete" (click)="deleteExpenseConfirm(selectedExpense.id)">
                 <div class="icon-circle">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="m19 6-.867 12.142A2 2 0 0 1 16.138 20H7.862a2 2 0 0 1-1.995-1.858L5 6m5 0V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/></svg>
                 </div>
-                <span>Delete</span>
+                <span>{{ 'action.delete' | translate }}</span>
               </button>
             </div>
           }
         </div>
         
-        <button class="btn-receipt-close" (click)="selectedExpense = null">Close</button>
+        <button class="btn-receipt-close" (click)="selectedExpense = null">{{ 'action.close' | translate }}</button>
       </div>
     </div>
   }
@@ -687,7 +687,7 @@
 
         <!-- Header -->
         <div class="modal-header">
-          <h3>Comments ({{ activeCommentPost()!.comments.length }})</h3>
+          <h3>{{ 'comment.comments' | translate }} ({{ activeCommentPost()!.comments.length }})</h3>
           <button class="btn-close" (click)="closeComments()" id="btn-close-comments">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A8A29E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
           </button>
@@ -696,7 +696,7 @@
         <!-- Comments list -->
         <div class="comments-list">
           @if (activeCommentPost()!.comments.length === 0) {
-            <p class="comments-empty">No comments yet. Be the first! 💬</p>
+            <p class="comments-empty">{{ 'comment.empty' | translate }}</p>
           }
           @for (c of activeCommentPost()!.comments; track c.id) {
             <div class="comment-item" [id]="'comment-' + c.id">
@@ -725,7 +725,7 @@
           <div class="comment-input-area">
             <textarea
               class="comment-input"
-              placeholder="Write a comment..."
+              [placeholder]="'comment.write' | translate"
               [(ngModel)]="commentText"
               rows="1"
               id="input-comment"
@@ -755,15 +755,13 @@
       <div class="modal" (click)="$event.stopPropagation()" appSwipeToClose (swipeClose)="closeAddMember()">
 
         <div class="modal-header">
-          <h3>Add New Member</h3>
+          <h3>{{ 'detail.addMember' | translate }}</h3>
           <button class="btn-close" (click)="closeAddMember()" id="btn-close-add-member">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A8A29E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
           </button>
         </div>
 
-        <p class="member-invite-hint">
-          Enter the email of a registered WanderPool user to add them to your trip.<br />
-          They will receive an invitation notification.
+        <p class="member-invite-hint" [innerHTML]="'trip.inviteHint' | translate">
         </p>
 
         <div class="form-field">

@@ -7,7 +7,7 @@
         <path d="m15 18-6-6 6-6"/>
       </svg>
     </button>
-    <h1 class="notif-header__title">Notifications</h1>
+    <h1 class="notif-header__title">{{ 'notif.title' | translate }}</h1>
     @if (hasUnread()) {
       <button class="btn-mark-all" (click)="markAllAsRead()" title="Đánh dấu đã đọc tất cả">
         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -29,8 +29,8 @@
           <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
         </svg>
       </div>
-      <h2 class="empty-title">No Notifications Yet</h2>
-      <p class="empty-sub">When your friends interact with you, it will show up here.</p>
+      <h2 class="empty-title">{{ 'notif.empty' | translate }}</h2>
+      <p class="empty-sub">{{ 'notif.sub' | translate }}</p>
     </div>
   } @else {
     <div class="notif-list">
@@ -67,10 +67,10 @@
             @if (item.type === 'TRIP_INVITE' && !item.isRead) {
               <div class="action-row">
                 <button class="btn-accept" (click)="$event.stopPropagation(); handleAccept(item)" [id]="'btn-accept-' + item.id">
-                  Accept
+                  {{ 'notif.accept' | translate }}
                 </button>
                 <button class="btn-decline" (click)="$event.stopPropagation(); handleDecline(item)" [id]="'btn-decline-' + item.id">
-                  Decline
+                  {{ 'notif.decline' | translate }}
                 </button>
               </div>
             }
@@ -82,7 +82,7 @@
                   <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>
                   </svg>
-                  Settle Up
+                  {{ 'notif.settleUp' | translate }}
                 </button>
               </div>
             }

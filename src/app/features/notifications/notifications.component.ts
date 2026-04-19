@@ -13,9 +13,12 @@ const ICON_BACKGROUNDS: Record<string, string> = {
   TRIP_COMMENT:   '#FFFBEB',
 };
 
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
+
 @Component({
   selector: 'app-notifications',
   standalone: true,
+  imports: [TranslatePipe],
   templateUrl: './notifications.component.html',
   styleUrl: './notifications.component.scss'
 })

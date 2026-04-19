@@ -21,10 +21,14 @@ interface FeedItem {
   postImages?: { url: string; location?: string }[];
 }
 
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
+
+import { LowerCasePipe } from '@angular/common';
+
 @Component({
   selector: 'app-discover',
   standalone: true,
-  imports: [RouterLink, FormsModule],
+  imports: [RouterLink, FormsModule, TranslatePipe, LowerCasePipe],
   templateUrl: './discover.component.html',
   styleUrl: './discover.component.scss'
 })

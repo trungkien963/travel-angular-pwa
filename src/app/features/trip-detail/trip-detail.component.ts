@@ -28,10 +28,14 @@ const CATEGORY_META: Record<string, { emoji: string; label: string; color: strin
   OTHER:      { emoji: '💳', label: 'Other',       color: '#6B7280', bg: '#F3F4F6' },
 };
 
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
+
+import { LowerCasePipe } from '@angular/common';
+
 @Component({
   selector: 'app-trip-detail',
   standalone: true,
-  imports: [FormsModule, MomentsComponent, SwipeToCloseDirective, CalculatorInputComponent],
+  imports: [FormsModule, MomentsComponent, SwipeToCloseDirective, CalculatorInputComponent, TranslatePipe, LowerCasePipe],
   templateUrl: './trip-detail.component.html',
   styleUrl: './trip-detail.component.scss'
 })
