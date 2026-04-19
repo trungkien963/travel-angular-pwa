@@ -9,6 +9,7 @@ import { SupabaseService } from '../../core/services/supabase.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ConfirmService } from '../../core/services/confirm.service';
 import { MomentsComponent } from '../moments/moments.component';
+import { SwipeToCloseDirective } from '../../shared/directives/swipe-to-close.directive';
 import * as XLSX from 'xlsx';
 
 export interface Debt {
@@ -29,7 +30,7 @@ const CATEGORY_META: Record<string, { emoji: string; label: string; color: strin
 @Component({
   selector: 'app-trip-detail',
   standalone: true,
-  imports: [FormsModule, MomentsComponent],
+  imports: [FormsModule, MomentsComponent, SwipeToCloseDirective],
   templateUrl: './trip-detail.component.html',
   styleUrl: './trip-detail.component.scss'
 })
@@ -240,6 +241,16 @@ export class TripDetailComponent implements OnInit {
   editingExpense: Expense | null = null;
   
   readonly pendingReceipts = signal<{url: string, file?: File}[]>([]);
+
+  async closeExpenseModal() {
+    if (this.expForm.amount > 0 || this.expForm.desc.trim().length > 0 || this.pendingReceipts().length > 0) {
+      if (await this.confirmService.confirm('Bạn đang nhập dở chi phí. Bạn có chắc muốn thoát?', 'Cảnh báo', 'Đóng', 'Tiếp tục')) {
+        this.expenseModalOpen.set(false);
+      }
+    } else {
+      this.expenseModalOpen.set(false);
+    }
+  }
   readonly lightboxImages = signal<string[]>([]);
   readonly lightboxIndex = signal<number | null>(null);
   readonly lightboxContext = signal<'PENDING' | 'SAVED' | null>(null);
@@ -281,6 +292,16 @@ export class TripDetailComponent implements OnInit {
   // ─── Edit Post modal state ─────────────────────────────────────────────
   readonly editPostOpen = signal(false);
   editPostObj: Post | null = null;
+
+  async closeEditPostLocal() {
+    if (this.editPostContent.trim() !== (this.editPostObj?.content || '')) {
+      if (await this.confirmService.confirm('Bạn có thay đổi chưa lưu. Bạn có chắc muốn hủy bỏ?', 'Cảnh báo', 'Đóng', 'Tiếp tục')) {
+        this.editPostOpen.set(false);
+      }
+    } else {
+      this.editPostOpen.set(false);
+    }
+  }
   editPostContent = '';
   readonly isSavingPost = signal(false);
   readonly activeMenuId = signal<string | null>(null);
@@ -320,6 +341,16 @@ export class TripDetailComponent implements OnInit {
   readonly isInviting = signal(false);
   readonly inviteStatus = signal('');
   readonly inviteSuccess = signal(false);
+
+  async closeAddMember() {
+    if (this.newMemberName.trim() || this.newMemberEmail.trim()) {
+      if (await this.confirmService.confirm('Bạn đang nhập dở thông tin. Bạn có chắc muốn hủy bỏ?', 'Cảnh báo', 'Đóng', 'Tiếp tục')) {
+        this.addMemberOpen.set(false);
+      }
+    } else {
+      this.addMemberOpen.set(false);
+    }
+  }
 
   // ─── Edit Member modal state ──────────────────────────────────────────
   readonly editMemberOpen = signal(false);
