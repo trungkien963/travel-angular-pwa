@@ -735,9 +735,20 @@ export class AddMomentComponent implements OnInit, OnDestroy {
     });
 
     let remainder = total - totalLocked;
-    if (remainder < 0) remainder = 0; 
+    return floatCount > 0 ? Math.round(Math.max(0, remainder) / floatCount) : 0;
+  }
 
-    return floatCount > 0 ? Math.round(remainder / floatCount) : 0;
+  isSplitExceedingTotal(): boolean {
+    if (this.activeMemberCount() <= 1) return false;
+    const total = this.expenseAmount || 0;
+    let totalLocked = 0;
+    Object.keys(this.includedMembers()).forEach(id => {
+      if (this.includedMembers()[id]) {
+        const l = this.lockedShares()[id];
+        if (l != null) totalLocked += l;
+      }
+    });
+    return totalLocked > total;
   }
 
   onInputSplitAmount(memberId: string, event: Event) {

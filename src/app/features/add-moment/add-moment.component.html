@@ -457,10 +457,10 @@
                 }
                 <span class="currency-symbol-small" style="margin-right: 2px;">₫</span>
                 <app-calculator-input 
-                  [amount]="lockedShares()[member.id] != null ? lockedShares()[member.id]! : calcShare(member.id)"
+                  [amount]="calcShare(member.id)"
                   (amountChange)="setLockedAmountNum(member.id, $event)"
                   (commitBtn)="onMemberShareCommit(member.id, $event)"
-                  [placeholder]="formatNumber(calcShare(member.id))"
+                  placeholder="0"
                   customClass="inline-edit"
                 ></app-calculator-input>
               </div>
@@ -484,13 +484,19 @@
             </svg>}
           </button>
         </div>
+
+        @if (isSplitExceedingTotal()) {
+          <div style="color: #DC2626; font-size: 13px; font-weight: 700; text-align: center; margin-top: 16px;">
+            ⚠ Assigned amounts exceed the Total Price.
+          </div>
+        }
       </div>
       }
 
       <!-- Submit Button (inline at the bottom) -->
       <div class="submit-action-area">
         <button class="btn-primary-large" (click)="submit()"
-          [disabled]="!canSubmit() || isSubmitting() || newMemberEmail.trim().length > 0"
+          [disabled]="!canSubmit() || isSubmitting() || newMemberEmail.trim().length > 0 || isSplitExceedingTotal()"
           [class.btn-warning]="newMemberEmail.trim().length > 0">
           @if (isSubmitting()) {
           <svg class="spinning" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
@@ -500,6 +506,8 @@
           <span>SAVING...</span>
           } @else if (newMemberEmail.trim().length > 0) {
           <span>☝️ Tap '+' to add this person first</span>
+          } @else if (isSplitExceedingTotal()) {
+          <span>⚠ Fix split amounts</span>
           } @else {
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">

@@ -77,14 +77,13 @@ export class CalculatorInputComponent {
   }
 
   commitValue() {
-    if (!this.expression.trim()) {
-       this.amount = 0;
-    } else {
-       const finalVal = this.evaluateExpression(this.expression);
-       this.amount = finalVal > 0 ? finalVal : 0;
+    let finalVal = 0;
+    if (this.expression.trim()) {
+       finalVal = this.evaluateExpression(this.expression);
+       finalVal = finalVal > 0 ? finalVal : 0;
     }
-    this.amountChange.emit(this.amount);
-    this.commitBtn.emit(this.amount);
+    this.amountChange.emit(finalVal);
+    this.commitBtn.emit(finalVal);
     this.expression = ''; // Clear expression after commute
     this.suggestions = [];
   }
