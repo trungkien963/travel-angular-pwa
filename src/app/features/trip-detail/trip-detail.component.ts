@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit, ViewChild, ElementRef, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, AfterViewInit, ViewChild, ElementRef, ChangeDetectorRef, NgZone } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TravelStore } from '../../core/store/travel.store';
@@ -34,7 +34,7 @@ const CATEGORY_META: Record<string, { emoji: string; label: string; color: strin
   templateUrl: './trip-detail.component.html',
   styleUrl: './trip-detail.component.scss'
 })
-export class TripDetailComponent implements OnInit {
+export class TripDetailComponent implements OnInit, AfterViewInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private travelStore = inject(TravelStore);
@@ -787,65 +787,53 @@ export class TripDetailComponent implements OnInit {
 
   // ─── Navigation ───────────────────────────────────────────────────────────
   goBack() { this.router.navigate(['/trips']); }
+  @ViewChild('tabCarousel') tabCarousel!: ElementRef<HTMLDivElement>;
 
-  animationDirection = 'slide-fade-in';
-  animationTrigger = true;
+  ngAfterViewInit() {
+    if (this.tabCarousel?.nativeElement) {
+      setTimeout(() => {
+        const el = this.tabCarousel.nativeElement;
+        const index = this.tabs.indexOf(this.activeTab);
+        if (index > 0) {
+          el.scrollTo({ left: index * el.clientWidth, behavior: 'instant' as ScrollBehavior });
+          const tabEl = document.getElementById('tab-' + this.activeTab.toLowerCase());
+          if (tabEl) tabEl.scrollIntoView({ behavior: 'instant' as ScrollBehavior, block: 'nearest', inline: 'center' });
+        }
+      }, 50); // slight delay to ensure DOM is rendered
+    }
+  }
 
   setTab(tab: string) { 
     const currentIndex = this.tabs.indexOf(this.activeTab);
     const nextIndex = this.tabs.indexOf(tab);
     if (currentIndex === nextIndex) return;
 
-    this.animationDirection = nextIndex > currentIndex ? 'slide-left' : 'slide-right';
-    this.animationTrigger = false;
     this.activeTab = tab; 
+    
+    // Smoothly scroll the tab header button into view
+    const tabEl = document.getElementById('tab-' + this.activeTab.toLowerCase());
+    if (tabEl) tabEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
 
-    // small delay to force DOM reflow and restart CSS animation
-    setTimeout(() => {
-      this.animationTrigger = true;
-    }, 10);
+    if (this.tabCarousel?.nativeElement) {
+      const el = this.tabCarousel.nativeElement;
+      el.scrollTo({ left: nextIndex * el.clientWidth, behavior: 'smooth' });
+    }
+  }
+
+  onTabScroll(event: Event) {
+    const el = event.target as HTMLElement;
+    const index = Math.round(el.scrollLeft / el.clientWidth);
+    if (this.tabs[index] && this.activeTab !== this.tabs[index]) {
+      this.activeTab = this.tabs[index];
+      
+      // Smoothly scroll the tab header button into view
+      const tabEl = document.getElementById('tab-' + this.activeTab.toLowerCase());
+      if (tabEl) tabEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
   }
 
   navigateToAddMoment() {
     this.router.navigate(['/add-moment'], { queryParams: { tripId: this.tripId() } });
-  }
-
-  // ─── Swipe Gestures ────────────────────────────────────────────────────────
-  touchStartX = 0;
-  touchEndX = 0;
-  touchStartY = 0;
-  touchEndY = 0;
-  
-  onTouchStart(e: TouchEvent) {
-    this.touchStartX = e.changedTouches[0].screenX;
-    this.touchStartY = e.changedTouches[0].screenY;
-  }
-  
-  onTouchEnd(e: TouchEvent) {
-    this.touchEndX = e.changedTouches[0].screenX;
-    this.touchEndY = e.changedTouches[0].screenY;
-    this.handleSwipe();
-  }
-  
-  handleSwipe() {
-    const swipeDistanceX = this.touchEndX - this.touchStartX;
-    const swipeDistanceY = this.touchEndY - this.touchStartY;
-    
-    // Only register as horizontal swipe if distance X is greater than Y and meets threshold
-    if (Math.abs(swipeDistanceX) > 60 && Math.abs(swipeDistanceX) > Math.abs(swipeDistanceY)) {
-      const currentIndex = this.tabs.indexOf(this.activeTab);
-      if (swipeDistanceX < 0) {
-        // swipe left -> next tab
-        if (currentIndex < this.tabs.length - 1) {
-          this.setTab(this.tabs[currentIndex + 1]);
-        }
-      } else {
-        // swipe right -> prev tab
-        if (currentIndex > 0) {
-          this.setTab(this.tabs[currentIndex - 1]);
-        }
-      }
-    }
   }
 
   // ─── Social ───────────────────────────────────────────────────────────────

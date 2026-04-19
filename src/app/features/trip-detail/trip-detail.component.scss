@@ -191,35 +191,22 @@ $border: #F0F0F0;
 
 // ─── Content ──────────────────────────────────────────────────────────────────
 .tab-content { 
-  padding: 24px; 
-  overflow-x: hidden;
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar { display: none; }
 }
 
-.pane-animator {
-  opacity: 1;
-  transform: translateX(0);
-
-  &.slide-fade-in {
-    animation: fadeIn 0.3s ease forwards;
-  }
-  
-  &.slide-left {
-    animation: slideInLeft 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-  }
-  
-  &.slide-right {
-    animation: slideInRight 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-  }
-}
-
-@keyframes slideInLeft {
-  0% { transform: translateX(40px); opacity: 0; }
-  100% { transform: translateX(0); opacity: 1; }
-}
-
-@keyframes slideInRight {
-  0% { transform: translateX(-40px); opacity: 0; }
-  100% { transform: translateX(0); opacity: 1; }
+.tab-pane {
+  flex: 0 0 100%;
+  width: 100%;
+  padding: 24px;
+  scroll-snap-align: start;
+  box-sizing: border-box;
+  /* Prevent horizontal browser actions (like going back) from snapping here if we drag vertical */
+  touch-action: pan-y;
 }
 
 .section-header {

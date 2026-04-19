@@ -70,11 +70,10 @@
       </div>
 
       <!-- Tab Content -->
-      <div class="tab-content" (touchstart)="onTouchStart($event)" (touchend)="onTouchEnd($event)">
-        <div [class]="'pane-animator ' + (animationTrigger ? animationDirection : '')">
+      <div class="tab-content" #tabCarousel (scroll)="onTabScroll($event)">
 
         <!-- ═══ MOMENTS ═══ -->
-        @if (activeTab === 'MOMENTS') {
+        <div class="tab-pane">
           <app-moments [tripId]="tripId()" (onTabSwitch)="setTab($event)"></app-moments>
           
           @if (isOwner()) {
@@ -100,10 +99,10 @@
               </button>
             </div>
           }
-        }
+        </div>
 
         <!-- ═══ SOCIAL ═══ -->
-        @if (activeTab === 'SOCIAL') {
+        <div class="tab-pane">
           <div class="section-header">
             <h2 class="section-title">Trip Diary</h2>
             @if (isMember()) {
@@ -243,19 +242,19 @@
               </div>
             }
           </div>
-        }
+        </div>
 
         <!-- ═══ EXPENSES ═══ -->
-        @if (activeTab === 'EXPENSES') {
+        <div class="tab-pane">
           <!-- Summary Cards -->
           <div class="summary-row">
-            <div class="summary-black">
-              <span class="summary-label">TOTAL TRIP</span>
-              <span class="summary-value-white">{{ formatCurrency(totalTripCost()) }}</span>
+            <div class="summary-black" (click)="setTab('BALANCES')" style="cursor: pointer;">
+              <span class="summary-label">YOU HAVE SPENT</span>
+              <span class="summary-value-white">{{ formatCurrency(yourShare()) }}</span>
             </div>
             <div class="summary-white">
-              <span class="summary-label">YOUR SHARE</span>
-              <span class="summary-value-dark">{{ formatCurrency(yourShare()) }}</span>
+              <span class="summary-label">TOTAL TRIP</span>
+              <span class="summary-value-dark">{{ formatCurrency(totalTripCost()) }}</span>
             </div>
           </div>
 
@@ -296,10 +295,10 @@
               </div>
             }
           </div>
-        }
+        </div>
 
         <!-- ═══ BALANCES ═══ -->
-        @if (activeTab === 'BALANCES') {
+        <div class="tab-pane">
           @if (totalTripCost() > 0) {
             <div class="chart-card">
               <h3 class="chart-title">SPENDING BREAKDOWN</h3>
@@ -367,10 +366,10 @@
               </div>
             }
           </div>
-        }
+        </div>
 
         <!-- ═══ MEMBERS ═══ -->
-        @if (activeTab === 'MEMBERS') {
+        <div class="tab-pane">
           <div class="section-header">
             <h2 class="section-title">Trip Members</h2>
             @if (isOwner()) {
@@ -417,9 +416,8 @@
               </div>
             }
           </div>
-        }
-
         </div>
+
       </div>
 
     </div>
