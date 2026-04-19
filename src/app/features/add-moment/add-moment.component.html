@@ -459,6 +459,7 @@
                 <app-calculator-input 
                   [amount]="lockedShares()[member.id] != null ? lockedShares()[member.id]! : calcShare(member.id)"
                   (amountChange)="setLockedAmountNum(member.id, $event)"
+                  (commitBtn)="onMemberShareCommit(member.id, $event)"
                   [placeholder]="formatNumber(calcShare(member.id))"
                   customClass="inline-edit"
                 ></app-calculator-input>

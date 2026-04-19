@@ -422,13 +422,15 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
   }
 
   setLockedAmountNum(memberId: string, value: number | null) {
+    this.lockedShares.update(m => ({ ...m, [memberId]: value }));
+    this.updateLockedValue(memberId, value == null ? '' : value.toString());
+  }
+
+  onMemberShareCommit(memberId: string, value: number | null) {
     if (value === 0) {
       this.includedMembers.update(m => ({ ...m, [memberId]: false }));
       this.lockedShares.update(m => ({ ...m, [memberId]: null }));
       this.updateLockedValue(memberId, '');
-    } else {
-      this.lockedShares.update(m => ({ ...m, [memberId]: value }));
-      this.updateLockedValue(memberId, value == null ? '' : value.toString());
     }
   }
 

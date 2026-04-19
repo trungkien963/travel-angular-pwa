@@ -12,6 +12,7 @@ import { FormsModule } from '@angular/forms';
 export class CalculatorInputComponent {
   @Input() amount: number | null = null;
   @Output() amountChange = new EventEmitter<number | null>();
+  @Output() commitBtn = new EventEmitter<number | null>(); // Emitted only on Done
   @Input() placeholder: string = '0';
   @Input() customClass: string = '';
 
@@ -35,20 +36,26 @@ export class CalculatorInputComponent {
     this.updateSuggestions();
     
     // Find the nearest scrollable container to add padding so we can scroll smoothly
-    const scrollContainer = this.el.nativeElement.closest('.form-section') || this.el.nativeElement.closest('.details-sheet') || document.body;
+    const scrollContainer = this.el.nativeElement.closest('.form-section') || 
+                            this.el.nativeElement.closest('.modal') || 
+                            this.el.nativeElement.closest('.details-sheet') || 
+                            document.body;
     if (scrollContainer && scrollContainer !== document.body) {
       scrollContainer.style.paddingBottom = '500px';
       
       setTimeout(() => {
         const containerRect = scrollContainer.getBoundingClientRect();
         const elRect = this.el.nativeElement.getBoundingClientRect();
-        // Target: position the input 100px below the top edge of the scroll container
-        const newScrollTop = scrollContainer.scrollTop + (elRect.top - containerRect.top) - 80;
+        const relativeTop = elRect.top - containerRect.top;
         
-        scrollContainer.scrollTo({
-          top: Math.max(0, newScrollTop),
-          behavior: 'smooth'
-        });
+        // Fixed keyboard height + suggestions + breathing room = ~480px from bottom.
+        // We calculate the maximum safe Y coordinate for the input's top edge.
+        const safeZoneBottomLimit = Math.max(60, containerRect.height - 480);
+        
+        if (relativeTop > safeZoneBottomLimit) {
+          const neededScroll = relativeTop - safeZoneBottomLimit;
+          scrollContainer.scrollBy({ top: neededScroll, behavior: 'smooth' });
+        }
       }, 50);
     } else {
       setTimeout(() => {
@@ -59,7 +66,10 @@ export class CalculatorInputComponent {
 
   closeKeyboard() {
     this.isKeyboardOpen = false;
-    const scrollContainer = this.el.nativeElement.closest('.form-section') || this.el.nativeElement.closest('.details-sheet') || document.body;
+    const scrollContainer = this.el.nativeElement.closest('.form-section') || 
+                            this.el.nativeElement.closest('.modal') || 
+                            this.el.nativeElement.closest('.details-sheet') || 
+                            document.body;
     if (scrollContainer) {
       scrollContainer.style.paddingBottom = '';
     }
@@ -74,6 +84,7 @@ export class CalculatorInputComponent {
        this.amount = finalVal > 0 ? finalVal : 0;
     }
     this.amountChange.emit(this.amount);
+    this.commitBtn.emit(this.amount);
     this.expression = ''; // Clear expression after commute
     this.suggestions = [];
   }
@@ -109,6 +120,14 @@ export class CalculatorInputComponent {
       }
     }
     this.updateSuggestions();
+    
+    // Emit real time value so parent components update instantly
+    if (!this.expression.trim()) {
+      this.amountChange.emit(0);
+    } else {
+      const currentVal = this.evaluateExpression(this.expression);
+      this.amountChange.emit(currentVal > 0 ? currentVal : 0);
+    }
   }
 
   evaluateExpression(expr: string): number {
