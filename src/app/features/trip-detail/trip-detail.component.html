@@ -489,7 +489,7 @@
           <p class="field-label" style="margin-top: 24px;">TOTAL PRICE <span class="req">*</span></p>
           <div class="amount-row">
             <span class="currency-symbol">₫</span>
-            <input type="text" inputmode="numeric" [ngModel]="formattedTotalAmount" (ngModelChange)="setTotalAmount($event)" placeholder="0" class="amount-input" id="exp-amount" />
+            <app-calculator-input [(amount)]="expForm.amount" placeholder="0" class="amount-input" id="exp-amount"></app-calculator-input>
           </div>
 
           <!-- Paid By -->
@@ -521,29 +521,19 @@
                 </button>
                 <span class="split-name" [class.strikethrough]="!includedMembers()[member.id]">{{ member.name }}</span>
               </div>
-              <div class="split-right" (click)="$event.stopPropagation(); startEdit(member.id)">
-                @if (editingMemberId() === member.id) {
-                  <span class="currency-symbol-small">₫</span>
-                  <input 
-                    #amtInput
-                    type="text" 
-                    class="inline-edit"
-                    [value]="lockedShares()[member.id] != null ? formatNumber(lockedShares()[member.id]!) : ''"
-                    inputmode="text"
-                    placeholder="{{ formatNumber(calcShare(member.id)) }}"
-                    (input)="onInputSplitAmount(member.id, $event)"
-                    (blur)="setLockedAmount(member.id, amtInput.value)"
-                    (keydown.enter)="setLockedAmount(member.id, amtInput.value)"
-                    (click)="$event.stopPropagation()"
-                  />
-                } @else {
-                  <div class="amount-val" [class.is-locked]="lockedShares()[member.id] != null && activeMemberCount() > 1">
-                    @if (lockedShares()[member.id] != null && activeMemberCount() > 1) {
-                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="lock-icon"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                    }
-                    ₫{{ formatNumber(calcShare(member.id)) }}
-                  </div>
-                }
+              <div class="split-right" (click)="$event.stopPropagation()">
+                <div class="amount-val-container" [class.is-locked]="lockedShares()[member.id] != null && activeMemberCount() > 1" style="display: flex; align-items: center; justify-content: flex-end; width: 100%;">
+                  @if (lockedShares()[member.id] != null && activeMemberCount() > 1) {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="lock-icon" style="margin-right: 4px;"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  }
+                  <span class="currency-symbol-small" style="margin-right: 2px;">₫</span>
+                  <app-calculator-input 
+                    [amount]="lockedShares()[member.id] != null ? lockedShares()[member.id]! : calcShare(member.id)"
+                    (amountChange)="setLockedAmountNum(member.id, $event)"
+                    [placeholder]="formatNumber(calcShare(member.id))"
+                    customClass="inline-edit"
+                  ></app-calculator-input>
+                </div>
               </div>
             </div>
           }

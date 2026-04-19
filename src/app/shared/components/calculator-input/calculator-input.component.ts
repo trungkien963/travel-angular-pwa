@@ -1,0 +1,164 @@
+import { Component, Input, Output, EventEmitter, ElementRef, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+
+@Component({
+  selector: 'app-calculator-input',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './calculator-input.component.html',
+  styleUrls: ['./calculator-input.component.scss']
+})
+export class CalculatorInputComponent {
+  @Input() amount: number | null = null;
+  @Output() amountChange = new EventEmitter<number | null>();
+  @Input() placeholder: string = '0';
+  @Input() customClass: string = '';
+
+  isKeyboardOpen = false;
+  expression = ''; // The active string being typed
+  suggestions: number[] = [];
+  
+  private el = inject(ElementRef);
+  
+  // Format number to VNĐ format (e.g. 100,000)
+  formatNumber(val: number): string {
+    return val.toLocaleString('en-US');
+  }
+
+  // Handle clicking the input
+  openKeyboard() {
+    this.isKeyboardOpen = true;
+    if (this.amount && !this.expression) {
+      this.expression = this.amount.toString();
+    }
+    this.updateSuggestions();
+    
+    // Find the nearest scrollable container to add padding so we can scroll smoothly
+    const scrollContainer = this.el.nativeElement.closest('.form-section') || this.el.nativeElement.closest('.details-sheet') || document.body;
+    if (scrollContainer && scrollContainer !== document.body) {
+      scrollContainer.style.paddingBottom = '500px';
+      
+      setTimeout(() => {
+        const containerRect = scrollContainer.getBoundingClientRect();
+        const elRect = this.el.nativeElement.getBoundingClientRect();
+        // Target: position the input 100px below the top edge of the scroll container
+        const newScrollTop = scrollContainer.scrollTop + (elRect.top - containerRect.top) - 80;
+        
+        scrollContainer.scrollTo({
+          top: Math.max(0, newScrollTop),
+          behavior: 'smooth'
+        });
+      }, 50);
+    } else {
+      setTimeout(() => {
+        this.el.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 50);
+    }
+  }
+
+  closeKeyboard() {
+    this.isKeyboardOpen = false;
+    const scrollContainer = this.el.nativeElement.closest('.form-section') || this.el.nativeElement.closest('.details-sheet') || document.body;
+    if (scrollContainer) {
+      scrollContainer.style.paddingBottom = '';
+    }
+    this.commitValue();
+  }
+
+  commitValue() {
+    if (!this.expression.trim()) {
+       this.amount = 0;
+    } else {
+       const finalVal = this.evaluateExpression(this.expression);
+       this.amount = finalVal > 0 ? finalVal : 0;
+    }
+    this.amountChange.emit(this.amount);
+    this.expression = ''; // Clear expression after commute
+    this.suggestions = [];
+  }
+
+  // Handle keys from the custom keyboard
+  onKeyPress(key: string, event: Event) {
+    event.stopPropagation();
+    event.preventDefault();
+
+    if (key === 'BACKSPACE') {
+      this.expression = this.expression.slice(0, -1);
+    } else if (key === '000') {
+      // Don't add 000 if expression is empty
+      if (this.expression.length > 0) {
+        this.expression += '000';
+      }
+    } else if (['+', '-', 'x', '/'].includes(key)) {
+      // replace x with *
+      const op = key === 'x' ? '*' : key;
+      // prevent multiple operators in a row
+      const lastChar = this.expression.slice(-1);
+      if (['+', '-', '*', '/'].includes(lastChar)) {
+         this.expression = this.expression.slice(0, -1) + op;
+      } else if (this.expression.length > 0) {
+         this.expression += op;
+      }
+    } else {
+      // prevent leading multiple zeros
+      if (this.expression === '0') {
+         this.expression = key;
+      } else {
+         this.expression += key;
+      }
+    }
+    this.updateSuggestions();
+  }
+
+  evaluateExpression(expr: string): number {
+    if (!expr) return 0;
+    try {
+      // Remove all characters except numbers, +, -, *, /, .
+      const safeExpr = expr.replace(/[^-()\d/*+.]/g, '');
+      if (!safeExpr) return 0;
+      
+      // If trailing operator, remove it
+      const lastChar = safeExpr.slice(-1);
+      let evalExpr = safeExpr;
+      if (['+', '-', '*', '/'].includes(lastChar)) {
+         evalExpr = safeExpr.slice(0, -1);
+      }
+      
+      const result = new Function('return ' + evalExpr)();
+      return Math.round(result && !isNaN(result) && isFinite(result) && result > 0 ? result : 0);
+    } catch {
+      return 0; // Return 0 if syntax error
+    }
+  }
+
+  updateSuggestions() {
+    const currentVal = this.evaluateExpression(this.expression);
+    if (currentVal > 0 && currentVal < 100000) {
+      // Only suggest if the number is small enough
+      this.suggestions = [currentVal * 1000, currentVal * 10000, currentVal * 100000];
+    } else {
+      this.suggestions = [];
+    }
+  }
+
+  applySuggestion(val: number) {
+    this.expression = val.toString();
+    this.closeKeyboard();
+  }
+
+  get displayValue(): string {
+    if (this.expression) {
+      // Add thousand separators to numbers in the expression for better readability
+      return this.expression.replace(/\d+/g, (match) => {
+        return parseInt(match, 10).toLocaleString('en-US');
+      }).replace(/\*/g, ' x ');
+    }
+    return '';
+  }
+
+  // Prevent background clicks
+  stopPropagation(event: Event) {
+    event.stopPropagation();
+  }
+}

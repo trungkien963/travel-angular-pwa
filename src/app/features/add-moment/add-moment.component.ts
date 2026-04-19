@@ -8,6 +8,7 @@ import { ConfirmService } from '../../core/services/confirm.service';
 import { Trip } from '../../core/models/trip.model';
 import { Expense } from '../../core/models/expense.model';
 import { Post } from '../../core/models/social.model';
+import { CalculatorInputComponent } from '../../shared/components/calculator-input/calculator-input.component';
 
 interface LocationResult {
   placeId: string;
@@ -26,7 +27,7 @@ export interface PhotoCapture {
 @Component({
   selector: 'app-add-moment',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, CalculatorInputComponent],
   templateUrl: './add-moment.component.html',
   styleUrl: './add-moment.component.scss'
 })
@@ -657,6 +658,17 @@ export class AddMomentComponent implements OnInit, OnDestroy {
   setLockedAmount(memberId: string, value: string) {
     this.editingMemberId.set(null);
     this.updateLockedValue(memberId, value);
+  }
+
+  setLockedAmountNum(memberId: string, value: number | null) {
+    if (value === 0) {
+      this.includedMembers.update(m => ({ ...m, [memberId]: false }));
+      this.lockedShares.update(m => ({ ...m, [memberId]: null }));
+      this.updateLockedValue(memberId, '');
+    } else {
+      this.lockedShares.update(m => ({ ...m, [memberId]: value }));
+      this.updateLockedValue(memberId, value == null ? '' : value.toString());
+    }
   }
 
   updateLockedValue(memberId: string, value: string) {

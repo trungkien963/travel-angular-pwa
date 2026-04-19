@@ -10,6 +10,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { ConfirmService } from '../../core/services/confirm.service';
 import { MomentsComponent } from '../moments/moments.component';
 import { SwipeToCloseDirective } from '../../shared/directives/swipe-to-close.directive';
+import { CalculatorInputComponent } from '../../shared/components/calculator-input/calculator-input.component';
 import * as XLSX from 'xlsx';
 
 export interface Debt {
@@ -30,7 +31,7 @@ const CATEGORY_META: Record<string, { emoji: string; label: string; color: strin
 @Component({
   selector: 'app-trip-detail',
   standalone: true,
-  imports: [FormsModule, MomentsComponent, SwipeToCloseDirective],
+  imports: [FormsModule, MomentsComponent, SwipeToCloseDirective, CalculatorInputComponent],
   templateUrl: './trip-detail.component.html',
   styleUrl: './trip-detail.component.scss'
 })
@@ -418,6 +419,17 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
   setLockedAmount(memberId: string, value: string) {
     this.editingMemberId.set(null);
     this.updateLockedValue(memberId, value);
+  }
+
+  setLockedAmountNum(memberId: string, value: number | null) {
+    if (value === 0) {
+      this.includedMembers.update(m => ({ ...m, [memberId]: false }));
+      this.lockedShares.update(m => ({ ...m, [memberId]: null }));
+      this.updateLockedValue(memberId, '');
+    } else {
+      this.lockedShares.update(m => ({ ...m, [memberId]: value }));
+      this.updateLockedValue(memberId, value == null ? '' : value.toString());
+    }
   }
 
   updateLockedValue(memberId: string, value: string) {
