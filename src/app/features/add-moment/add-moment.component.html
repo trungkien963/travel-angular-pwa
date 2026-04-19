@@ -163,7 +163,7 @@
   }
 
   <!-- LAYER 2: DETAILS BOTTOM SHEET -->
-  <div class="details-sheet" [class.open]="cameraPhase() === 'details'">
+  <div class="details-sheet" [class.open]="cameraPhase() === 'details'" appSwipeToClose (swipeClose)="goToCapture()">
     <div class="sheet-header" (click)="goToCapture()">
       <div class="drag-handle"></div>
       <button class="btn-back-camera">

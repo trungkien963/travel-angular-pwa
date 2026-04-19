@@ -8,6 +8,7 @@ import { ConfirmService } from '../../core/services/confirm.service';
 import { Trip } from '../../core/models/trip.model';
 import { Expense } from '../../core/models/expense.model';
 import { Post } from '../../core/models/social.model';
+import { SwipeToCloseDirective } from '../../shared/directives/swipe-to-close.directive';
 
 interface LocationResult {
   placeId: string;
@@ -26,7 +27,7 @@ export interface PhotoCapture {
 @Component({
   selector: 'app-add-moment',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, SwipeToCloseDirective],
   templateUrl: './add-moment.component.html',
   styleUrl: './add-moment.component.scss'
 })
