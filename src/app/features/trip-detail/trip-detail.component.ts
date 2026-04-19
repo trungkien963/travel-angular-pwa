@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, ViewChild, ElementRef, ChangeDetectorRef, NgZone } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TravelStore } from '../../core/store/travel.store';
@@ -40,6 +40,8 @@ export class TripDetailComponent implements OnInit {
   private supabaseService = inject(SupabaseService);
   private toastService = inject(ToastService);
   private confirmService = inject(ConfirmService);
+  private cdr = inject(ChangeDetectorRef);
+  private ngZone = inject(NgZone);
 
   readonly defaultCover = 'https://images.unsplash.com/photo-1473496169904-6a58eb22bf2f?q=80&w=1000';
 
@@ -49,6 +51,7 @@ export class TripDetailComponent implements OnInit {
 
   // ─── Edit Trip State ────────────────────────────────────────────────────────
   editTripModal = false;
+  isCoverLoading = signal(false);
   editTripTitle = '';
   editTripLocation = '';
   editTripStartDate = '';
@@ -91,7 +94,10 @@ export class TripDetailComponent implements OnInit {
     this.editTripCoverFile = file;
     const reader = new FileReader();
     reader.onload = (e) => {
-      this.editTripCoverPreviewUrl = e.target?.result as string;
+      this.ngZone.run(() => {
+        this.editTripCoverPreviewUrl = e.target?.result as string;
+        this.cdr.detectChanges();
+      });
     };
     reader.readAsDataURL(file);
   }
@@ -195,24 +201,38 @@ export class TripDetailComponent implements OnInit {
       const { error } = await db.from('trips').update(updateData).eq('id', t.id);
       if (error) throw error;
 
-      this.travelStore.updateTrip(t.id, {
-        title: this.editTripTitle,
-        coverImage: finalCoverUrl,
-        locationName: this.editTripLocation || undefined,
-        locationCity: this.editTripLocation || undefined,
-        startDate: this.editTripStartDate,
-        endDate: this.editTripEndDate
+      this.ngZone.run(() => {
+        this.travelStore.updateTrip(t.id, {
+          title: this.editTripTitle,
+          coverImage: finalCoverUrl,
+          locationName: this.editTripLocation || undefined,
+          locationCity: this.editTripLocation || undefined,
+          startDate: this.editTripStartDate,
+          endDate: this.editTripEndDate
+        });
+        
+        this.toastService.show('Trip updated successfully!', 'success');
+        this.closeEditTrip();
+        if (this.editTripCoverFile) {
+          this.isCoverLoading.set(true);
+        }
       });
-      
-      this.toastService.show('Trip updated successfully!', 'success');
-      this.closeEditTrip();
     } catch (err: any) {
-      this.toastService.show(err.message || 'Failed to update trip.', 'error');
+      this.ngZone.run(() => {
+        this.toastService.show(err.message || 'Failed to update trip.', 'error');
+      });
     } finally {
-      this.isSavingTrip.set(false);
-      this.travelStore.setGlobalLoading(false);
+      this.ngZone.run(() => {
+        this.isSavingTrip.set(false);
+        this.travelStore.setGlobalLoading(false);
+      });
     }
   }
+
+  onCoverLoaded() {
+    this.isCoverLoading.set(false);
+  }
+  
   selectedExpense: Expense | null = null;
 
   readonly expenseModalOpen = signal(false);
@@ -548,7 +568,7 @@ export class TripDetailComponent implements OnInit {
     const uid = this.currentUserId();
     const members = this.trip()?.members?.length || 1;
     return this.tripExpenses().reduce((sum, e) => {
-      if (e.splits && Object.keys(e.splits).length > 0) {
+      if (e.splits && Object.keys(e.splits).filter(k => !k.startsWith('__')).length > 0) {
         return sum + (e.splits[uid] || 0);
       }
       return sum + Math.round(e.amount / members);
@@ -583,9 +603,11 @@ export class TripDetailComponent implements OnInit {
     expenses.forEach(exp => {
       const paidAmount = exp.amount;
       balance[exp.payerId] = (balance[exp.payerId] || 0) + paidAmount;
-      if (exp.splits && Object.keys(exp.splits).length > 0) {
+      if (exp.splits && Object.keys(exp.splits).filter(k => !k.startsWith('__')).length > 0) {
         Object.entries(exp.splits).forEach(([uid, share]) => {
-          balance[uid] = (balance[uid] || 0) - (share as number);
+          if (!uid.startsWith('__')) {
+            balance[uid] = (balance[uid] || 0) - (share as number);
+          }
         });
       } else {
         const share = paidAmount / members.length;
@@ -659,6 +681,12 @@ export class TripDetailComponent implements OnInit {
     const { data } = await db.from('expenses').select('*').eq('trip_id', this.tripId()).order('created_at', { ascending: false });
     if (data) {
       data.forEach((row: any) => {
+        let parsedSplits = row.splits;
+        if (typeof parsedSplits === 'string') {
+          try { parsedSplits = JSON.parse(parsedSplits); } catch (e) { parsedSplits = {}; }
+        }
+        if (!parsedSplits || typeof parsedSplits !== 'object') parsedSplits = {};
+
         const expense: Expense = {
           id: row.id,
           tripId: row.trip_id,
@@ -666,10 +694,11 @@ export class TripDetailComponent implements OnInit {
           amount: row.amount,
           category: row.category,
           payerId: row.payer_id,
-          date: row.date,
+          date: parsedSplits['__date'] || (row.created_at ? row.created_at.substring(0, 10) : new Date().toISOString().substring(0, 10)),
           createdAt: row.created_at,
-          splits: row.splits || {},
-          receipts: row.receipt_urls || []
+          splits: parsedSplits,
+          receipts: row.receipt_urls || [],
+          isEdited: !!parsedSplits['__isEdited']
         };
         this.travelStore.upsertExpense(expense);
       });
@@ -1080,7 +1109,7 @@ export class TripDetailComponent implements OnInit {
     const lock: Record<string, number | null> = {};
     const trip = this.trip();
     if (trip) {
-      if (exp.splits && Object.keys(exp.splits).length > 0) {
+      if (exp.splits && Object.keys(exp.splits).filter(k => !k.startsWith('__')).length > 0) {
         trip.members.forEach(m => {
           const share = exp.splits![m.id];
           if (share !== undefined && share > 0) {
@@ -1184,7 +1213,7 @@ export class TripDetailComponent implements OnInit {
     this.isSavingExpense.set(true);
     this.travelStore.setGlobalLoading(true);
 
-    const splits: Record<string, number> = {};
+    const splits: Record<string, any> = {};
     let totalAssigned = 0;
     let lastMemberId: string | null = null;
     
@@ -1202,6 +1231,12 @@ export class TripDetailComponent implements OnInit {
          splits[lastMemberId] += (this.expForm.amount - totalAssigned);
       }
 
+      // Inject metadata into splits JSON to avoid altering Supabase schema
+      splits['__date'] = this.expForm.date;
+      if (this.editingExpense) {
+         splits['__isEdited'] = true;
+      }
+
       const payload: any = {
         trip_id: this.tripId(),
         description: this.expForm.desc,
@@ -1211,12 +1246,11 @@ export class TripDetailComponent implements OnInit {
         splits
       };
       
-      if (this.expForm.date) {
+      // Override created_at only on new inserts
+      if (!this.editingExpense && this.expForm.date) {
         try {
           payload.created_at = new Date(this.expForm.date).toISOString();
-        } catch(e) {
-          console.warn('Invalid date string');
-        }
+        } catch(e) {}
       }
 
       let finalReceiptUrls: string[] = [];
@@ -1243,7 +1277,9 @@ export class TripDetailComponent implements OnInit {
         if (data) this.travelStore.upsertExpense({
           id: data['id'], tripId: data['trip_id'], desc: data['description'],
           amount: data['amount'], category: data['category'],
-          payerId: data['payer_id'], date: data['date'], createdAt: data['created_at'], splits: data['splits'], receipts: data['receipt_urls']
+          payerId: data['payer_id'], date: data['splits']?.['__date'] || (data['created_at'] ? data['created_at'].substring(0, 10) : this.expForm.date), 
+          createdAt: data['created_at'], splits: data['splits'], receipts: data['receipt_urls'],
+          isEdited: !!data['splits']?.['__isEdited']
         } as Expense);
       } else {
         const { data, error } = await db.from('expenses').insert(payload).select().single();
@@ -1251,7 +1287,9 @@ export class TripDetailComponent implements OnInit {
         if (data) this.travelStore.upsertExpense({
           id: data['id'], tripId: data['trip_id'], desc: data['description'],
           amount: data['amount'], category: data['category'],
-          payerId: data['payer_id'], date: data['date'], createdAt: data['created_at'], splits: data['splits'], receipts: data['receipt_urls']
+          payerId: data['payer_id'], date: data['splits']?.['__date'] || (data['created_at'] ? data['created_at'].substring(0, 10) : this.expForm.date), 
+          createdAt: data['created_at'], splits: data['splits'], receipts: data['receipt_urls'],
+          isEdited: !!data['splits']?.['__isEdited']
         } as Expense);
       }
       this.expenseModalOpen.set(false);
@@ -1530,7 +1568,7 @@ export class TripDetailComponent implements OnInit {
 
     // Helper for safely getting share
     const getShare = (mId: string, e: Expense) => {
-      if (e.splits && Object.keys(e.splits).length > 0) {
+      if (e.splits && Object.keys(e.splits).filter(k => !k.startsWith('__')).length > 0) {
         return e.splits[mId] || 0;
       }
       return this.getFallbackSplit(e);
@@ -1564,7 +1602,7 @@ export class TripDetailComponent implements OnInit {
         }
       });
       
-      if (e.splits && Object.keys(e.splits).length > 0) {
+      if (e.splits && Object.keys(e.splits).filter(k => !k.startsWith('__')).length > 0) {
          const amtValues = Object.values(e.splits).filter(v => typeof v === 'number' && v > 0);
          if (amtValues.length > 0) {
            const max = Math.max(...amtValues);

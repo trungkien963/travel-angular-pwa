@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, ElementRef, ViewChild, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, ElementRef, ViewChild, OnInit, NgZone, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TravelStore } from '../../core/store/travel.store';
@@ -17,6 +17,8 @@ export class TripsComponent implements OnInit {
   private router = inject(Router);
   private travelStore = inject(TravelStore);
   private toastService = inject(ToastService);
+  private ngZone = inject(NgZone);
+  private cdr = inject(ChangeDetectorRef);
 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
@@ -109,7 +111,10 @@ export class TripsComponent implements OnInit {
     this.coverImageFile = file;
     const reader = new FileReader();
     reader.onload = (e) => {
-      this.coverImagePreview.set(e.target?.result as string);
+      this.ngZone.run(() => {
+        this.coverImagePreview.set(e.target?.result as string);
+        this.cdr.detectChanges();
+      });
     };
     reader.readAsDataURL(file);
   }

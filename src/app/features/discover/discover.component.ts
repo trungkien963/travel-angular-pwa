@@ -1,7 +1,6 @@
 import { Component, inject, computed, OnInit, signal, OnDestroy, HostListener, AfterViewInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TravelStore } from '../../core/store/travel.store';
-import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { ToastService } from '../../core/services/toast.service';
 import { Router } from '@angular/router';
 import { SupabaseService } from '../../core/services/supabase.service';
@@ -25,7 +24,7 @@ interface FeedItem {
 @Component({
   selector: 'app-discover',
   standalone: true,
-  imports: [RouterLink, TranslatePipe, FormsModule],
+  imports: [RouterLink, FormsModule],
   templateUrl: './discover.component.html',
   styleUrl: './discover.component.scss'
 })

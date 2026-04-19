@@ -6,7 +6,7 @@
     <base href="/" />
 
     <!-- Viewport -->
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 
     <!-- SEO -->
     <meta name="description" content="Travel together, share moments, split expenses. WanderPool is your social travel companion." />
@@ -47,6 +47,18 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
       rel="stylesheet"
     />
+
+    <!-- Prevent pinch-to-zoom on iOS Safari -->
+    <script>
+      document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
+      document.addEventListener('gesturechange', function (e) { e.preventDefault(); });
+      document.addEventListener('gestureend', function (e) { e.preventDefault(); });
+      document.addEventListener('touchmove', function(e) {
+        if (e.touches && e.touches.length > 1) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+    </script>
   </head>
   <body>
     <app-root>

@@ -20,6 +20,7 @@ export interface Expense {
   receipt?: string;
   createdAt?: string;
   category?: ExpenseCategory;
+  isEdited?: boolean;
 }
 
 export type ExpenseCategory = 'FOOD' | 'TRANSPORT' | 'HOTEL' | 'ACTIVITIES' | 'SHOPPING' | 'OTHER';

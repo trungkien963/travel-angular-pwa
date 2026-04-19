@@ -424,11 +424,11 @@ export class AddMomentComponent implements OnInit, OnDestroy {
     const ctx = (canvas as any).getContext('2d', { colorSpace: 'display-p3' }) || canvas.getContext('2d');
     if (!ctx) return;
     
-    // Draw current frame with precise cropping
-    if (this.facingMode() === 'user') {
-      ctx.translate(canvas.width, 0);
-      ctx.scale(-1, 1);
-    }
+    // Remove scaling to prevent mirrored (flipped) result
+    // if (this.facingMode() === 'user') {
+    //   ctx.translate(canvas.width, 0);
+    //   ctx.scale(-1, 1);
+    // }
 
     // Apply Base CSS Filters
     if (this.activeFilter() === 'film') {

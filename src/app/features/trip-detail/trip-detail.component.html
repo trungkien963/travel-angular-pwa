@@ -8,7 +8,12 @@
 
     <!-- Cover Image -->
     <div class="cover-area">
-      <img [src]="trip()!.coverImage || defaultCover" [alt]="trip()!.title" class="cover-img" />
+      <img [src]="trip()!.coverImage || defaultCover" [alt]="trip()!.title" class="cover-img" (load)="onCoverLoaded()" />
+      @if (isCoverLoading()) {
+        <div class="cover-skeleton">
+           <div class="spinner"></div>
+        </div>
+      }
       <div class="cover-overlay"></div>
       
       <!-- Back Button -->
@@ -280,7 +285,7 @@
                   <div class="expense-info">
                     <p class="expense-desc">{{ exp.desc || getCategoryLabel(exp.category || 'OTHER') }}</p>
                     <p class="expense-meta">
-                      {{ getCategoryLabel(exp.category || 'OTHER') }} • {{ exp.date }}
+                      {{ formatDate(exp.date) || 'No Date' }}
                       @if (isMember()) {
                         • Paid by {{ getPayerName(exp.payerId) }}
                       }
@@ -555,7 +560,7 @@
         </div>
         </div> <!-- Close input-card -->
         
-        <button class="btn-receipt-close" (click)="saveExpense()" [disabled]="isSavingExpense() || !expForm.desc || expForm.amount <= 0 || newMemberEmail.trim().length > 0" [class.btn-warning]="newMemberEmail.trim().length > 0" style="margin-top: 16px; width: 100%; border:none; padding:18px; border-radius:100px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); font-size:16px; font-weight:800; cursor:pointer;" [style.background]="(isSavingExpense() || !expForm.desc || expForm.amount <= 0 || newMemberEmail.trim().length > 0) ? '#F5F5F5' : '#FFF'" [style.color]="newMemberEmail.trim().length > 0 ? '#854D0E' : '#1C1917'">
+        <button class="btn-receipt-close" (click)="saveExpense()" [disabled]="isSavingExpense() || !expForm.desc || expForm.amount <= 0 || newMemberEmail.trim().length > 0" [class.btn-warning]="newMemberEmail.trim().length > 0" style="margin-top: 16px; width: 100%; border:none; padding:18px; border-radius:100px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); font-size:16px; font-weight:800; cursor:pointer;" [style.background]="(isSavingExpense() || !expForm.desc || expForm.amount <= 0 || newMemberEmail.trim().length > 0) ? '#F5F5F5' : '#FFC800'" [style.color]="(isSavingExpense() || !expForm.desc || expForm.amount <= 0 || newMemberEmail.trim().length > 0) ? '#A8A29E' : '#1C1917'">
           @if (isSavingExpense()) {
             Saving...
           } @else if (newMemberEmail.trim().length > 0) {
@@ -583,7 +588,10 @@
             <h2 class="receipt-title">{{ selectedExpense.desc || getCategoryLabel(selectedExpense.category || 'OTHER') }}</h2>
             <div class="receipt-date">
               <span class="receipt-category-pill" [style.background]="getCategoryBg(selectedExpense.category || 'OTHER')">{{ getCategoryLabel(selectedExpense.category || 'OTHER') }}</span>
-              {{ formatDate(selectedExpense.date) }}
+              <span>{{ formatDate(selectedExpense.date) }}</span>
+              @if (selectedExpense.isEdited) {
+                <span class="edited-badge">· Edited</span>
+              }
             </div>
           </div>
           

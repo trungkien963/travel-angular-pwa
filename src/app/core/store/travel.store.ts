@@ -282,7 +282,7 @@ export class TravelStore {
               images: parsedImages,
               isDual: p['is_dual_camera'] || false,
               timestamp: p['created_at'] || new Date().toISOString(),
-              date: p['created_at'] ? p['created_at'].split('T')[0] : new Date().toISOString().split('T')[0],
+              date: p['created_at'] ? p['created_at'].substring(0, 10) : new Date().toISOString().substring(0, 10),
               likes: parsedLikes.length,
               hasLiked: parsedLikes.includes(this.currentUserId()),
               comments: parsedComments
@@ -312,12 +312,13 @@ export class TravelStore {
               tripId: e['trip_id'],
               amount: e['amount'],
               desc: e['description'] || '',
-              date: e['created_at'] ? e['created_at'].split('T')[0] : new Date().toISOString().split('T')[0],
+              date: parsedSplits['__date'] || (e['created_at'] ? e['created_at'].substring(0, 10) : new Date().toISOString().substring(0, 10)),
               createdAt: e['created_at'],
               payerId: e['payer_id'] || 'Traveler',
               category: e['category'] || 'OTHER',
               splits: parsedSplits,
-              receipts: parsedReceipts
+              receipts: parsedReceipts,
+              isEdited: !!parsedSplits['__isEdited']
             };
           });
         }
@@ -471,7 +472,7 @@ export class TravelStore {
       content: p.content || '', images: parsedImages,
       isDual: p.is_dual_camera || false,
       timestamp: p.created_at || new Date().toISOString(),
-      date: p.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+      date: p.created_at ? p.created_at.substring(0, 10) : new Date().toISOString().substring(0, 10),
       likes: parsedLikes.length,
       hasLiked: parsedLikes.includes(this.currentUserId()),
       comments: parsedComments
@@ -507,10 +508,12 @@ export class TravelStore {
     const formatted: Expense = {
       id: e.id, tripId: e.trip_id, amount: e.amount,
       desc: e.description || '',
-      date: e.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+      date: parsedSplits['__date'] || (e.created_at ? e.created_at.substring(0, 10) : new Date().toISOString().substring(0, 10)),
+      createdAt: e.created_at,
       payerId: e.payer_id || 'Traveler',
       category: e.category || 'OTHER',
-      splits: parsedSplits, receipts: parsedReceipts
+      splits: parsedSplits, receipts: parsedReceipts,
+      isEdited: !!parsedSplits['__isEdited']
     };
 
     if (payload.eventType === 'INSERT') {
