@@ -2,452 +2,567 @@
 
   <!-- LAYER 1: CAPTURE MODE -->
   <div class="capture-layer">
-  <!-- Top Controls -->
-  <div class="top-bar">
-    <button class="icon-circle" (click)="handleClose()" id="btn-close-moment">
-      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
-      </svg>
-    </button>
-    <div class="top-right-controls">
-      <button class="icon-circle text-btn" [class.active]="isDualMode()" (click)="toggleDualMode()">
-        DUAL
-      </button>
-      <button class="icon-circle" (click)="toggleFlash()" [class.active]="isFlashOn()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          @if (isFlashOn()) {
-            <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.9 1.2 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>
-          } @else {
-            <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.9 1.2 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/><line x1="2" y1="2" x2="22" y2="22"/>
-          }
+    <!-- Top Controls -->
+    <div class="top-bar">
+      <button class="icon-circle" (click)="handleClose()" id="btn-close-moment">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 6 6 18" />
+          <path d="m6 6 12 12" />
         </svg>
       </button>
-    </div>
-  </div>
-
-  <div class="camera-lens-wrapper">
-  <!-- Camera / Preview Area -->
-  <div class="camera-area">
-    
-    <!-- Video Stream (Live Camera) -->
-    <video #videoElement autoplay playsinline class="video-feed" 
-      [class.mirrored]="facingMode() === 'user'"
-      [class.filter-base-film]="activeFilter() === 'film'"
-      [class.filter-base-kodak]="activeFilter() === 'kodak'"
-      [class.filter-base-y2k]="activeFilter() === 'y2k'"
-      [class.filter-base-cine]="activeFilter() === 'cine'"
-    ></video>
-    <div class="video-vignette"></div>
-    @if (showGrid()) {
-      <div class="grid-overlay">
-        <div class="grid-hline" style="top: 33.33%"></div>
-        <div class="grid-hline" style="top: 66.66%"></div>
-        <div class="grid-vline" style="left: 33.33%"></div>
-        <div class="grid-vline" style="left: 66.66%"></div>
-      </div>
-    }
-    <!-- Hidden canvas for capture -->
-    <canvas #canvasElement class="hidden-canvas"></canvas>
-  </div>
-  </div> <!-- end camera-lens-wrapper -->
-
-  <div class="camera-bottom-section">
-    <!-- Filters Bar -->
-    <div class="filters-scroll">
-      <button class="filter-pill" [class.active]="activeFilter() === 'none'" (click)="activeFilter.set('none')">NORMAL</button>
-      <button class="filter-pill" [class.active]="activeFilter() === 'film'" (click)="activeFilter.set('film')">FUJI 400</button>
-      <button class="filter-pill" [class.active]="activeFilter() === 'kodak'" (click)="activeFilter.set('kodak')">KODAK</button>
-      <button class="filter-pill" [class.active]="activeFilter() === 'y2k'" (click)="activeFilter.set('y2k')">Y2K GLOW</button>
-      <button class="filter-pill" [class.active]="activeFilter() === 'cine'" (click)="activeFilter.set('cine')">CINEMA</button>
-    </div>
-
-    <!-- Primary Camera Actions -->
-    <div class="camera-primary-actions">
-      <!-- Gallery Left -->
-      <label class="icon-circle action-left" for="file-input">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
-        </svg>
-      </label>
-
-      <!-- Shutter Center -->
-      <div class="shutter-wrapper">
-        <button class="shutter-ring" (click)="capturePhoto()">
-          <div class="shutter-inner"></div>
+      <div class="top-right-controls">
+        <button class="icon-circle text-btn" [class.active]="isDualMode()" (click)="toggleDualMode()">
+          DUAL
+        </button>
+        <button class="icon-circle" (click)="toggleFlash()" [class.active]="isFlashOn()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            @if (isFlashOn()) {
+            <path
+              d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.9 1.2 1.5 1.5 2.5" />
+            <path d="M9 18h6" />
+            <path d="M10 22h4" />
+            } @else {
+            <path
+              d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.9 1.2 1.5 1.5 2.5" />
+            <path d="M9 18h6" />
+            <path d="M10 22h4" />
+            <line x1="2" y1="2" x2="22" y2="22" />
+            }
+          </svg>
         </button>
       </div>
-
-      <!-- Flip Camera Right -->
-      <button class="icon-circle action-right" (click)="toggleCamera()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M11 19H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/><path d="M13 5h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-5"/><circle cx="12" cy="12" r="3"/><path d="m18 22-3-3 3-3"/><path d="m6 2 3 3-3 3"/>
-        </svg>
-      </button>
     </div>
-    <input id="file-input" type="file" accept="image/*" multiple class="file-input-hidden" (change)="onFilePicked($event)" />
-  </div>
 
-  <!-- Next Phase Trigger & Selected Photos List -->
-  <div class="photos-tray-wrapper" [class.has-photos]="photos().length > 0">
-    <div class="photos-tray">
-      <div class="tray-scroll">
-        @for (p of photos(); track p.id) {
+    <div class="camera-lens-wrapper">
+      <!-- Camera / Preview Area -->
+      <div class="camera-area">
+
+        <!-- Video Stream (Live Camera) -->
+        <video #videoElement autoplay playsinline class="video-feed" [class.mirrored]="facingMode() === 'user'"
+          [class.filter-base-film]="activeFilter() === 'film'" [class.filter-base-kodak]="activeFilter() === 'kodak'"
+          [class.filter-base-y2k]="activeFilter() === 'y2k'"
+          [class.filter-base-cine]="activeFilter() === 'cine'"></video>
+        <div class="video-vignette"></div>
+        @if (showGrid()) {
+        <div class="grid-overlay">
+          <div class="grid-hline" style="top: 33.33%"></div>
+          <div class="grid-hline" style="top: 66.66%"></div>
+          <div class="grid-vline" style="left: 33.33%"></div>
+          <div class="grid-vline" style="left: 66.66%"></div>
+        </div>
+        }
+        <!-- Hidden canvas for capture -->
+        <canvas #canvasElement class="hidden-canvas"></canvas>
+      </div>
+    </div> <!-- end camera-lens-wrapper -->
+
+    <div class="camera-bottom-section">
+      <!-- Filters Bar -->
+      <div class="filters-scroll">
+        <button class="filter-pill" [class.active]="activeFilter() === 'none'"
+          (click)="activeFilter.set('none')">NORMAL</button>
+        <button class="filter-pill" [class.active]="activeFilter() === 'film'" (click)="activeFilter.set('film')">FUJI
+          400</button>
+        <button class="filter-pill" [class.active]="activeFilter() === 'kodak'"
+          (click)="activeFilter.set('kodak')">KODAK</button>
+        <button class="filter-pill" [class.active]="activeFilter() === 'y2k'" (click)="activeFilter.set('y2k')">Y2K
+          GLOW</button>
+        <button class="filter-pill" [class.active]="activeFilter() === 'cine'"
+          (click)="activeFilter.set('cine')">CINEMA</button>
+      </div>
+
+      <!-- Primary Camera Actions -->
+      <div class="camera-primary-actions">
+        <!-- Gallery Left -->
+        <label class="icon-circle action-left" for="file-input">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+            <circle cx="9" cy="9" r="2" />
+            <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+          </svg>
+        </label>
+
+        <!-- Shutter Center -->
+        <div class="shutter-wrapper">
+          <button class="shutter-ring" (click)="capturePhoto()">
+            <div class="shutter-inner"></div>
+          </button>
+        </div>
+
+        <!-- Flip Camera Right -->
+        <button class="icon-circle action-right" (click)="toggleCamera()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 19H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5" />
+            <path d="M13 5h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-5" />
+            <circle cx="12" cy="12" r="3" />
+            <path d="m18 22-3-3 3-3" />
+            <path d="m6 2 3 3-3 3" />
+          </svg>
+        </button>
+      </div>
+      <input id="file-input" type="file" accept="image/*" multiple class="file-input-hidden"
+        (change)="onFilePicked($event)" />
+    </div>
+
+    <!-- Next Phase Trigger & Selected Photos List -->
+    <div class="photos-tray-wrapper" [class.has-photos]="photos().length > 0">
+      <div class="photos-tray">
+        <div class="tray-scroll">
+          @for (p of photos(); track p.id) {
           <div class="tray-item" (click)="viewPhoto(p.id)">
             <img [src]="p.url" />
             <button class="del-thumb-btn" (click)="removePhoto(p.id, $event)">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                stroke="white" stroke-width="2.5">
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
             </button>
           </div>
-        }
+          }
+        </div>
       </div>
-    </div>
-    @if (photos().length > 0) {
+      @if (photos().length > 0) {
       <button class="btn-next-phase" (click)="goToDetails()">
-         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14" />
+          <path d="m12 5 7 7-7 7" />
+        </svg>
       </button>
-    }
-  </div>
+      }
+    </div>
 
   </div> <!-- /capture-layer -->
 
   <!-- LAYER 1.5: CROPPER MODE OVERLAY -->
   @if (currentCrop()) {
-    <div class="cropper-layer">
-       <div class="top-bar">
-         <button class="icon-circle" (click)="abortCropSession()">
-           <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
-         </button>
-         <div><span class="crop-title">CĂN CHỈNH ({{ currentCropIndex() }}/{{ cropTotal() }})</span></div>
-         <div style="width: 44px"></div> <!-- Placeholder for symmetry -->
-       </div>
-
-       <div class="camera-lens-wrapper">
-          <div class="camera-area-container" style="position: relative; width: 100%; max-width: 500px; aspect-ratio: 1/1;">
-            <div class="camera-area cropper-scroll-area" style="max-width: none; width: 100%; height: 100%;" #cropperScrollArea>
-               <img [src]="currentCrop()!.url" #cropperImgElement (load)="onCropImgLoad($event)" class="cropper-target-img" [class.is-landscape]="isCropLandscape()" />
-            </div>
-            <!-- Grid Overlay stays fixed on top -->
-            <div class="crop-grid-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; border-radius: 40px; border: 2px solid rgba(255,255,255,0.4); z-index: 50;">
-               <div class="grid-hline" style="position: absolute; top: 33.33%; left: 0; right: 0; height: 1px; background: rgba(255,255,255,0.5)"></div>
-               <div class="grid-hline" style="position: absolute; top: 66.66%; left: 0; right: 0; height: 1px; background: rgba(255,255,255,0.5)"></div>
-               <div class="grid-vline" style="position: absolute; left: 33.33%; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,0.5)"></div>
-               <div class="grid-vline" style="position: absolute; left: 66.66%; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,0.5)"></div>
-            </div>
-          </div>
-       </div>
-
-       <div class="camera-bottom-section">
-         <div class="crop-hint" style="margin-bottom: 24px;">
-           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 9l-3 3 3 3M19 9l3 3-3 3M9 5l3-3 3 3M9 19l3 3 3 3"/></svg>
-           Dùng ngón tay cuộn ảnh để chọn góc
-         </div>
-         <div class="camera-primary-actions" style="padding-bottom: 32px">
-            <!-- Discard/Skip (Left) -->
-            <button class="icon-circle action-left" (click)="skipCrop()" style="background: rgba(255,0,0,0.15); border-color: rgba(255,60,60,0.4)">
-              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF5555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-            </button>
-            
-            <div class="shutter-wrapper"></div>
-            
-            <!-- Next / Confirm (Right) -->
-            <button class="icon-circle action-right active" (click)="confirmCrop()">
-              @if (currentCropIndex() === cropTotal()) {
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>
-              } @else {
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-              }
-            </button>
-         </div>
-       </div>
+  <div class="cropper-layer">
+    <div class="top-bar">
+      <button class="icon-circle" (click)="abortCropSession()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5">
+          <path d="M18 6 6 18M6 6l12 12" />
+        </svg>
+      </button>
+      <div><span class="crop-title">CĂN CHỈNH ({{ currentCropIndex() }}/{{ cropTotal() }})</span></div>
+      <div style="width: 44px"></div> <!-- Placeholder for symmetry -->
     </div>
+
+    <div class="camera-lens-wrapper">
+      <div class="camera-area-container" style="position: relative; width: 100%; max-width: 500px; aspect-ratio: 1/1;">
+        <div class="camera-area cropper-scroll-area" style="max-width: none; width: 100%; height: 100%;"
+          #cropperScrollArea>
+          <img [src]="currentCrop()!.url" #cropperImgElement (load)="onCropImgLoad($event)" class="cropper-target-img"
+            [class.is-landscape]="isCropLandscape()" />
+        </div>
+        <!-- Grid Overlay stays fixed on top -->
+        <div class="crop-grid-overlay"
+          style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; border-radius: 40px; border: 2px solid rgba(255,255,255,0.4); z-index: 50;">
+          <div class="grid-hline"
+            style="position: absolute; top: 33.33%; left: 0; right: 0; height: 1px; background: rgba(255,255,255,0.5)">
+          </div>
+          <div class="grid-hline"
+            style="position: absolute; top: 66.66%; left: 0; right: 0; height: 1px; background: rgba(255,255,255,0.5)">
+          </div>
+          <div class="grid-vline"
+            style="position: absolute; left: 33.33%; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,0.5)">
+          </div>
+          <div class="grid-vline"
+            style="position: absolute; left: 66.66%; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,0.5)">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="camera-bottom-section">
+      <div class="crop-hint" style="margin-bottom: 24px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
+          stroke-width="2" viewBox="0 0 24 24">
+          <path d="M5 9l-3 3 3 3M19 9l3 3-3 3M9 5l3-3 3 3M9 19l3 3 3 3" />
+        </svg>
+        Dùng ngón tay cuộn ảnh để chọn góc
+      </div>
+      <div class="camera-primary-actions" style="padding-bottom: 32px">
+        <!-- Discard/Skip (Left) -->
+        <button class="icon-circle action-left" (click)="skipCrop()"
+          style="background: rgba(255,0,0,0.15); border-color: rgba(255,60,60,0.4)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+            stroke="#FF5555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18" />
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+            <line x1="10" y1="11" x2="10" y2="17" />
+            <line x1="14" y1="11" x2="14" y2="17" />
+          </svg>
+        </button>
+
+        <div class="shutter-wrapper"></div>
+
+        <!-- Next / Confirm (Right) -->
+        <button class="icon-circle action-right active" (click)="confirmCrop()">
+          @if (currentCropIndex() === cropTotal()) {
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="3">
+            <path d="M5 12l5 5L20 7" />
+          </svg>
+          } @else {
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14" />
+            <path d="m12 5 7 7-7 7" />
+          </svg>
+          }
+        </button>
+      </div>
+    </div>
+  </div>
   }
 
   <!-- LAYER 2: DETAILS BOTTOM SHEET -->
-  <div class="details-sheet" [class.open]="cameraPhase() === 'details'" appSwipeToClose (swipeClose)="goToCapture()">
+  <div class="details-sheet" [class.open]="cameraPhase() === 'details'">
     <div class="sheet-header" (click)="goToCapture()">
       <div class="drag-handle"></div>
       <button class="btn-back-camera">
-         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-         Back
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m15 18-6-6 6-6" />
+        </svg>
+        Back
       </button>
     </div>
     <div class="form-section">
 
-    <!-- Section header with expense toggle -->
-    <div class="form-header">
-      <h2 class="form-title">Add Details</h2>
-      <button
-        class="expense-toggle"
-        [class.active]="isExpenseMode()"
-        (click)="toggleExpenseMode()"
-        id="btn-expense-toggle"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1z"/><path d="M16 8H8"/><path d="M16 12H8"/><path d="M16 16H8"/>
-        </svg>
-        {{ isExpenseMode() ? 'EXPENSE ON' : '+ BILL' }}
-      </button>
-    </div>
-
-    <!-- Trip Selector -->
-    <p class="field-label">SAVE TO TRIP <span class="req">*</span></p>
-    <button class="trip-selector" (click)="showTripPicker = !showTripPicker" id="btn-trip-selector">
-      <div class="trip-selector-left">
-        <div class="trip-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFC800" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+      <!-- Section header with expense toggle -->
+      <div class="form-header">
+        <h2 class="form-title">Add Details</h2>
+        <button class="expense-toggle" [class.active]="isExpenseMode()" (click)="toggleExpenseMode()"
+          id="btn-expense-toggle">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1z" />
+            <path d="M16 8H8" />
+            <path d="M16 12H8" />
+            <path d="M16 16H8" />
           </svg>
-        </div>
-        <div>
-          <p class="trip-sel-title">{{ selectedTrip()?.title || 'Select a Trip' }}</p>
-          <p class="trip-sel-sub">{{ selectedTrip()?.startDate ? formatDate(selectedTrip()!.startDate) : 'Requires selection' }}</p>
-        </div>
+          {{ isExpenseMode() ? 'EXPENSE ON' : '+ BILL' }}
+        </button>
       </div>
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A8A29E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="m6 9 6 6 6-6"/>
-      </svg>
-    </button>
 
-    <!-- Trip Dropdown -->
-    @if (showTripPicker) {
+      <!-- Trip Selector -->
+      <p class="field-label">SAVE TO TRIP <span class="req">*</span></p>
+      <button class="trip-selector" (click)="showTripPicker = !showTripPicker" id="btn-trip-selector">
+        <div class="trip-selector-left">
+          <div class="trip-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="#FFC800" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+          </div>
+          <div>
+            <p class="trip-sel-title">{{ selectedTrip()?.title || 'Select a Trip' }}</p>
+            <p class="trip-sel-sub">{{ selectedTrip()?.startDate ? formatDate(selectedTrip()!.startDate) : 'Requires
+              selection' }}</p>
+          </div>
+        </div>
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A8A29E"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </button>
+
+      <!-- Trip Dropdown -->
+      @if (showTripPicker) {
       <div class="trip-dropdown">
         @for (trip of trips(); track trip.id) {
-          <button class="trip-dropdown-item" [class.selected]="selectedTripId() === trip.id" (click)="selectTrip(trip.id)" [id]="'trip-option-' + trip.id">
-            <span>{{ trip.title }}</span>
-            <span class="trip-date">{{ formatDate(trip.startDate) }}</span>
-          </button>
+        <button class="trip-dropdown-item" [class.selected]="selectedTripId() === trip.id" (click)="selectTrip(trip.id)"
+          [id]="'trip-option-' + trip.id">
+          <span>{{ trip.title }}</span>
+          <span class="trip-date">{{ formatDate(trip.startDate) }}</span>
+        </button>
         }
         @if (trips().length === 0) {
-          <p class="trip-dropdown-empty">No trips available</p>
+        <p class="trip-dropdown-empty">No trips available</p>
         }
       </div>
-    }
+      }
 
-    <!-- Caption Input -->
-    <div class="input-card">
-      <p class="field-label">WHAT WAS THIS FOR? @if (isExpenseMode()) { <span class="req">*</span> }</p>
-      <textarea
-        class="caption-input"
-        placeholder="E.g., Dinner at the bay..."
-        [(ngModel)]="caption"
-        rows="2"
-        id="input-caption"
-      ></textarea>
-    </div>
+      <!-- Caption Input -->
+      <div class="input-card">
+        <p class="field-label">WHAT WAS THIS FOR? @if (isExpenseMode()) { <span class="req">*</span> }</p>
+        <textarea class="caption-input" placeholder="E.g., Dinner at the bay..." [(ngModel)]="caption" rows="2"
+          id="input-caption"></textarea>
+      </div>
 
-    <!-- Location Search -->
-    <div class="input-card">
-      <p class="field-label">LOCATION (TAG)</p>
-      @if (selectedLocation) {
+      <!-- Location Search -->
+      <div class="input-card">
+        <p class="field-label">LOCATION (TAG)</p>
+        @if (selectedLocation) {
         <div class="location-selected">
           <div>
             <p class="location-name">📍 {{ selectedLocation.name }}</p>
             <p class="location-city">{{ selectedLocation.city }}</p>
           </div>
           <button class="btn-clear-location" (click)="clearLocation()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 6 6 18" />
+              <path d="m6 6 12 12" />
             </svg>
           </button>
         </div>
-      } @else {
+        } @else {
         <div class="location-search-row">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8A29E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="#A8A29E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
           </svg>
-          <input
-            type="text"
-            class="location-input"
-            placeholder="Search on OpenStreetMap..."
-            [(ngModel)]="locationQuery"
-            (input)="onLocationSearch()"
-            id="input-location"
-          />
+          <input type="text" class="location-input" placeholder="Search on OpenStreetMap..." [(ngModel)]="locationQuery"
+            (input)="onLocationSearch()" id="input-location" />
         </div>
         @if (isSearching()) {
-          <p class="searching-text">Searching...</p>
+        <p class="searching-text">Searching...</p>
         }
         @if (locationResults().length > 0) {
-          <div class="location-results">
-            @for (result of locationResults(); track result.placeId) {
-              <button class="location-result-item" (click)="selectLocation(result)">
-                <p class="loc-result-name">{{ result.name }}</p>
-                <p class="loc-result-addr">{{ result.address }}</p>
-              </button>
+        <div class="location-results">
+          @for (result of locationResults(); track result.placeId) {
+          <button class="location-result-item" (click)="selectLocation(result)">
+            <p class="loc-result-name">{{ result.name }}</p>
+            <p class="loc-result-addr">{{ result.address }}</p>
+          </button>
+          }
+        </div>
+        }
+        }
+      </div>
+
+      <!-- Expense Fields -->
+      @if (isExpenseMode()) {
+      <div class="input-card" style="margin-top:20px;">
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <p class="field-label" style="margin: 0;">ADD RECEIPT (OPTIONAL)</p>
+          @if (pendingReceipts().length > 0) {
+          <span style="font-size: 12px; color: #a1a1aa; font-weight: 500;">{{ pendingReceipts().length }}
+            selected</span>
+          }
+        </div>
+
+        <div class="receipt-picker"
+          style="border-radius: 12px; background: #fafafa; border: 2px dashed #e5e5e5; display: flex; flex-direction:column; padding: 16px; margin-bottom: 20px; gap: 16px;">
+          <!-- Image Previews -->
+          @if (pendingReceipts().length > 0) {
+          <div
+            style="display:flex; gap:12px; overflow-x:auto; padding-bottom:4px; max-width: 100%; -webkit-overflow-scrolling: touch;">
+            @for (rec of pendingReceipts(); track rec.url; let i = $index) {
+            <div
+              style="position:relative; width: 80px; height: 80px; flex-shrink:0; border-radius:8px; overflow:hidden; border:1px solid #e5e5e5; cursor:pointer;"
+              (click)="openPendingReceiptViewer(i)">
+              <img [src]="rec.url" style="width:100%; height:100%; object-fit:cover;" />
+              <button (click)="removeReceipt(i, $event)"
+                style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.6); color:white; border:none; border-radius:50%; width:22px; height:22px; font-size:12px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:10;">✕</button>
+            </div>
             }
           </div>
-        }
-      }
-    </div>
+          }
 
-    <!-- Expense Fields -->
-    @if (isExpenseMode()) {
-      <div class="input-card" style="margin-top:20px;">
-        
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-           <p class="field-label" style="margin: 0;">ADD RECEIPT (OPTIONAL)</p>
-           @if (pendingReceipts().length > 0) {
-             <span style="font-size: 12px; color: #a1a1aa; font-weight: 500;">{{ pendingReceipts().length }} selected</span>
-           }
-        </div>
-        
-        <div class="receipt-picker" style="border-radius: 12px; background: #fafafa; border: 2px dashed #e5e5e5; display: flex; flex-direction:column; padding: 16px; margin-bottom: 20px; gap: 16px;">
-           <!-- Image Previews -->
-           @if (pendingReceipts().length > 0) {
-             <div style="display:flex; gap:12px; overflow-x:auto; padding-bottom:4px; max-width: 100%; -webkit-overflow-scrolling: touch;">
-                @for (rec of pendingReceipts(); track rec.url; let i = $index) {
-                   <div style="position:relative; width: 80px; height: 80px; flex-shrink:0; border-radius:8px; overflow:hidden; border:1px solid #e5e5e5; cursor:pointer;" (click)="openPendingReceiptViewer(i)">
-                      <img [src]="rec.url" style="width:100%; height:100%; object-fit:cover;" />
-                      <button (click)="removeReceipt(i, $event)" style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.6); color:white; border:none; border-radius:50%; width:22px; height:22px; font-size:12px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:10;">✕</button>
-                   </div>
-                }
-             </div>
-           }
-           
-           <div style="display:flex; width: 100%; gap:12px;">
-               <label style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 16px; background: white; border: 1px solid #e5e5e5; border-radius: 12px; gap:8px; color: #666; cursor:pointer; position: relative;">
-                 <input type="file" accept="image/*" multiple style="position:absolute; width:1px; height:1px; opacity:0; overflow:hidden;" (change)="onReceiptSelected($event)" />
-                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="M9 15h6"/></svg>
-                 <span style="font-size:12px; font-weight:600;">Upload Files</span>
-               </label>
-               <label style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 16px; background: white; border: 1px solid #e5e5e5; border-radius: 12px; gap:8px; color: #666; cursor:pointer; position: relative;">
-                 <input type="file" accept="image/*" capture="environment" style="position:absolute; width:1px; height:1px; opacity:0; overflow:hidden;" (change)="onReceiptSelected($event)" />
-                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-                 <span style="font-size:12px; font-weight:600;">Take Photo</span>
-               </label>
-           </div>
+          <div style="display:flex; width: 100%; gap:12px;">
+            <label
+              style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 16px; background: white; border: 1px solid #e5e5e5; border-radius: 12px; gap:8px; color: #666; cursor:pointer; position: relative;">
+              <input type="file" accept="image/*" multiple
+                style="position:absolute; width:1px; height:1px; opacity:0; overflow:hidden;"
+                (change)="onReceiptSelected($event)" />
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                <polyline points="14 2 14 8 20 8" />
+                <path d="M12 18v-6" />
+                <path d="M9 15h6" />
+              </svg>
+              <span style="font-size:12px; font-weight:600;">Upload Files</span>
+            </label>
+            <label
+              style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 16px; background: white; border: 1px solid #e5e5e5; border-radius: 12px; gap:8px; color: #666; cursor:pointer; position: relative;">
+              <input type="file" accept="image/*" capture="environment"
+                style="position:absolute; width:1px; height:1px; opacity:0; overflow:hidden;"
+                (change)="onReceiptSelected($event)" />
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+                <circle cx="12" cy="13" r="3" />
+              </svg>
+              <span style="font-size:12px; font-weight:600;">Take Photo</span>
+            </label>
+          </div>
         </div>
 
         <p class="field-label">CATEGORY</p>
         <div class="category-scroll">
           @for (cat of expenseCategories; track cat.id) {
-            <button class="category-pill" [class.active]="selectedCategory() === cat.id" (click)="selectedCategory.set(cat.id)">
-              <span>{{ cat.icon }}</span> {{ cat.label }}
-            </button>
+          <button class="category-pill" [class.active]="selectedCategory() === cat.id"
+            (click)="selectedCategory.set(cat.id)">
+            <span>{{ cat.icon }}</span> {{ cat.label }}
+          </button>
           }
-        </div >
+        </div>
 
         <p class="field-label" style="margin-top: 20px;">TOTAL PRICE <span class="req">*</span></p>
         <div class="amount-row">
           <span class="currency-symbol">₫</span>
-          <input 
-            type="text" 
-            inputmode="numeric"
-            class="amount-input" 
-            placeholder="0" 
-            [ngModel]="formattedTotalAmount"
-            (ngModelChange)="setTotalAmount($event)"
-          />
+          <input type="text" inputmode="numeric" class="amount-input" placeholder="0" [ngModel]="formattedTotalAmount"
+            (ngModelChange)="setTotalAmount($event)" />
         </div>
         <p class="field-label" style="margin-top: 20px;">PAID BY</p>
         <div class="paidby-row">
           @for (member of currentTripMembers(); track member.id) {
-            <button class="member-pill" [class.active]="paidById() === member.id" (click)="paidById.set(member.id)">{{ member.name }}</button>
+          <button class="member-pill" [class.active]="paidById() === member.id" (click)="paidById.set(member.id)">{{
+            member.name }}</button>
           }
         </div>
         <p class="field-label" style="margin-top: 20px;">SPLIT EQUALLY</p>
         <div class="split-list">
           @for (member of currentTripMembers(); track member.id) {
-            <div class="split-row" [class.excluded]="!includedMembers()[member.id]">
-              
-              <!-- Left side: Click to toggle include/exclude -->
-              <div class="split-left" (click)="toggleMember(member.id)">
-                <button class="split-check">
-                  @if (includedMembers()[member.id]) {
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFC800" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                  } @else {
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4D4D4" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
-                  }
-                </button>
-                <span class="split-name" [class.strikethrough]="!includedMembers()[member.id]">{{ member.name }}</span>
-              </div>
+          <div class="split-row" [class.excluded]="!includedMembers()[member.id]">
 
-              <!-- Right side: Click to input exact/percent amount -->
-              <div class="split-right" (click)="$event.stopPropagation(); startEdit(member.id)">
-                @if (editingMemberId() === member.id) {
-                  <span class="currency-symbol-small">₫</span>
-                  <input 
-                    #amtInput
-                    type="text" 
-                    class="inline-edit"
-                    [value]="lockedShares()[member.id] != null ? formatNumber(lockedShares()[member.id]!) : ''"
-                    inputmode="text"
-                    placeholder="{{ formatNumber(calcShare(member.id)) }}"
-                    (input)="onInputSplitAmount(member.id, $event)"
-                    (blur)="setLockedAmount(member.id, amtInput.value)"
-                    (keydown.enter)="setLockedAmount(member.id, amtInput.value)"
-                    (click)="$event.stopPropagation()"
-                  />
+            <!-- Left side: Click to toggle include/exclude -->
+            <div class="split-left" (click)="toggleMember(member.id)">
+              <button class="split-check">
+                @if (includedMembers()[member.id]) {
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="#FFC800" stroke-width="2.5">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
                 } @else {
-                  <div class="amount-val" [class.is-locked]="lockedShares()[member.id] != null && activeMemberCount() > 1">
-                    @if (lockedShares()[member.id] != null && activeMemberCount() > 1) {
-                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lock-icon"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                    }
-                    ₫{{ formatNumber(calcShare(member.id)) }}
-                  </div>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="#D4D4D4" stroke-width="2">
+                  <circle cx="12" cy="12" r="10" />
+                </svg>
                 }
-              </div>
-
+              </button>
+              <span class="split-name" [class.strikethrough]="!includedMembers()[member.id]">{{ member.name }}</span>
             </div>
+
+            <!-- Right side: Click to input exact/percent amount -->
+            <div class="split-right" (click)="$event.stopPropagation(); startEdit(member.id)">
+              @if (editingMemberId() === member.id) {
+              <span class="currency-symbol-small">₫</span>
+              <input #amtInput type="text" class="inline-edit"
+                [value]="lockedShares()[member.id] != null ? formatNumber(lockedShares()[member.id]!) : ''"
+                inputmode="text" placeholder="{{ formatNumber(calcShare(member.id)) }}"
+                (input)="onInputSplitAmount(member.id, $event)" (blur)="setLockedAmount(member.id, amtInput.value)"
+                (keydown.enter)="setLockedAmount(member.id, amtInput.value)" (click)="$event.stopPropagation()" />
+              } @else {
+              <div class="amount-val" [class.is-locked]="lockedShares()[member.id] != null && activeMemberCount() > 1">
+                @if (lockedShares()[member.id] != null && activeMemberCount() > 1) {
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lock-icon">
+                  <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                }
+                ₫{{ formatNumber(calcShare(member.id)) }}
+              </div>
+              }
+            </div>
+
+          </div>
           }
         </div>
-        
+
         <!-- Quick add member -->
         <div class="quick-add-member">
-          <input type="email" [(ngModel)]="newMemberEmail" placeholder="Missing someone? Email them" class="quick-add-input" (keyup.enter)="quickInviteMember()" />
-          <button class="btn-quick-add" [disabled]="isInviting() || !newMemberEmail.trim()" (click)="quickInviteMember()">
-             @if (isInviting()) {<div class="spinner-sm"></div>} @else {<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFC800" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>}
+          <input type="email" [(ngModel)]="newMemberEmail" placeholder="Missing someone? Email them"
+            class="quick-add-input" (keyup.enter)="quickInviteMember()" />
+          <button class="btn-quick-add" [disabled]="isInviting() || !newMemberEmail.trim()"
+            (click)="quickInviteMember()">
+            @if (isInviting()) {<div class="spinner-sm"></div>} @else {<svg xmlns="http://www.w3.org/2000/svg"
+              width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFC800" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14" />
+              <path d="M12 5v14" />
+            </svg>}
           </button>
         </div>
       </div>
-    }
+      }
 
-    <!-- Submit Button (inline at the bottom) -->
-    <div class="submit-action-area">
-      <button class="btn-primary-large" (click)="submit()" [disabled]="!canSubmit() || isSubmitting() || newMemberEmail.trim().length > 0" [class.btn-warning]="newMemberEmail.trim().length > 0">
-        @if (isSubmitting()) {
-          <svg class="spinning" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+      <!-- Submit Button (inline at the bottom) -->
+      <div class="submit-action-area">
+        <button class="btn-primary-large" (click)="submit()"
+          [disabled]="!canSubmit() || isSubmitting() || newMemberEmail.trim().length > 0"
+          [class.btn-warning]="newMemberEmail.trim().length > 0">
+          @if (isSubmitting()) {
+          <svg class="spinning" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
           </svg>
           <span>SAVING...</span>
-        } @else if (newMemberEmail.trim().length > 0) {
+          } @else if (newMemberEmail.trim().length > 0) {
           <span>☝️ Tap '+' to add this person first</span>
-        } @else {
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 6 9 17l-5-5"/>
+          } @else {
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6 9 17l-5-5" />
           </svg>
           <span>SAVE CAPTURE</span>
-        }
-      </button>
-    </div> <!-- close submit-action-area -->
-  </div> <!-- close form-section -->
-</div> <!-- close details-sheet -->
+          }
+        </button>
+      </div> <!-- close submit-action-area -->
+    </div> <!-- close form-section -->
+  </div> <!-- close details-sheet -->
 
-<!-- Fullscreen Lightbox Overlay -->
-@if (lightboxIndex() !== null && lightboxImages().length > 0) {
-  <div class="modal-overlay receipt-viewer" style="position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
-    <button style="position: absolute; top: 24px; right: 24px; background: rgba(255,255,255,0.2); border: none; width: 40px; height: 40px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 1001;" (click)="lightboxIndex.set(null)">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+  <!-- Fullscreen Lightbox Overlay -->
+  @if (lightboxIndex() !== null && lightboxImages().length > 0) {
+  <div class="modal-overlay receipt-viewer"
+    style="position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+    <button
+      style="position: absolute; top: 24px; right: 24px; background: rgba(255,255,255,0.2); border: none; width: 40px; height: 40px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 1001;"
+      (click)="lightboxIndex.set(null)">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 6 6 18" />
+        <path d="m6 6 12 12" />
+      </svg>
     </button>
 
     @if (lightboxContext() === 'PENDING' || lightboxContext() === 'PENDING_PHOTO') {
-      <button style="position: absolute; bottom: max(48px, calc(env(safe-area-inset-bottom, 24px) + 24px)); left: 50%; transform: translateX(-50%); background: rgba(239, 68, 68, 0.4); border: none; width: 56px; height: 56px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 1001; box-shadow: 0 4px 12px rgba(0,0,0,0.5);" (click)="removeCurrentLightboxImage(); $event.stopPropagation()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-      </button>
+    <button
+      style="position: absolute; bottom: max(48px, calc(env(safe-area-inset-bottom, 24px) + 24px)); left: 50%; transform: translateX(-50%); background: rgba(239, 68, 68, 0.4); border: none; width: 56px; height: 56px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 1001; box-shadow: 0 4px 12px rgba(0,0,0,0.5);"
+      (click)="removeCurrentLightboxImage(); $event.stopPropagation()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 6h18" />
+        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+        <line x1="10" x2="10" y1="11" y2="17" />
+        <line x1="14" x2="14" y1="11" y2="17" />
+      </svg>
+    </button>
     }
 
-    <div class="receipt-carousel-badge" style="position:absolute; top:32px; left:24px; background:rgba(255,255,255,0.2); color:white; padding:4px 10px; border-radius:12px; font-size:14px; font-weight:600; z-index:1001;">
+    <div class="receipt-carousel-badge"
+      style="position:absolute; top:32px; left:24px; background:rgba(255,255,255,0.2); color:white; padding:4px 10px; border-radius:12px; font-size:14px; font-weight:600; z-index:1001;">
       {{ lightboxIndex()! + 1 }} / {{ lightboxImages().length }}
     </div>
 
-    <div class="receipt-fullscreen-scroll lightbox-scroll" style="display:flex; width:100vw; height:100vh; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scroll-behavior:smooth;" (scroll)="onLightboxScroll($event)">
+    <div class="receipt-fullscreen-scroll lightbox-scroll"
+      style="display:flex; width:100vw; height:100vh; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scroll-behavior:smooth;"
+      (scroll)="onLightboxScroll($event)">
       @for (img of lightboxImages(); track img) {
-        <div style="width:100vw; height:100vh; flex-shrink:0; scroll-snap-align:center; display:flex; align-items:center; justify-content:center; padding: 20px;">
-          <img [src]="img" style="max-width: 100%; max-height: 85vh; object-fit: contain; border-radius: 8px;" (click)="$event.stopPropagation()" />
-        </div>
+      <div
+        style="width:100vw; height:100vh; flex-shrink:0; scroll-snap-align:center; display:flex; align-items:center; justify-content:center; padding: 20px;">
+        <img [src]="img" style="max-width: 100%; max-height: 85vh; object-fit: contain; border-radius: 8px;"
+          (click)="$event.stopPropagation()" />
+      </div>
       }
     </div>
   </div>
-}
+  }
 
 </div>
