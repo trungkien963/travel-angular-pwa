@@ -383,7 +383,7 @@
                 <path d="M12 18v-6" />
                 <path d="M9 15h6" />
               </svg>
-              <span style="font-size:12px; font-weight:600;">Upload Files</span>
+              <span style="font-size:12px; font-weight:600;">{{ 'expense.upload' | translate }}</span>
             </label>
             <label
               style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 16px; background: white; border: 1px solid #e5e5e5; border-radius: 12px; gap:8px; color: #666; cursor:pointer; position: relative;">
@@ -395,12 +395,12 @@
                 <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
                 <circle cx="12" cy="13" r="3" />
               </svg>
-              <span style="font-size:12px; font-weight:600;">Take Photo</span>
+              <span style="font-size:12px; font-weight:600;">{{ 'expense.takePhoto' | translate }}</span>
             </label>
           </div>
         </div>
 
-        <p class="field-label">CATEGORY</p>
+        <p class="field-label">{{ 'expense.category' | translate }}</p>
         <div class="category-scroll">
           @for (cat of expenseCategories; track cat.id) {
           <button class="category-pill" [class.active]="selectedCategory() === cat.id"
@@ -410,12 +410,12 @@
           }
         </div>
 
-        <p class="field-label" style="margin-top: 20px;">TOTAL PRICE <span class="req">*</span></p>
+        <p class="field-label" style="margin-top: 20px;">{{ 'expense.totalPrice' | translate }} <span class="req">*</span></p>
         <div class="amount-row">
           <span class="currency-symbol">₫</span>
           <app-calculator-input [(amount)]="expenseAmount" placeholder="0" class="amount-input"></app-calculator-input>
         </div>
-        <p class="field-label" style="margin-top: 20px;">PAID BY</p>
+        <p class="field-label" style="margin-top: 20px;">{{ 'expense.paidBy' | translate }}</p>
         <div class="paidby-row">
           @for (member of currentTripMembers(); track member.id) {
           <button class="member-pill" [class.active]="paidById() === member.id" (click)="paidById.set(member.id)">{{
