@@ -183,12 +183,14 @@ export class DiscoverComponent implements OnInit, OnDestroy {
     if (this.scrollContainer) {
       this.scrollContainer.addEventListener('scroll', this.onScroll, { passive: true });
     }
+    window.addEventListener('scroll', this.onScroll, { passive: true });
   }
 
   ngOnDestroy() {
     if (this.scrollContainer) {
       this.scrollContainer.removeEventListener('scroll', this.onScroll);
     }
+    window.removeEventListener('scroll', this.onScroll);
   }
 
   // ─── Dynamic Header Scroll ───
@@ -198,12 +200,15 @@ export class DiscoverComponent implements OnInit, OnDestroy {
   private scrollThreshold = 100; // Increased threshold for less twitchy header
 
   onScroll = () => {
-    if (!this.scrollContainer) return;
-    const st = this.scrollContainer.scrollTop;
+    // Determine scroll position from either container or window
+    const st = this.scrollContainer && this.scrollContainer.scrollTop > 0 
+      ? this.scrollContainer.scrollTop 
+      : (window.scrollY || document.documentElement.scrollTop);
+      
     if (st > this.lastScrollTop && st > this.scrollThreshold) {
-      this.headerHidden.set(true); // scrolling down
+      this.headerHidden.set(true); // scrolling down -> hide
     } else if (st < this.lastScrollTop || st < this.scrollThreshold) {
-      this.headerHidden.set(false); // scrolling up or near top
+      this.headerHidden.set(false); // scrolling up -> show
     }
     this.lastScrollTop = Math.max(0, st);
   };

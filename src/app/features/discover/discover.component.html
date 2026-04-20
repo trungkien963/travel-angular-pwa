@@ -38,7 +38,7 @@
   </header>
 
   <!-- Feed -->
-  <div class="feed">
+  <div class="feed" [style.padding-top.px]="currentTab() === 'COMMUNITY' ? 220 : 140">
     @if (currentTab() === 'CATCH_UP') {
       <div class="ig-feed">
         @if (catchUpPosts().length === 0) {
