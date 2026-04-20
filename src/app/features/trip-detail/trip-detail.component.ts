@@ -857,20 +857,32 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
 
   // ─── Navigation ───────────────────────────────────────────────────────────
   goBack() { this.router.navigate(['/trips']); }
-  @ViewChild('tabCarousel') tabCarousel!: ElementRef<HTMLDivElement>;
+  private _hasScrolledToInitialTab = false;
+  private _tabCarousel!: ElementRef<HTMLDivElement>;
 
-  ngAfterViewInit() {
-    if (this.tabCarousel?.nativeElement) {
+  @ViewChild('tabCarousel') 
+  set tabCarousel(ref: ElementRef<HTMLDivElement>) {
+    if (ref && !this._hasScrolledToInitialTab) {
+      this._hasScrolledToInitialTab = true;
       setTimeout(() => {
-        const el = this.tabCarousel.nativeElement;
+        const el = ref.nativeElement;
         const index = this.tabs.indexOf(this.activeTab);
         if (index > 0) {
           el.scrollTo({ left: index * el.clientWidth, behavior: 'instant' as ScrollBehavior });
           const tabEl = document.getElementById('tab-' + this.activeTab.toLowerCase());
           if (tabEl) tabEl.scrollIntoView({ behavior: 'instant' as ScrollBehavior, block: 'nearest', inline: 'center' });
         }
-      }, 50); // slight delay to ensure DOM is rendered
+      }, 100); // slight delay to ensure DOM is rendered and styled
     }
+    this._tabCarousel = ref;
+  }
+  
+  get tabCarousel(): ElementRef<HTMLDivElement> {
+    return this._tabCarousel;
+  }
+
+  ngAfterViewInit() {
+    // Scroll logic moved to tabCarousel setter to handle async rendering
   }
 
   setTab(tab: string) { 
