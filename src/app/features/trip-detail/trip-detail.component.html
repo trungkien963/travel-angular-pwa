@@ -386,8 +386,12 @@
             @for (member of trip()!.members; track member.id) {
               <div class="expense-item">
                 <div class="expense-left">
-                  <div class="expense-icon member-avatar" [style.background]="getAvatarBg(member.name)">
-                    <span [style.color]="getAvatarColor(member.name)">{{ member.name.charAt(0).toUpperCase() }}</span>
+                  <div class="expense-icon member-avatar" [style.background]="!member.avatar ? getAvatarBg(member.name) : ''">
+                    @if (member.avatar) {
+                      <img [src]="member.avatar" [alt]="member.name" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" />
+                    } @else {
+                      <span [style.color]="getAvatarColor(member.name)">{{ member.name.charAt(0).toUpperCase() }}</span>
+                    }
                   </div>
                   <div class="expense-info">
                     <div class="member-name-row">
