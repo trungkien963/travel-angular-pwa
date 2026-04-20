@@ -109,6 +109,62 @@ export const enDictionary = {
   'comment.empty': 'No comments yet. Be the first! 💬',
   'comment.write': 'Write a comment...',
 
+  // MOMENT
+  'moment.align': 'ALIGN',
+  'moment.cropHint': 'Use your finger to scroll and pick the best angle',
+  'moment.detailsTitle': 'Add Details',
+  'moment.saveToTrip': 'SAVE TO TRIP',
+  'moment.whatFor': 'WHAT WAS THIS FOR?',
+  'moment.descPlaceholder': 'E.g., Dinner at the bay...',
+  'moment.locationTag': 'LOCATION (TAG)',
+  'moment.searchLocation': 'Search on OpenStreetMap...',
+  
+  // TRIP CREATION (TRIPS MODAL) + MORE
+  'trip.autoCreateNew': 'Auto-create new trip',
+  'trip.smart': 'Smart',
+  'trip.selectTrip': 'Select a Trip',
+  'trip.requiresSelection': 'Requires selection',
+  'trip.createNew': 'Create new trip...',
+  'trip.auto': 'Auto',
+  'trip.noTripsAvail': 'No trips available',
+  'trip.friendEmailPlaceholder': 'friend@email.com',
+
+  // DISCOVER updates
+  'discover.exploreNow': 'Explore Now',
+  'discover.tripUpdate': 'Trip Update',
+  'discover.inTrip': 'in',
+  'discover.likedBy': 'Liked by',
+  'discover.andOthers': 'and others',
+  'discover.likes': 'likes',
+
+  // DETAIL updates
+  'detail.membersCount': 'members',
+  'detail.attachedReceipts': 'ATTACHED RECEIPTS',
+  'detail.fullNameReq': 'FULL NAME *',
+  'detail.emailReq': 'EMAIL ADDRESS *',
+  'detail.placeholderName': 'e.g. John Doe',
+  'detail.placeholderEmail': 'e.g. john@example.com',
+
+  // TRIPS updates
+  'trips.noTrips': 'No trips yet',
+  'trips.startPlanning': 'Start planning your next adventure!',
+  'trips.createTrip': 'Create a Trip',
+  
+  // SHARED ACTIONS
+  'action.back': 'Back',
+  'action.searching': 'Searching...',
+  'action.searchingLocations': 'Searching locations...',
+  'action.saving': 'SAVING...',
+  
+  // EXPENSE updates
+  'expense.addReceiptOpt': 'ADD RECEIPT (OPTIONAL)',
+  'expense.selected': 'selected',
+  'expense.splitEqually': 'SPLIT EQUALLY',
+  'expense.missingSomeone': 'Missing someone? Email them',
+  'expense.exceedTotalWarning': '⚠ Assigned amounts exceed the Total Price.',
+  'expense.tapToAddPerson': '☝️ Tap \'+\' to add this person first',
+  'expense.fixSplitAmounts': '⚠ Fix split amounts',
+
   // SHELL (Bottom Nav)
   'nav.home': 'Home',
   'nav.discover': 'Discover',

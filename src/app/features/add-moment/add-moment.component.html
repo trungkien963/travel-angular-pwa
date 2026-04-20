@@ -148,7 +148,7 @@
           <path d="M18 6 6 18M6 6l12 12" />
         </svg>
       </button>
-      <div><span class="crop-title">CĂN CHỈNH ({{ currentCropIndex() }}/{{ cropTotal() }})</span></div>
+      <div><span class="crop-title">{{ 'moment.align' | translate }} ({{ currentCropIndex() }}/{{ cropTotal() }})</span></div>
       <div style="width: 44px"></div> <!-- Placeholder for symmetry -->
     </div>
 
@@ -184,7 +184,7 @@
           stroke-width="2" viewBox="0 0 24 24">
           <path d="M5 9l-3 3 3 3M19 9l3 3-3 3M9 5l3-3 3 3M9 19l3 3 3 3" />
         </svg>
-        Dùng ngón tay cuộn ảnh để chọn góc
+        {{ 'moment.cropHint' | translate }}
       </div>
       <div class="camera-primary-actions" style="padding-bottom: 32px">
         <!-- Discard/Skip (Left) -->
@@ -230,14 +230,14 @@
           stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="m15 18-6-6 6-6" />
         </svg>
-        Back
+        {{ 'action.back' | translate }}
       </button>
     </div>
     <div class="form-section">
 
       <!-- Section header with expense toggle -->
       <div class="form-header">
-        <h2 class="form-title">Add Details</h2>
+        <h2 class="form-title">{{ 'moment.detailsTitle' | translate }}</h2>
         <button class="expense-toggle" [class.active]="isExpenseMode()" (click)="toggleExpenseMode()"
           id="btn-expense-toggle">
           <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
@@ -252,7 +252,7 @@
       </div>
 
       <!-- Trip Selector -->
-      <p class="field-label">SAVE TO TRIP <span class="req">*</span></p>
+      <p class="field-label">{{ 'moment.saveToTrip' | translate }} <span class="req">*</span></p>
       <button class="trip-selector" [class.is-new-trip]="selectedTripId() === 'NEW_TRIP'" (click)="showTripPicker = !showTripPicker" id="btn-trip-selector">
         <div class="trip-selector-left">
           <div class="trip-icon" [style.background]="selectedTripId() === 'NEW_TRIP' ? '#fffdf0' : ''">
@@ -268,11 +268,11 @@
           </div>
           <div>
             @if (selectedTripId() === 'NEW_TRIP') {
-              <p class="trip-sel-title">Tự động tạo chuyến đi mới</p>
-              <p class="trip-sel-sub" style="color: var(--primary-color)">Thông minh</p>
+              <p class="trip-sel-title">{{ 'trip.autoCreateNew' | translate }}</p>
+              <p class="trip-sel-sub" style="color: var(--primary-color)">{{ 'trip.smart' | translate }}</p>
             } @else {
-              <p class="trip-sel-title">{{ selectedTrip()?.title || 'Select a Trip' }}</p>
-              <p class="trip-sel-sub">{{ selectedTrip()?.startDate ? formatDate(selectedTrip()!.startDate) : 'Requires selection' }}</p>
+              <p class="trip-sel-title">{{ selectedTrip()?.title || ('trip.selectTrip' | translate) }}</p>
+              <p class="trip-sel-sub">{{ selectedTrip()?.startDate ? formatDate(selectedTrip()!.startDate) : ('trip.requiresSelection' | translate) }}</p>
             }
           </div>
         </div>
@@ -287,8 +287,8 @@
       <div class="trip-dropdown">
         <button class="trip-dropdown-item new-trip-option" [class.selected]="selectedTripId() === 'NEW_TRIP'" (click)="selectTrip('NEW_TRIP')"
           id="trip-option-new" style="background-color: #fff9ed;">
-          <span style="font-weight: 600; color: var(--primary-color);">✨ Tạo chuyến đi mới...</span>
-          <span class="trip-date" style="color: var(--primary-color);">Tự động</span>
+          <span style="font-weight: 600; color: var(--primary-color);">✨ {{ 'trip.createNew' | translate }}</span>
+          <span class="trip-date" style="color: var(--primary-color);">{{ 'trip.auto' | translate }}</span>
         </button>
         @for (trip of trips(); track trip.id) {
         <button class="trip-dropdown-item" [class.selected]="selectedTripId() === trip.id" (click)="selectTrip(trip.id)"
@@ -298,21 +298,21 @@
         </button>
         }
         @if (trips().length === 0) {
-        <p class="trip-dropdown-empty">No trips available</p>
+        <p class="trip-dropdown-empty">{{ 'trip.noTripsAvail' | translate }}</p>
         }
       </div>
       }
 
       <!-- Caption Input -->
       <div class="input-card">
-        <p class="field-label">WHAT WAS THIS FOR? @if (isExpenseMode()) { <span class="req">*</span> }</p>
-        <textarea class="caption-input" placeholder="E.g., Dinner at the bay..." [(ngModel)]="caption" rows="2"
+        <p class="field-label">{{ 'moment.whatFor' | translate }} @if (isExpenseMode()) { <span class="req">*</span> }</p>
+        <textarea class="caption-input" [placeholder]="'moment.descPlaceholder' | translate" [(ngModel)]="caption" rows="2"
           id="input-caption"></textarea>
       </div>
 
       <!-- Location Search -->
       <div class="input-card">
-        <p class="field-label">LOCATION (TAG)</p>
+        <p class="field-label">{{ 'moment.locationTag' | translate }}</p>
         @if (selectedLocation) {
         <div class="location-selected">
           <div>
@@ -338,7 +338,7 @@
             (input)="onLocationSearch()" id="input-location" />
         </div>
         @if (isSearching()) {
-        <p class="searching-text">Searching...</p>
+        <p class="searching-text">{{ 'action.searching' | translate }}</p>
         }
         @if (locationResults().length > 0) {
         <div class="location-results">
@@ -358,10 +358,10 @@
       <div class="input-card" style="margin-top:20px;">
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-          <p class="field-label" style="margin: 0;">ADD RECEIPT (OPTIONAL)</p>
+          <p class="field-label" style="margin: 0;">{{ 'expense.addReceiptOpt' | translate }}</p>
           @if (pendingReceipts().length > 0) {
           <span style="font-size: 12px; color: #a1a1aa; font-weight: 500;">{{ pendingReceipts().length }}
-            selected</span>
+            {{ 'expense.selected' | translate }}</span>
           }
         </div>
 
@@ -435,7 +435,7 @@
             member.name }}</button>
           }
         </div>
-        <p class="field-label" style="margin-top: 20px;">SPLIT EQUALLY</p>
+        <p class="field-label" style="margin-top: 20px;">{{ 'expense.splitEqually' | translate }}</p>
         <div class="split-list">
           @for (member of currentTripMembers(); track member.id) {
           <div class="split-row" [class.excluded]="!includedMembers()[member.id]">
@@ -485,7 +485,7 @@
 
         <!-- Quick add member -->
         <div class="quick-add-member">
-          <input type="email" [(ngModel)]="newMemberEmail" placeholder="Missing someone? Email them"
+          <input type="email" [(ngModel)]="newMemberEmail" [placeholder]="'expense.missingSomeone' | translate"
             class="quick-add-input" (keyup.enter)="quickInviteMember()" />
           <button class="btn-quick-add" [disabled]="isInviting() || !newMemberEmail.trim()"
             (click)="quickInviteMember()">
@@ -500,7 +500,7 @@
 
         @if (isSplitExceedingTotal()) {
           <div style="color: #DC2626; font-size: 13px; font-weight: 700; text-align: center; margin-top: 16px;">
-            ⚠ Assigned amounts exceed the Total Price.
+            {{ 'expense.exceedTotalWarning' | translate }}
           </div>
         }
       </div>
@@ -516,11 +516,11 @@
             fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 12a9 9 0 1 1-6.219-8.56" />
           </svg>
-          <span>SAVING...</span>
+          <span>{{ 'action.saving' | translate }}</span>
           } @else if (newMemberEmail.trim().length > 0) {
-          <span>☝️ Tap '+' to add this person first</span>
+          <span>{{ 'expense.tapToAddPerson' | translate }}</span>
           } @else if (isSplitExceedingTotal()) {
-          <span>⚠ Fix split amounts</span>
+          <span>{{ 'expense.fixSplitAmounts' | translate }}</span>
           } @else {
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">

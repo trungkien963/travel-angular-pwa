@@ -50,7 +50,7 @@
             </div>
             <h3 class="empty-title">{{ 'discover.caughtUp' | translate }}</h3>
             <p class="empty-sub">{{ 'discover.caughtUpSub' | translate }}</p>
-            <button class="btn-create-trip" (click)="currentTab.set('COMMUNITY')" style="margin-top: 16px;">Khám phá ngay</button>
+            <button class="btn-create-trip" (click)="currentTab.set('COMMUNITY')" style="margin-top: 16px;">{{ 'discover.exploreNow' | translate }}</button>
           </div>
         } @else {
           @for (post of catchUpPosts(); track post.id) {
@@ -68,7 +68,7 @@
                   <div class="ig-user-info">
                     <span class="ig-author" style="font-size: 15px;">{{ post.authorName }}</span>
                     <span class="ig-time">
-                      in <strong>{{ getTripDetails(post.tripId)?.title || 'Trip Update' }}</strong> • {{ formatRelative(post.timestamp) }}
+                      {{ 'discover.inTrip' | translate }} <strong>{{ getTripDetails(post.tripId)?.title || ('discover.tripUpdate' | translate) }}</strong> • {{ formatRelative(post.timestamp) }}
                     </span>
                   </div>
                 </div>
@@ -120,10 +120,10 @@
               <!-- IG Likes Info -->
               <div class="ig-likes-count">
                 @if (post.hasLiked) {
-                  Liked by <strong>You</strong> {{ post.likes > 1 ? 'and others' : '' }}
+                  {{ 'discover.likedBy' | translate }} <strong>You</strong> {{ post.likes > 1 ? ('discover.andOthers' | translate) : '' }}
                 } @else {
                   @if (post.likes > 0) {
-                    <strong>{{ post.likes }} likes</strong>
+                    <strong>{{ post.likes }} {{ 'discover.likes' | translate }}</strong>
                   }
                 }
               </div>

@@ -24,9 +24,9 @@
     } @else if (trips().length === 0) {
     <div class="empty-state">
       <div class="empty-icon">🗺️</div>
-      <p class="empty-title">No trips yet</p>
-      <p class="empty-sub">Start planning your next adventure!</p>
-      <button class="btn-empty-cta" (click)="openModal()">Create a Trip</button>
+      <p class="empty-title">{{ 'trips.noTrips' | translate }}</p>
+      <p class="empty-sub">{{ 'trips.startPlanning' | translate }}</p>
+      <button class="btn-empty-cta" (click)="openModal()">{{ 'trips.createTrip' | translate }}</button>
     </div>
     } @else {
     <div class="trip-list">
@@ -163,7 +163,7 @@
           @if (isLocationLoading()) {
           <li class="loc-loading">
             <div class="spinner-sm"></div>
-            <span>Searching locations...</span>
+            <span>{{ 'action.searchingLocations' | translate }}</span>
           </li>
           } @else {
           @for (loc of locationSuggestions(); track loc.place_id) {
@@ -216,7 +216,7 @@
           <rect width="20" height="16" x="2" y="4" rx="2" />
           <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
         </svg>
-        <input type="email" [(ngModel)]="emailInput" placeholder="friend@email.com" class="email-input"
+        <input type="email" [(ngModel)]="emailInput" [placeholder]="'trip.friendEmailPlaceholder' | translate" class="email-input"
           id="input-member-email" (keyup.enter)="addMember()" />
         <button class="btn-add-member" [class.highlight]="emailInput.length > 0" (click)="addMember()" id="btn-add-member">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"

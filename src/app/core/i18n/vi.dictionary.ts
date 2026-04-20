@@ -109,6 +109,62 @@ export const viDictionary = {
   'comment.empty': 'Chưa có bình luận. Mở bát ngay! 💬',
   'comment.write': 'Viết bình luận...',
 
+  // MOMENT
+  'moment.align': 'CĂN CHỈNH',
+  'moment.cropHint': 'Dùng ngón tay cuộn ảnh để chọn góc',
+  'moment.detailsTitle': 'Thêm chi tiết',
+  'moment.saveToTrip': 'LƯU VÀO CHUYẾN ĐI',
+  'moment.whatFor': 'MÔ TẢ CHI TIẾT',
+  'moment.descPlaceholder': 'VD: Bữa tối ấm cúng bên biển...',
+  'moment.locationTag': 'ĐỊA ĐIỂM (GẮN THẺ)',
+  'moment.searchLocation': 'Tìm kiếm trên hệ thống...',
+  
+  // TRIP CREATION (TRIPS MODAL) + MORE
+  'trip.autoCreateNew': 'Tự động tạo chuyến đi mới',
+  'trip.smart': 'Thông minh',
+  'trip.selectTrip': 'Chọn chuyến đi',
+  'trip.requiresSelection': 'Vui lòng chọn',
+  'trip.createNew': 'Tạo chuyến đi mới...',
+  'trip.auto': 'Tự động',
+  'trip.noTripsAvail': 'Chưa có chuyến đi nào',
+  'trip.friendEmailPlaceholder': 'banbe@email.com',
+
+  // DISCOVER updates
+  'discover.exploreNow': 'Khám phá ngay',
+  'discover.tripUpdate': 'Cập nhật chuyến đi',
+  'discover.inTrip': 'tại',
+  'discover.likedBy': 'Được thích bởi',
+  'discover.andOthers': 'và những người khác',
+  'discover.likes': 'lượt thích',
+
+  // DETAIL updates
+  'detail.membersCount': 'thành viên',
+  'detail.attachedReceipts': 'HÓA ĐƠN ĐÍNH KÈM',
+  'detail.fullNameReq': 'HỌ TÊN *',
+  'detail.emailReq': 'ĐỊA CHỈ EMAIL *',
+  'detail.placeholderName': 'VD: Nguyễn Văn A',
+  'detail.placeholderEmail': 'VD: nguyenvana@gmail.com',
+
+  // TRIPS updates
+  'trips.noTrips': 'Chưa có chuyến đi nào',
+  'trips.startPlanning': 'Bắt đầu lên kế hoạch cho chuyến đi nhé!',
+  'trips.createTrip': 'Tạo chuyến đi',
+
+  // SHARED ACTIONS
+  'action.back': 'Back',
+  'action.searching': 'Đang tìm...',
+  'action.searchingLocations': 'Đang tìm kiếm...',
+  'action.saving': 'ĐANG LƯU...',
+  
+  // EXPENSE updates
+  'expense.addReceiptOpt': 'THÊM HÓA ĐƠN (TÙY CHỌN)',
+  'expense.selected': 'đã chọn',
+  'expense.splitEqually': 'CHIA ĐỀU BẰNG NHAU',
+  'expense.missingSomeone': 'Thiếu ai đó? Nhập email của họ',
+  'expense.exceedTotalWarning': '⚠ Tổng chia đang vượt quá tổng tiền!',
+  'expense.tapToAddPerson': '☝️ Bấm \'+\' để thêm người này trước',
+  'expense.fixSplitAmounts': '⚠ Cần sửa lại chia tiền',
+
   // SHELL (Bottom Nav)
   'nav.home': 'Trang chủ',
   'nav.discover': 'Khám phá',
