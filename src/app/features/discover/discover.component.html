@@ -58,12 +58,18 @@
               <!-- IG Header -->
               <div class="ig-header">
                 <div class="ig-user" (click)="goToTrip(post.tripId)" style="cursor:pointer;">
-                  <div class="ig-avatar">
-                    <img [src]="getTripDetails(post.tripId)?.coverImage || 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=800'" class="ig-avatar-img" />
+                  <div class="ig-avatar" [style.background]="!post.authorAvatar ? getAvatarBg(post.authorName || '?') : ''">
+                    @if (post.authorAvatar) {
+                      <img [src]="post.authorAvatar" class="ig-avatar-img" />
+                    } @else {
+                      <span class="ig-avatar-initial" [style.color]="getAvatarColor(post.authorName || '?')">{{ (post.authorName || '?').charAt(0).toUpperCase() }}</span>
+                    }
                   </div>
                   <div class="ig-user-info">
-                    <span class="ig-author">{{ getTripDetails(post.tripId)?.title || 'Trip Update' }}</span>
-                    <span class="ig-time">Added by {{ post.authorName }} • {{ formatRelative(post.timestamp) }}</span>
+                    <span class="ig-author" style="font-size: 15px;">{{ post.authorName }}</span>
+                    <span class="ig-time">
+                      in <strong>{{ getTripDetails(post.tripId)?.title || 'Trip Update' }}</strong> • {{ formatRelative(post.timestamp) }}
+                    </span>
                   </div>
                 </div>
               </div>

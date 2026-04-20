@@ -225,29 +225,71 @@ export class TravelStore {
   async refreshData() {
     const db = this.supabase.client;
     try {
+      // Fetch users mapping
+      const { data: usersData } = await db.from('users').select('id, full_name, avatar_url');
+      const userMap = new Map<string, any>();
+      if (usersData) {
+        usersData.forEach(u => userMap.set(u.id, u));
+      }
+
+      // Update current user profile if needed
+      const uid = this.currentUserId();
+      if (uid && userMap.has(uid)) {
+        const dbUser = userMap.get(uid);
+        const currentProfile = this.currentUserProfile();
+        this.currentUserProfile.set({
+          name: dbUser.full_name || currentProfile?.name || 'Traveler',
+          avatar: dbUser.avatar_url || currentProfile?.avatar
+        });
+      }
+
       // Fetch trips
       const { data: tripsData, error: tripsError } = await db.from('trips').select('*').order('created_at', { ascending: false });
       if (!tripsError && tripsData) {
-        const formattedTrips: Trip[] = tripsData.map(t => ({
-          id: t['id'],
-          title: t['title'],
-          locationName: t['location_name'],
-          locationCity: t['location_city'],
-          coverImage: t['cover_image'],
-          startDate: t['start_date'],
-          endDate: t['end_date'],
-          ownerId: t['owner_id'] || this.currentUserId(),
-          isPrivate: t['is_private'],
-          members: typeof t['members'] === 'string'
+        const formattedTrips: Trip[] = tripsData.map(t => {
+          let parsedMembers = typeof t['members'] === 'string'
             ? JSON.parse(t['members'])
-            : (Array.isArray(t['members']) ? t['members'] : []),
-          likes: typeof t['likes'] === 'string'
-            ? JSON.parse(t['likes'])
-            : (Array.isArray(t['likes']) ? t['likes'] : []),
-          comments: typeof t['comments'] === 'string'
+            : (Array.isArray(t['members']) ? t['members'] : []);
+          
+          parsedMembers = parsedMembers.map((m: any) => {
+            const u = userMap.get(m.id);
+            if (u) {
+              m.name = u.full_name || m.name || 'Traveler';
+              m.avatar = u.avatar_url || m.avatar;
+            }
+            return m;
+          });
+
+          let parsedComments = typeof t['comments'] === 'string'
             ? JSON.parse(t['comments'])
-            : (Array.isArray(t['comments']) ? t['comments'] : [])
-        }));
+            : (Array.isArray(t['comments']) ? t['comments'] : []);
+          
+          parsedComments = parsedComments.map((c: any) => {
+            const u = userMap.get(c.authorId);
+            if (u) {
+              c.authorName = u.full_name || c.authorName || 'Traveler';
+              c.authorAvatar = u.avatar_url || c.authorAvatar;
+            }
+            return c;
+          });
+
+          return {
+            id: t['id'],
+            title: t['title'],
+            locationName: t['location_name'],
+            locationCity: t['location_city'],
+            coverImage: t['cover_image'],
+            startDate: t['start_date'],
+            endDate: t['end_date'],
+            ownerId: t['owner_id'] || this.currentUserId(),
+            isPrivate: t['is_private'],
+            members: parsedMembers,
+            likes: typeof t['likes'] === 'string'
+              ? JSON.parse(t['likes'])
+              : (Array.isArray(t['likes']) ? t['likes'] : []),
+            comments: parsedComments
+          };
+        });
 
         // Fetch posts
         const { data: postsData, error: postsError } = await db.from('posts').select('*').order('created_at', { ascending: false });
@@ -265,6 +307,16 @@ export class TravelStore {
               try { parsedComments = JSON.parse(parsedComments); } catch (e) { parsedComments = []; }
             }
             if (!Array.isArray(parsedComments)) parsedComments = [];
+
+            parsedComments = parsedComments.map((c: any) => {
+              const u = userMap.get(c.authorId);
+              if (u) {
+                c.authorName = u.full_name || c.authorName || 'Traveler';
+                c.authorAvatar = u.avatar_url || c.authorAvatar;
+              }
+              return c;
+            });
+
 
             let parsedImages = p['image_urls'];
             if (typeof parsedImages === 'string') {
