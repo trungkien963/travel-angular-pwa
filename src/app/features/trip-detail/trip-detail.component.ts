@@ -725,6 +725,21 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
       if (creditor.amount < 1) j++;
     }
 
+    const uid = this.currentUserId();
+    result.sort((a, b) => {
+      const getRank = (d: Debt) => {
+        if (d.toId === uid) return 1; // Current user receives
+        if (d.fromId === uid) return 2; // Current user owes
+        return 3; // Others
+      };
+      const rankA = getRank(a);
+      const rankB = getRank(b);
+      
+      if (rankA !== rankB) return rankA - rankB;
+      // Secondary sort: amount descending
+      return b.amount - a.amount;
+    });
+
     return result;
   });
 
