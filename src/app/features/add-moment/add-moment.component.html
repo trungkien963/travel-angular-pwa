@@ -253,19 +253,27 @@
 
       <!-- Trip Selector -->
       <p class="field-label">SAVE TO TRIP <span class="req">*</span></p>
-      <button class="trip-selector" (click)="showTripPicker = !showTripPicker" id="btn-trip-selector">
+      <button class="trip-selector" [class.is-new-trip]="selectedTripId() === 'NEW_TRIP'" (click)="showTripPicker = !showTripPicker" id="btn-trip-selector">
         <div class="trip-selector-left">
-          <div class="trip-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-              stroke="#FFC800" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-              <circle cx="12" cy="10" r="3" />
-            </svg>
+          <div class="trip-icon" [style.background]="selectedTripId() === 'NEW_TRIP' ? '#fffdf0' : ''">
+            @if (selectedTripId() === 'NEW_TRIP') {
+              <span style="font-size: 16px;">✨</span>
+            } @else {
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                stroke="#FFC800" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+            }
           </div>
           <div>
-            <p class="trip-sel-title">{{ selectedTrip()?.title || 'Select a Trip' }}</p>
-            <p class="trip-sel-sub">{{ selectedTrip()?.startDate ? formatDate(selectedTrip()!.startDate) : 'Requires
-              selection' }}</p>
+            @if (selectedTripId() === 'NEW_TRIP') {
+              <p class="trip-sel-title">Tự động tạo chuyến đi mới</p>
+              <p class="trip-sel-sub" style="color: var(--primary-color)">Thông minh</p>
+            } @else {
+              <p class="trip-sel-title">{{ selectedTrip()?.title || 'Select a Trip' }}</p>
+              <p class="trip-sel-sub">{{ selectedTrip()?.startDate ? formatDate(selectedTrip()!.startDate) : 'Requires selection' }}</p>
+            }
           </div>
         </div>
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A8A29E"
@@ -277,6 +285,11 @@
       <!-- Trip Dropdown -->
       @if (showTripPicker) {
       <div class="trip-dropdown">
+        <button class="trip-dropdown-item new-trip-option" [class.selected]="selectedTripId() === 'NEW_TRIP'" (click)="selectTrip('NEW_TRIP')"
+          id="trip-option-new" style="background-color: #fff9ed;">
+          <span style="font-weight: 600; color: var(--primary-color);">✨ Tạo chuyến đi mới...</span>
+          <span class="trip-date" style="color: var(--primary-color);">Tự động</span>
+        </button>
         @for (trip of trips(); track trip.id) {
         <button class="trip-dropdown-item" [class.selected]="selectedTripId() === trip.id" (click)="selectTrip(trip.id)"
           [id]="'trip-option-' + trip.id">
