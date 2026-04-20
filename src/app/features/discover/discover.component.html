@@ -122,9 +122,7 @@
                 @if (post.hasLiked) {
                   {{ 'discover.likedBy' | translate }} <strong>You</strong> {{ post.likes > 1 ? ('discover.andOthers' | translate) : '' }}
                 } @else {
-                  @if (post.likes > 0) {
-                    <strong>{{ post.likes }} {{ 'discover.likes' | translate }}</strong>
-                  }
+                  <strong>{{ post.likes || 0 }} {{ 'discover.likes' | translate }}</strong>
                 }
               </div>
 

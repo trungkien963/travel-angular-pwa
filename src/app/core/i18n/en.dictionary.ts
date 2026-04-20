@@ -83,7 +83,7 @@ export const enDictionary = {
   'expense.paidBy': 'PAID BY',
   'expense.date': 'DATE',
   'expense.splitDetails': 'SPLIT DETAILS',
-  'expense.emailPrompt': 'Missing someone? Email them',
+  'expense.emailPrompt': 'Enter name or email...',
   'expense.exceeds': 'Assigned amounts exceed the Total Price.',
   'expense.saving': 'Saving...',
   'expense.fixSplit': 'Fix split amounts',
@@ -141,9 +141,11 @@ export const enDictionary = {
   'detail.membersCount': 'members',
   'detail.attachedReceipts': 'ATTACHED RECEIPTS',
   'detail.fullNameReq': 'FULL NAME *',
-  'detail.emailReq': 'EMAIL ADDRESS *',
+  'detail.emailReq': 'EMAIL ADDRESS (Optional)',
   'detail.placeholderName': 'e.g. John Doe',
-  'detail.placeholderEmail': 'e.g. john@example.com',
+  'detail.placeholderEmail': 'Enter to invite to app (optional)',
+  'trip.addGuestHint': 'Don\'t use the app? No problem, just a name is enough.',
+  'detail.linkAccount': 'Link Account',
 
   // TRIPS updates
   'trips.noTrips': 'No trips yet',

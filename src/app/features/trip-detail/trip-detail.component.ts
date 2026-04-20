@@ -530,28 +530,38 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
 
   // ─── Direct Member Invite ──────────────────────────────────────────────────
   async quickInviteMember() {
-    const email = this.newMemberEmail.trim();
-    if (!email) return;
+    const inputStr = this.newMemberEmail.trim();
+    if (!inputStr) return;
     
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      this.toastService.show('Invalid email format.', 'error');
-      return;
-    }
-
     const trip = this.trip();
     if (!trip) return;
 
-    if (trip.members.some(m => m.email === email) || this.pendingNewMembers().some(m => m.email === email)) {
-      this.toastService.show('Member already in trip or pending.', 'error');
-      return;
-    }
+    if (inputStr.includes('@')) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(inputStr)) {
+        this.toastService.show('Invalid email format.', 'error');
+        return;
+      }
+      if (trip.members.some(m => m.email === inputStr) || this.pendingNewMembers().some(m => m.email === inputStr)) {
+        this.toastService.show('Member already in trip or pending.', 'error');
+        return;
+      }
 
-    const tempId = `pending-${Date.now()}-${Math.random().toString(36).substring(2,7)}`;
-    const newMember = { id: tempId, name: email.split('@')[0], email, isMe: false, avatar: undefined };
-    
-    this.pendingNewMembers.update(list => [...list, newMember]);
-    this.includedMembers.update(m => ({ ...m, [tempId]: true }));
+      const tempId = `pending-${Date.now()}-${Math.random().toString(36).substring(2,7)}`;
+      const newMember = { id: tempId, name: inputStr.split('@')[0], email: inputStr, isMe: false, avatar: undefined };
+      
+      this.pendingNewMembers.update(list => [...list, newMember]);
+      this.includedMembers.update(m => ({ ...m, [tempId]: true }));
+    } else {
+      // Name only -> Immediate Ghost User
+      const ghostId = window.crypto.randomUUID();
+      const ghostMember = { id: ghostId, name: inputStr, email: undefined, isMe: false, avatar: undefined };
+      
+      const updatedMembers = [...trip.members, ghostMember];
+      this.supabaseService.client.from('trips').update({ members: updatedMembers }).eq('id', trip.id).then();
+      this.travelStore.updateTrip(trip.id, { members: updatedMembers });
+      this.includedMembers.update(m => ({ ...m, [ghostId]: true }));
+    }
     this.newMemberEmail = '';
   }
 
@@ -1377,7 +1387,7 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
     const email = this.newMemberEmail.trim();
 
     if (!name) { this.setInviteError('Please enter the member\'s name.'); return; }
-    if (!email || !email.includes('@')) { this.setInviteError('Please enter a valid email address.'); return; }
+    if (email && !email.includes('@')) { this.setInviteError('Please enter a valid email address.'); return; }
 
     this.isInviting.set(true);
     this.inviteStatus.set('');
@@ -1388,31 +1398,29 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
     if (!trip) { this.isInviting.set(false); return; }
 
     try {
-      // 1. Try to find user by email in `users` table
       let userId: string | null = null;
-      const { data: userData } = await db
-        .from('users')
-        .select('id, name')
-        .eq('email', email)
-        .maybeSingle();
+      let userAvatar: string | undefined = undefined;
 
-      if (userData) {
-        userId = userData['id'];
+      if (email) {
+        // 1. Try to find user by email in `users` table
+        const { data: userData } = await db.from('users').select('id, name, avatar_url').eq('email', email).maybeSingle();
+        if (userData) {
+          userId = userData['id'];
+          if (userData['avatar_url']) userAvatar = userData['avatar_url'];
+        }
+
+        // 2. Try Edge Function
+        if (!userId) {
+          try {
+            const { data: fnData } = await db.functions.invoke('invite-member', { body: { email } });
+            if (fnData?.userId) userId = fnData.userId;
+          } catch { /* Edge function optional */ }
+        }
       }
 
-      // 2. Try Edge Function (best-effort - may not exist in all envs)
-      if (!userId) {
-        try {
-          const { data: fnData } = await db.functions.invoke('invite-member', {
-            body: { email }
-          });
-          if (fnData?.userId) userId = fnData.userId;
-        } catch { /* Edge function optional */ }
-      }
-
-      // 3. Build member object (use found userId or generate temp ID)
+      // 3. Build member object
       const finalId = userId || window.crypto.randomUUID();
-      const alreadyMember = trip.members.some(m => m.id === finalId || m.email === email);
+      const alreadyMember = trip.members.some(m => m.id === finalId || (email && m.email === email));
 
       if (alreadyMember) {
         this.setInviteError('This person is already a member of the trip.');
@@ -1422,7 +1430,8 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
       const newMember: Member = {
         id: finalId,
         name,
-        email,
+        email: email || undefined,
+        avatar: userAvatar,
         isMe: false
       };
 
@@ -1493,6 +1502,40 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
 
     try {
       const db = this.supabaseService.client;
+      
+      // Merge Ghost User Migration Logic
+      let newUserId = this.editingMember.id;
+      let newAvatar = this.editingMember.avatar;
+      const isGhost = !this.editingMember.email;
+      
+      if (isGhost && email && email !== this.editingMember.email) {
+          const { data: userData } = await db.from('users').select('id, avatar_url').eq('email', email).maybeSingle();
+          if (userData) {
+             newUserId = userData['id'];
+             if (userData['avatar_url']) newAvatar = userData['avatar_url'];
+          } else {
+             try {
+                const { data: fnData } = await db.functions.invoke('invite-member', { body: { email } });
+                if (fnData?.userId) newUserId = fnData.userId;
+             } catch {}
+          }
+          
+          if (newUserId !== this.editingMember.id) {
+             await db.rpc('merge_ghost_user', {
+                p_trip_id: trip.id,
+                p_ghost_id: this.editingMember.id,
+                p_real_user_id: newUserId,
+                p_real_name: name,
+                p_real_avatar: newAvatar
+             });
+             await this.travelStore.refreshData(); // Lấy data mới ngay lập tức
+             this.toastService.show('Account merged successfully!', 'success');
+             this.editMemberOpen.set(false);
+             this.editingMember = null;
+             return;
+          }
+      }
+
       // Fetch latest members to prevent race condition
       const { data: freshTrip } = await db.from('trips').select('members').eq('id', trip.id).single();
       let dbMembers = trip.members;
@@ -1502,8 +1545,8 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
          if (Array.isArray(raw)) dbMembers = raw;
       }
 
-      const updatedMember: Member = { ...this.editingMember, name, email };
-      const newMembers = dbMembers.map(m => m.id === updatedMember.id ? updatedMember : m);
+      const updatedMember: Member = { ...this.editingMember, id: newUserId, name, email: email || undefined, avatar: newAvatar };
+      const newMembers = dbMembers.map(m => m.id === this.editingMember!.id ? updatedMember : m);
 
       const { error } = await db.from('trips').update({ members: newMembers }).eq('id', trip.id);
       if (error) throw error;

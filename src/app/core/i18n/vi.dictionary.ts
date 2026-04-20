@@ -83,7 +83,7 @@ export const viDictionary = {
   'expense.paidBy': 'NGƯỜI TRẢ',
   'expense.date': 'NGÀY',
   'expense.splitDetails': 'CHI TIẾT CHIA TIỀN',
-  'expense.emailPrompt': 'Thiếu ai? Nhập email để mời',
+  'expense.emailPrompt': 'Nhập tên hoặc email...',
   'expense.exceeds': 'Số tiền chia đang vượt quá Tổng tiền!',
   'expense.saving': 'Đang lưu...',
   'expense.fixSplit': 'Sửa lại số chia',
@@ -141,9 +141,11 @@ export const viDictionary = {
   'detail.membersCount': 'thành viên',
   'detail.attachedReceipts': 'HÓA ĐƠN ĐÍNH KÈM',
   'detail.fullNameReq': 'HỌ TÊN *',
-  'detail.emailReq': 'ĐỊA CHỈ EMAIL *',
+  'detail.emailReq': 'ĐỊA CHỈ EMAIL (Tùy chọn)',
   'detail.placeholderName': 'VD: Nguyễn Văn A',
-  'detail.placeholderEmail': 'VD: nguyenvana@gmail.com',
+  'detail.placeholderEmail': 'Nhập để mời dùng app (không bắt buộc)',
+  'trip.addGuestHint': 'Không xài app? Không sao, chỉ cần tên là đủ tính tiền.',
+  'detail.linkAccount': 'Liên kết tài khoản',
 
   // TRIPS updates
   'trips.noTrips': 'Chưa có chuyến đi nào',
