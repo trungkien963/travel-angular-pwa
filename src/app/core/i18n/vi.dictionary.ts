@@ -146,6 +146,10 @@ export const viDictionary = {
   'detail.placeholderEmail': 'Nhập để mời dùng app (không bắt buộc)',
   'trip.addGuestHint': 'Không xài app? Không sao, chỉ cần tên là đủ tính tiền.',
   'detail.linkAccount': 'Liên kết tài khoản',
+  'detail.youOweTotal': 'Tổng bạn nợ',
+  'detail.owedToYouTotal': 'Tổng bạn nhận',
+  'detail.status': 'Trạng thái',
+  'detail.youAreSettledUser': 'Không nợ/nhận',
 
   // TRIPS updates
   'trips.noTrips': 'Chưa có chuyến đi nào',

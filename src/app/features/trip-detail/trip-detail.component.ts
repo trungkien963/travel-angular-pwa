@@ -728,6 +728,20 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
     return result;
   });
 
+  readonly totalYouOwe = computed(() => {
+    const uid = this.currentUserId();
+    return this.debts()
+      .filter(d => d.fromId === uid)
+      .reduce((sum, d) => sum + d.amount, 0);
+  });
+
+  readonly totalOwedToYou = computed(() => {
+    const uid = this.currentUserId();
+    return this.debts()
+      .filter(d => d.toId === uid)
+      .reduce((sum, d) => sum + d.amount, 0);
+  });
+
   // ─── Lifecycle ────────────────────────────────────────────────────────────
   async ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id') || '';

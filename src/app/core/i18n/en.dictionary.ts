@@ -146,6 +146,10 @@ export const enDictionary = {
   'detail.placeholderEmail': 'Enter to invite to app (optional)',
   'trip.addGuestHint': 'Don\'t use the app? No problem, just a name is enough.',
   'detail.linkAccount': 'Link Account',
+  'detail.youOweTotal': 'Total you owe',
+  'detail.owedToYouTotal': 'Total owed to you',
+  'detail.status': 'Your Status',
+  'detail.youAreSettledUser': 'Settled up',
 
   // TRIPS updates
   'trips.noTrips': 'No trips yet',
