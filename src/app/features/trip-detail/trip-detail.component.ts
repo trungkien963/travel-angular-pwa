@@ -1425,7 +1425,7 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
 
   async inviteMember() {
     const name = this.newMemberName.trim();
-    const email = this.newMemberEmail.trim();
+    let email = this.newMemberEmail.trim();
 
     if (!name) { this.setInviteError('Please enter the member\'s name.'); return; }
     if (email && !email.includes('@')) { this.setInviteError('Please enter a valid email address.'); return; }
@@ -1453,9 +1453,26 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
         // 2. Try Edge Function
         if (!userId) {
           try {
-            const { data: fnData } = await db.functions.invoke('invite-member', { body: { email } });
+            const { data: fnData, error: fnErr } = await db.functions.invoke('invite-member', { body: { email } });
+            if (fnErr) throw fnErr;
             if (fnData?.userId) userId = fnData.userId;
-          } catch { /* Edge function optional */ }
+          } catch (e: any) {
+            console.warn('Invite edge function failed:', e);
+            this.travelStore.setGlobalLoading(false); // temp hide loading for modal
+            const confirmed = await this.confirmService.confirm(
+              'Hệ thống gửi thư mời đang bị nghẽn! Thư mời bị chặn.<br><br>Bạn có muốn thêm người này dưới dạng <b>OFFLINE GUEST</b> (Chỉ có Tên, không có Email) để tính toán chia tiền trước không?',
+              'Lỗi Gửi Email', 'Thêm Offline Guest', 'Huỷ bỏ'
+            );
+            this.travelStore.setGlobalLoading(true);
+            
+            if (confirmed) {
+              email = ''; // Xoá email đi để app nhận diện chuẩn là GUEST
+            } else {
+              this.isInviting.set(false);
+              this.travelStore.setGlobalLoading(false);
+              return; // Huỷ ngang
+            }
+          }
         }
       }
 
@@ -1508,6 +1525,7 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
       setTimeout(() => {
         this.addMemberOpen.set(false);
         this.inviteStatus.set('');
+        this.travelStore.refreshData(); // Lấy lại list hiển thị
       }, 1500);
     } catch (err: any) {
       this.setInviteError(err.message || 'Failed to add member. Please try again.');
@@ -1547,21 +1565,27 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
       // Merge Ghost User Migration Logic
       let newUserId = this.editingMember.id;
       let newAvatar = this.editingMember.avatar;
-      const isGhost = !this.editingMember.email;
       
-      if (isGhost && email && email !== this.editingMember.email) {
+      if (email) {
           const { data: userData } = await db.from('users').select('id, avatar_url').eq('email', email).maybeSingle();
           if (userData) {
              newUserId = userData['id'];
              if (userData['avatar_url']) newAvatar = userData['avatar_url'];
           } else {
              try {
-                const { data: fnData } = await db.functions.invoke('invite-member', { body: { email } });
+                const { data: fnData, error: fnErr } = await db.functions.invoke('invite-member', { body: { email } });
+                if (fnErr) throw fnErr;
                 if (fnData?.userId) newUserId = fnData.userId;
-             } catch {}
+             } catch (e: any) {
+                console.warn('Re-invite fail:', e);
+                this.toastService.show('Gửi thư nối tài khoản thất bại (Nghẽn mạng). Vui lòng thử lại sau 1 tiếng!', 'error');
+                this.isSavingMember.set(false);
+                this.travelStore.setGlobalLoading(false);
+                return; // Huỷ không cho lưu thông tin mập mờ vào DB
+             }
           }
           
-          if (newUserId !== this.editingMember.id) {
+          if (newUserId && newUserId !== this.editingMember.id) {
              await db.rpc('merge_ghost_user', {
                 p_trip_id: trip.id,
                 p_ghost_id: this.editingMember.id,
