@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, ElementRef, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ElementRef, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -28,7 +28,10 @@ export class CalculatorInputComponent {
   }
 
   // Handle clicking the input
-  openKeyboard() {
+  openKeyboard(event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
     this.isKeyboardOpen = true;
     if (this.amount && !this.expression) {
       this.expression = this.amount.toString();
@@ -61,6 +64,14 @@ export class CalculatorInputComponent {
       setTimeout(() => {
         this.el.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 50);
+    }
+  }
+
+  @HostListener('document:click', ['$event'])
+  @HostListener('document:touchstart', ['$event'])
+  onDocumentClick(event: Event) {
+    if (this.isKeyboardOpen && !this.el.nativeElement.contains(event.target)) {
+      this.closeKeyboard();
     }
   }
 

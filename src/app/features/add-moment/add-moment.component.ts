@@ -88,9 +88,13 @@ export class AddMomentComponent implements OnInit, OnDestroy {
   }
 
   setTotalAmount(val: string) {
-    // Strip non-numeric except % if needed (but total amount shouldn't have %)
     const parsed = parseInt(val.replace(/[^0-9]/g, ''), 10);
     this.expenseAmount = isNaN(parsed) ? 0 : parsed;
+  }
+  
+  onTotalAmountChange(val: any) {
+    this.expenseAmount = val || 0;
+    this.lockedShares.set({});
   }
 
   showTripPicker = false;
@@ -204,6 +208,7 @@ export class AddMomentComponent implements OnInit, OnDestroy {
   
   // Expense specific
   readonly paidById = signal('');
+  showPayerList = false;
   readonly includedMembers = signal<Record<string, boolean>>({});
   readonly activeMemberCount = computed(() => {
     const inc = this.includedMembers();
@@ -253,6 +258,25 @@ export class AddMomentComponent implements OnInit, OnDestroy {
     }
     return [...(this.selectedTrip()?.members ?? []), ...this.pendingNewMembers()];
   });
+
+  getPayerNameLocal(id: string): string {
+    const member = this.currentTripMembers().find(m => m.id === id);
+    return member ? member.name : 'You';
+  }
+
+  selectAllForSplit() {
+    const included: Record<string, boolean> = {};
+    this.currentTripMembers().forEach(m => included[m.id] = true);
+    this.includedMembers.set(included);
+    this.lockedShares.set({});
+  }
+
+  clearAllForSplit() {
+    const included: Record<string, boolean> = {};
+    this.currentTripMembers().forEach(m => included[m.id] = false);
+    this.includedMembers.set(included);
+    this.lockedShares.set({});
+  }
 
   // ─── Lifecycle ────────────────────────────────────────────────────────────
   async ngOnInit() {

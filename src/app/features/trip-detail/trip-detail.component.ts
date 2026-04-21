@@ -392,6 +392,33 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
     this.expForm.amount = isNaN(parsed) ? 0 : parsed;
   }
 
+  onTotalAmountChange(val: any) {
+    this.expForm.amount = val || 0;
+    this.lockedShares.set({});
+  }
+
+  showPayerList = false;
+
+  getPayerNameLocal(id: string): string {
+    if (!this.trip()) return 'Unknown';
+    const m = this.trip()?.members.find(x => x.id === id);
+    return m ? (m.id === this.currentUserId() ? 'You' : m.name) : 'Unknown';
+  }
+
+  selectAllForSplit() {
+    const included: Record<string, boolean> = {};
+    this.currentTripMembersForSplit().forEach(m => included[m.id] = true);
+    this.includedMembers.set(included);
+    this.lockedShares.set({});
+  }
+
+  clearAllForSplit() {
+    const included: Record<string, boolean> = {};
+    this.currentTripMembersForSplit().forEach(m => included[m.id] = false);
+    this.includedMembers.set(included);
+    this.lockedShares.set({});
+  }
+
   toggleMember(id: string) {
     this.includedMembers.update(m => ({ ...m, [id]: !m[id] }));
     if (!this.includedMembers()[id]) {

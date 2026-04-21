@@ -104,6 +104,8 @@ export const viDictionary = {
   'action.done': 'Xong',
   'action.skip': 'Bỏ qua',
   'action.next': 'Tiếp',
+  'action.selectAll': 'Chọn tất cả',
+  'action.clearAll': 'Bỏ chọn',
   'comment.viewAll': 'Xem tất cả',
   'comment.comments': 'Bình luận',
   'comment.empty': 'Chưa có bình luận. Mở bát ngay! 💬',

@@ -104,6 +104,8 @@ export const enDictionary = {
   'action.done': 'Done',
   'action.skip': 'Skip',
   'action.next': 'Next',
+  'action.selectAll': 'Select All',
+  'action.clearAll': 'Clear All',
   'comment.viewAll': 'View all',
   'comment.comments': 'Comments',
   'comment.empty': 'No comments yet. Be the first! 💬',

@@ -523,14 +523,21 @@
           <p class="field-label" style="margin-top: 24px;">{{ 'expense.totalPrice' | translate }} <span class="req">*</span></p>
           <div class="amount-row">
             <span class="currency-symbol">₫</span>
-            <app-calculator-input [(amount)]="expForm.amount" placeholder="0" class="amount-input" id="exp-amount"></app-calculator-input>
+            <app-calculator-input [amount]="expForm.amount" (amountChange)="onTotalAmountChange($event)" placeholder="0" class="amount-input" id="exp-amount"></app-calculator-input>
           </div>
 
           <!-- Paid By -->
-          <p class="field-label" style="margin-top: 24px;">{{ 'expense.paidBy' | translate }}</p>
-          <div class="paidby-row">
-            @for (member of currentTripMembersForSplit(); track member.id) {
-              <button class="member-pill" [class.active]="expForm.payerId === member.id" (click)="expForm.payerId = member.id">{{ member.name }}</button>
+          <p class="field-label" style="margin-top: 24px; margin-bottom: 8px;">{{ 'expense.paidBy' | translate }}</p>
+          <div class="paidby-row" style="display: flex; flex-wrap: wrap; gap: 8px;">
+            @if (!showPayerList) {
+              <button class="member-pill active" (click)="showPayerList = true" style="display: flex; align-items: center; gap: 6px; padding-right: 12px;">
+                {{ getPayerNameLocal(expForm.payerId) || 'Select' }}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+              </button>
+            } @else {
+              @for (member of currentTripMembersForSplit(); track member.id) {
+                <button class="member-pill" [class.active]="expForm.payerId === member.id" (click)="expForm.payerId = member.id; showPayerList = false">{{ member.name }}</button>
+              }
             }
           </div>
 
@@ -541,7 +548,13 @@
           </div>
 
           <!-- Split Logic UI (Hybrid Lock & Float) -->
-          <p class="field-label" style="margin-top: 24px; margin-bottom: 8px;">{{ 'expense.splitDetails' | translate }}</p>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; margin-bottom: 12px;">
+            <p class="field-label" style="margin: 0;">{{ 'expense.splitDetails' | translate }}</p>
+            <div style="display: flex; gap: 8px;">
+              <button (click)="selectAllForSplit()" style="background: #EFF6FF; color: #3B82F6; padding: 6px 12px; border-radius: 100px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s;">{{ 'action.selectAll' | translate }}</button>
+              <button (click)="clearAllForSplit()" style="background: #F3F4F6; color: #4B5563; padding: 6px 12px; border-radius: 100px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s;">{{ 'action.clearAll' | translate }}</button>
+            </div>
+          </div>
           <div class="split-list">
           @for (member of currentTripMembersForSplit(); track member.id) {
             <div class="split-row" [class.excluded]="!includedMembers()[member.id]">

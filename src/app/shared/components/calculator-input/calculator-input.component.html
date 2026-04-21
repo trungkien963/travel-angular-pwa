@@ -1,6 +1,6 @@
 <div class="calc-input-wrapper">
   <!-- Fake Input Display -->
-  <div class="fake-input" [ngClass]="customClass" (click)="openKeyboard()" [class.active]="isKeyboardOpen" id="amount-input-fake">
+  <div class="fake-input" [ngClass]="customClass" (click)="openKeyboard($event)" [class.active]="isKeyboardOpen" id="amount-input-fake">
     <span class="value" [class.placeholder]="isKeyboardOpen ? !displayValue : (!amount)">
       {{ isKeyboardOpen ? (displayValue || placeholder) : (amount ? formatNumber(amount) : placeholder) }}
     </span>
@@ -9,9 +9,6 @@
 
   <!-- Keyboard Overlay -->
   <ng-container *ngIf="isKeyboardOpen">
-    <!-- Backdrop to close when clicking outside -->
-    <div class="keyboard-backdrop" (click)="closeKeyboard()"></div>
-
     <!-- The actual keyboard -->
     <div class="custom-keyboard" (click)="stopPropagation($event)">
       <!-- Suggestions (Smart Chips) inside the top of keyboard sheet -->
