@@ -258,24 +258,31 @@
             </div>
           </div>
 
-          <div class="section-header">
-            <h2 class="section-title">{{ 'detail.transactions' | translate }}</h2>
-            @if (isMember()) {
-              <button class="btn-action btn-action--primary" (click)="openExpenseModal()" id="btn-log-expense">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M5 12h14"/><path d="M12 5v14"/>
-                </svg>
-                {{ 'detail.logExpense' | translate }}
-              </button>
-            }
+          <div class="section-header" style="flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+              <h2 class="section-title">{{ 'detail.transactions' | translate }}</h2>
+              @if (isMember()) {
+                <button class="btn-action btn-action--primary" (click)="openExpenseModal()" id="btn-log-expense">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h14"/><path d="M12 5v14"/>
+                  </svg>
+                  {{ 'detail.logExpense' | translate }}
+                </button>
+              }
+            </div>
+            <!-- Filter Pills -->
+            <div class="expense-filters" style="display: flex; gap: 8px; margin-top: 16px; width: 100%;">
+              <button class="filter-pill" [class.active]="activeExpenseFilter() === 'ALL'" (click)="activeExpenseFilter.set('ALL')">Tất cả</button>
+              <button class="filter-pill" [class.active]="activeExpenseFilter() === 'MINE'" (click)="activeExpenseFilter.set('MINE')">Của tôi</button>
+            </div>
           </div>
 
-          @if (tripExpenses().length === 0) {
+          @if (displayExpenses().length === 0) {
             <div class="empty-card">{{ 'detail.emptyExpenses' | translate }}</div>
           }
 
           <div class="expense-list">
-            @for (exp of tripExpenses(); track exp.id) {
+            @for (exp of displayExpenses(); track exp.id) {
               <div class="expense-item" (click)="isMember() ? openExpenseDetail(exp) : null" [id]="'expense-' + exp.id">
                 <div class="expense-left">
                   <div class="expense-icon" [style.background]="getCategoryBg(exp.category || 'OTHER')">
@@ -291,7 +298,18 @@
                     </p>
                   </div>
                 </div>
-                <span class="expense-amount">₫{{ formatNumber(exp.amount) }}</span>
+                
+                <div class="expense-share-info" style="display: flex; flex-direction: column; align-items: flex-end; text-align: right; margin-left: 12px; flex-shrink: 0;">
+                  @if (exp.isInvolved) {
+                    <span class="share-amount" style="color: #1C1917; font-weight: 900; font-size: 17px; letter-spacing: -0.5px;">₫{{ formatNumber(exp.mySplitAmount) }}</span>
+                    @if (exp.mySplitAmount !== exp.amount) {
+                      <span class="expense-amount" style="font-size: 12px; color: #9CA3AF; font-weight: 600; margin-top: 4px;">Tổng: ₫{{ formatNumber(exp.amount) }}</span>
+                    }
+                  } @else {
+                    <span class="share-amount" style="color: #9CA3AF; font-weight: 800; font-size: 17px;">-</span>
+                    <span class="expense-amount" style="font-size: 12px; color: #9CA3AF; font-weight: 600; margin-top: 4px;">Tổng: ₫{{ formatNumber(exp.amount) }}</span>
+                  }
+                </div>
               </div>
             }
           </div>

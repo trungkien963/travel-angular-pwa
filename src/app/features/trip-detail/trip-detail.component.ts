@@ -634,6 +634,46 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
       });
   });
 
+  readonly activeExpenseFilter = signal<'ALL' | 'MINE'>('ALL');
+
+  readonly displayExpenses = computed(() => {
+    const expenses = this.tripExpenses();
+    const uid = this.currentUserId();
+    const filter = this.activeExpenseFilter();
+    
+    const mapped = expenses.map(ex => {
+      let mySplitAmount = 0;
+      let hasSplit = false;
+      
+      if (ex.splits && Object.keys(ex.splits).filter(k => !k.startsWith('__')).length > 0) {
+        if (ex.splits[uid] !== undefined) {
+           mySplitAmount = ex.splits[uid];
+           hasSplit = true;
+        }
+      } else {
+         const tripObj = this.trip();
+         if (tripObj && tripObj.members) {
+           const membersCount = tripObj.members.length || 1;
+           const isMember = tripObj.members.some(m => m.id === uid);
+           if (isMember) {
+              mySplitAmount = Math.round(ex.amount / membersCount);
+              hasSplit = true;
+           }
+         }
+      }
+
+      const isInvolved = hasSplit && mySplitAmount > 0;
+      
+      return { ...ex, mySplitAmount, isInvolved };
+    });
+
+    if (filter === 'MINE') {
+       return mapped.filter(ex => ex.isInvolved);
+    }
+    
+    return mapped;
+  });
+
   readonly tripPosts = computed<Post[]>(() =>
     this.travelStore.posts().filter(p => p.tripId === this.tripId())
   );
