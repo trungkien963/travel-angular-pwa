@@ -3,7 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TravelStore } from '../../core/store/travel.store';
 import { Trip } from '../../core/models/trip.model';
-import { Expense, Member } from '../../core/models/expense.model';
+import { Expense, Member, ExpenseCategory } from '../../core/models/expense.model';
 import { Post, Comment } from '../../core/models/social.model';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -25,6 +25,7 @@ const CATEGORY_META: Record<string, { emoji: string; label: string; color: strin
   HOTEL:      { emoji: '🏨', label: 'Hotel',       color: '#8B5CF6', bg: '#EDE9FE' },
   ACTIVITIES: { emoji: '🎯', label: 'Activities',  color: '#10B981', bg: '#D1FAE5' },
   SHOPPING:   { emoji: '🛍️', label: 'Shopping',   color: '#EC4899', bg: '#FCE7F3' },
+  SETTLEMENT: { emoji: '💸', label: 'Settlement',  color: '#10B981', bg: '#D1FAE5' },
   OTHER:      { emoji: '💳', label: 'Other',       color: '#6B7280', bg: '#F3F4F6' },
 };
 
@@ -239,6 +240,77 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
     this.isCoverLoading.set(false);
   }
   
+  // ─── Settlement state ──────────────────────────────────────────
+  readonly settleModalOpen = signal(false);
+  readonly settleDebt = signal<Debt | null>(null);
+  settleAmount = 0;
+  readonly isSavingSettle = signal(false);
+  
+  openSettleModal(debt: Debt) {
+    this.settleDebt.set(debt);
+    this.settleAmount = debt.amount;
+    this.settleModalOpen.set(true);
+  }
+  
+  closeSettleModal() {
+    this.settleModalOpen.set(false);
+    this.settleDebt.set(null);
+  }
+  
+  onSettleAmountChange(val: any) {
+    this.settleAmount = val || 0;
+  }
+  
+  async submitSettle() {
+    const debt = this.settleDebt();
+    if (!debt || this.settleAmount <= 0) return;
+    
+    this.isSavingSettle.set(true);
+    this.travelStore.setGlobalLoading(true);
+    try {
+      const expDate = new Date().toISOString().split('T')[0];
+      const db = this.supabaseService.client;
+      // We model settlement as: Payer = Debtor. Split = { Creditor: amount }
+      const splits: Record<string, any> = {
+        [debt.toId]: this.settleAmount,
+        '__date': expDate,
+        '__isSettlement': true
+      };
+
+      const payload = {
+         trip_id: this.tripId(),
+         description: 'Payment: ' + debt.fromName + ' -> ' + debt.toName,
+         amount: this.settleAmount,
+         category: 'OTHER',
+         payer_id: debt.fromId,
+         splits,
+         created_at: new Date().toISOString()
+      };
+      
+      const { data, error } = await db.from('expenses').insert(payload).select().single();
+      if (error) throw error;
+      
+      if (data) {
+        this.travelStore.addExpense({
+           id: data['id'], tripId: data['trip_id'], desc: data['description'],
+           amount: data['amount'], category: (splits['__isSettlement'] ? 'SETTLEMENT' : data['category']) as ExpenseCategory,
+           payerId: data['payer_id'], date: expDate, 
+           createdAt: data['created_at'], splits: data['splits']
+        });
+      }
+      
+      this.closeSettleModal();
+      this.toastService.show('Đã ghi nhận thanh toán!', 'success');
+      
+    } catch(err) {
+      console.error(err);
+      this.toastService.show('Lỗi ghi nhận thanh toán', 'error');
+    } finally {
+      this.isSavingSettle.set(false);
+      this.travelStore.setGlobalLoading(false);
+    }
+  }
+
   selectedExpense: Expense | null = null;
 
   readonly expenseModalOpen = signal(false);
@@ -626,6 +698,7 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
   readonly tripExpenses = computed<Expense[]>(() => {
     return this.travelStore.expenses()
       .filter(e => e['tripId'] === this.tripId())
+      .map(e => e.splits?.['__isSettlement'] ? { ...e, category: 'SETTLEMENT' as ExpenseCategory } : e)
       .sort((a, b) => {
         // Sort by createdAt if available, otherwise by date descending
         const timeA = a.createdAt ? new Date(a.createdAt).getTime() : new Date(a.date).getTime();
@@ -662,7 +735,9 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
          }
       }
 
-      const isInvolved = hasSplit && mySplitAmount > 0;
+      const isInvolved = ex.category === 'SETTLEMENT' 
+        ? (ex.payerId === uid || mySplitAmount > 0 || ex.splits?.[uid] !== undefined)
+        : (hasSplit && mySplitAmount > 0);
       
       return { ...ex, mySplitAmount, isInvolved };
     });
@@ -700,13 +775,14 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
   });
 
   readonly totalTripCost = computed(() =>
-    this.tripExpenses().reduce((sum, e) => sum + e.amount, 0)
+    this.tripExpenses().reduce((sum, e) => sum + (e.category === 'SETTLEMENT' ? 0 : e.amount), 0)
   );
 
   readonly yourShare = computed(() => {
     const uid = this.currentUserId();
     const members = this.trip()?.members?.length || 1;
     return this.tripExpenses().reduce((sum, e) => {
+      if (e.category === 'SETTLEMENT') return sum;
       if (e.splits && Object.keys(e.splits).filter(k => !k.startsWith('__')).length > 0) {
         return sum + (e.splits[uid] || 0);
       }
@@ -718,6 +794,7 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
     const totals: Record<string, number> = {};
     let grand = 0;
     this.tripExpenses().forEach(e => {
+      if (e.category === 'SETTLEMENT') return;
       const cat = e.category || 'OTHER';
       totals[cat] = (totals[cat] || 0) + e.amount;
       grand += e.amount;

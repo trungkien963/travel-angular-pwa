@@ -300,7 +300,9 @@
                 </div>
                 
                 <div class="expense-share-info" style="display: flex; flex-direction: column; align-items: flex-end; text-align: right; margin-left: 12px; flex-shrink: 0;">
-                  @if (exp.isInvolved) {
+                  @if (exp.category === 'SETTLEMENT') {
+                    <span class="share-amount" style="color: #10B981; font-weight: 900; font-size: 16px; letter-spacing: -0.5px;">₫{{ formatNumber(exp.amount) }}</span>
+                  } @else if (exp.isInvolved) {
                     <span class="share-amount" style="color: #1C1917; font-weight: 900; font-size: 17px; letter-spacing: -0.5px;">₫{{ formatNumber(exp.mySplitAmount) }}</span>
                     @if (exp.mySplitAmount !== exp.amount) {
                       <span class="expense-amount" style="font-size: 12px; color: #9CA3AF; font-weight: 600; margin-top: 4px;">{{ 'expense.totalPrefix' | translate }} ₫{{ formatNumber(exp.amount) }}</span>
@@ -381,7 +383,7 @@
 
           <div class="expense-list">
             @for (debt of debts(); track debt.fromId + debt.toId) {
-              <div class="expense-item">
+              <div class="expense-item" (click)="(isMember() && (debt.fromId === currentUserId() || debt.toId === currentUserId() || isOwner())) ? openSettleModal(debt) : null" [style.cursor]="(isMember() && (debt.fromId === currentUserId() || debt.toId === currentUserId() || isOwner())) ? 'pointer' : 'default'">
                 <div class="expense-left">
                   <div class="expense-icon" [class.debt-me]="debt.fromId === currentUserId()" [class.debt-owed]="debt.toId === currentUserId()">
                     @if (debt.fromId === currentUserId()) {
@@ -397,11 +399,18 @@
                     <p class="expense-meta">{{ debt.fromId === currentUserId() ? debt.toName : (debt.toId === currentUserId() ? 'you' : debt.toName) }}</p>
                   </div>
                 </div>
-                <span class="expense-amount"
-                  [class.amount-red]="debt.fromId === currentUserId()"
-                  [class.amount-yellow]="debt.toId === currentUserId()">
-                  ₫{{ formatNumber(debt.amount) }}
-                </span>
+                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+                  <span class="expense-amount"
+                    [class.amount-red]="debt.fromId === currentUserId()"
+                    [class.amount-yellow]="debt.toId === currentUserId()">
+                    ₫{{ formatNumber(debt.amount) }}
+                  </span>
+                  @if (isMember() && (debt.fromId === currentUserId() || debt.toId === currentUserId() || isOwner())) {
+                    <span style="font-size: 11px; font-weight: 700; color: #3B82F6; background: #EFF6FF; padding: 4px 8px; border-radius: 6px; text-transform: uppercase;">
+                      Settle Up
+                    </span>
+                  }
+                </div>
               </div>
             }
           </div>
@@ -643,6 +652,59 @@
     </div>
   }
 
+  <!-- ═══ SETTLE UP MODAL ═══ -->
+  @if (settleModalOpen() && settleDebt()) {
+    <div class="modal-overlay" (click)="closeSettleModal()">
+      <div class="modal" (click)="$event.stopPropagation()" appSwipeToClose (swipeClose)="closeSettleModal()">
+        <div class="modal-header">
+          <h3>Thanh toán nợ</h3>
+          <button class="btn-close" (click)="closeSettleModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        
+        <div class="input-card" style="margin-top:20px; text-align: center;">
+          <div style="display: flex; justify-content: center; align-items: center; gap: 16px; margin-bottom: 24px;">
+            <div style="text-align: center;">
+               <div style="width: 56px; height: 56px; border-radius: 50%; background: #F3F4F6; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 20px; color: #1C1917;">
+                 {{ settleDebt()!.fromName.charAt(0).toUpperCase() }}
+               </div>
+               <span style="font-size: 13px; font-weight: 600; color: #4B5563;">{{ settleDebt()!.fromId === currentUserId() ? 'You' : settleDebt()!.fromName }}</span>
+            </div>
+            
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            
+            <div style="text-align: center;">
+               <div style="width: 56px; height: 56px; border-radius: 50%; background: #F3F4F6; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 20px; color: #1C1917;">
+                 {{ settleDebt()!.toName.charAt(0).toUpperCase() }}
+               </div>
+               <span style="font-size: 13px; font-weight: 600; color: #4B5563;">{{ settleDebt()!.toId === currentUserId() ? 'You' : settleDebt()!.toName }}</span>
+            </div>
+          </div>
+          
+          <div style="background: #F9FAFB; padding: 16px; border-radius: 12px; margin-bottom: 24px;">
+            <div class="amount-row" style="justify-content: center;">
+              <span class="currency-symbol">₫</span>
+              <app-calculator-input [amount]="settleAmount" (amountChange)="onSettleAmountChange($event)" placeholder="0" class="amount-input" style="text-align: center; font-size: 32px !important;"></app-calculator-input>
+            </div>
+          </div>
+        </div>
+        
+        <button class="btn-receipt-close" (click)="submitSettle()" [disabled]="isSavingSettle() || settleAmount <= 0" style="margin-top: 16px; width: 100%; border:none; padding:18px; border-radius:100px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); font-size:16px; font-weight:800; cursor:pointer;" [style.background]="(isSavingSettle() || settleAmount <= 0) ? '#F5F5F5' : '#FFC800'" [style.color]="(isSavingSettle() || settleAmount <= 0) ? '#A8A29E' : '#1C1917'">
+          @if (isSavingSettle()) {
+            Vui lòng chờ...
+          } @else if (settleDebt()!.toId === currentUserId()) {
+            Xác nhận đã thu tiền
+          } @else if (settleDebt()!.fromId === currentUserId()) {
+            Báo đã chuyển khoản
+          } @else {
+            Đánh dấu đã thanh toán
+          }
+        </button>
+      </div>
+    </div>
+  }
+
   <!-- ═══ EXPENSE DETAIL MODAL ═══ -->
   @if (selectedExpense) {
     <div class="modal-overlay" (click)="selectedExpense = null">
@@ -703,12 +765,14 @@
           @if (isOwner() || selectedExpense.payerId === currentUserId()) {
             <div class="receipt-divider"></div>
             <div class="receipt-footer-actions">
-              <button class="receipt-action-btn edit" (click)="editExpense(selectedExpense)">
-                <div class="icon-circle">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
-                </div>
-                <span>{{ 'action.edit' | translate }}</span>
-              </button>
+              @if (selectedExpense.category !== 'SETTLEMENT') {
+                <button class="receipt-action-btn edit" (click)="editExpense(selectedExpense)">
+                  <div class="icon-circle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                  </div>
+                  <span>{{ 'action.edit' | translate }}</span>
+                </button>
+              }
               <button class="receipt-action-btn delete" (click)="deleteExpenseConfirm(selectedExpense.id)">
                 <div class="icon-circle">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="m19 6-.867 12.142A2 2 0 0 1 16.138 20H7.862a2 2 0 0 1-1.995-1.858L5 6m5 0V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/></svg>

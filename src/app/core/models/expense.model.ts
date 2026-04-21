@@ -23,7 +23,7 @@ export interface Expense {
   isEdited?: boolean;
 }
 
-export type ExpenseCategory = 'FOOD' | 'TRANSPORT' | 'HOTEL' | 'ACTIVITIES' | 'SHOPPING' | 'OTHER';
+export type ExpenseCategory = 'FOOD' | 'TRANSPORT' | 'HOTEL' | 'ACTIVITIES' | 'SHOPPING' | 'SETTLEMENT' | 'OTHER';
 
 export const CATEGORY_COLORS: Record<ExpenseCategory, string> = {
   FOOD: '#EF4444',
@@ -31,6 +31,7 @@ export const CATEGORY_COLORS: Record<ExpenseCategory, string> = {
   HOTEL: '#8B5CF6',
   ACTIVITIES: '#10B981',
   SHOPPING: '#EC4899',
+  SETTLEMENT: '#10B981',
   OTHER: '#9CA3AF'
 };
 
@@ -40,6 +41,7 @@ export const CATEGORY_LABELS: Record<ExpenseCategory, string> = {
   HOTEL: '🏨 Hotel',
   ACTIVITIES: '🎯 Activities',
   SHOPPING: '🛍️ Shopping',
+  SETTLEMENT: '💸 Settlement',
   OTHER: '💼 Other'
 };
 
