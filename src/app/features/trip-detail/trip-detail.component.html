@@ -272,8 +272,8 @@
             </div>
             <!-- Filter Pills -->
             <div class="expense-filters" style="display: flex; gap: 8px; margin-top: 16px; width: 100%;">
-              <button class="filter-pill" [class.active]="activeExpenseFilter() === 'ALL'" (click)="activeExpenseFilter.set('ALL')">Tất cả</button>
-              <button class="filter-pill" [class.active]="activeExpenseFilter() === 'MINE'" (click)="activeExpenseFilter.set('MINE')">Của tôi</button>
+              <button class="filter-pill" [class.active]="activeExpenseFilter() === 'ALL'" (click)="activeExpenseFilter.set('ALL')">{{ 'expense.all' | translate }}</button>
+              <button class="filter-pill" [class.active]="activeExpenseFilter() === 'MINE'" (click)="activeExpenseFilter.set('MINE')">{{ 'expense.mine' | translate }}</button>
             </div>
           </div>
 
@@ -291,7 +291,7 @@
                   <div class="expense-info">
                     <p class="expense-desc">{{ exp.desc || getCategoryLabel(exp.category || 'OTHER') }}</p>
                     <p class="expense-meta">
-                      {{ formatDate(exp.date) || 'No Date' }}
+                      {{ formatDateShort(exp.date) || 'No Date' }}
                       @if (isMember()) {
                         • {{ 'expense.paidBy' | translate | lowercase }} {{ getPayerName(exp.payerId) }}
                       }
@@ -303,11 +303,11 @@
                   @if (exp.isInvolved) {
                     <span class="share-amount" style="color: #1C1917; font-weight: 900; font-size: 17px; letter-spacing: -0.5px;">₫{{ formatNumber(exp.mySplitAmount) }}</span>
                     @if (exp.mySplitAmount !== exp.amount) {
-                      <span class="expense-amount" style="font-size: 12px; color: #9CA3AF; font-weight: 600; margin-top: 4px;">Tổng: ₫{{ formatNumber(exp.amount) }}</span>
+                      <span class="expense-amount" style="font-size: 12px; color: #9CA3AF; font-weight: 600; margin-top: 4px;">{{ 'expense.totalPrefix' | translate }} ₫{{ formatNumber(exp.amount) }}</span>
                     }
                   } @else {
                     <span class="share-amount" style="color: #9CA3AF; font-weight: 800; font-size: 17px;">-</span>
-                    <span class="expense-amount" style="font-size: 12px; color: #9CA3AF; font-weight: 600; margin-top: 4px;">Tổng: ₫{{ formatNumber(exp.amount) }}</span>
+                    <span class="expense-amount" style="font-size: 12px; color: #9CA3AF; font-weight: 600; margin-top: 4px;">{{ 'expense.totalPrefix' | translate }} ₫{{ formatNumber(exp.amount) }}</span>
                   }
                 </div>
               </div>

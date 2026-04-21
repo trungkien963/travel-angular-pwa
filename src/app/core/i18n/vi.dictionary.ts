@@ -172,6 +172,9 @@ export const viDictionary = {
   'expense.exceedTotalWarning': '⚠ Tổng chia đang vượt quá tổng tiền!',
   'expense.tapToAddPerson': '☝️ Bấm \'+\' để thêm người này trước',
   'expense.fixSplitAmounts': '⚠ Cần sửa lại chia tiền',
+  'expense.all': 'Tất cả',
+  'expense.mine': 'Của tôi',
+  'expense.totalPrefix': 'Tổng:',
 
   // SHELL (Bottom Nav)
   'nav.home': 'Trang chủ',

@@ -172,6 +172,9 @@ export const enDictionary = {
   'expense.exceedTotalWarning': '⚠ Assigned amounts exceed the Total Price.',
   'expense.tapToAddPerson': '☝️ Tap \'+\' to add this person first',
   'expense.fixSplitAmounts': '⚠ Fix split amounts',
+  'expense.all': 'All',
+  'expense.mine': 'Mine',
+  'expense.totalPrefix': 'Total:',
 
   // SHELL (Bottom Nav)
   'nav.home': 'Home',

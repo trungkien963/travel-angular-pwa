@@ -1890,6 +1890,11 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
     return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   }
 
+  formatDateShort(dateStr: string): string {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  }
+
   formatRelative(ts: string): string {
     const diff = Date.now() - new Date(ts).getTime();
     if (diff < 60000) return 'just now';
