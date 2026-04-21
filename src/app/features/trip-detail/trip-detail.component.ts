@@ -1591,7 +1591,8 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
                 p_ghost_id: this.editingMember.id,
                 p_real_user_id: newUserId,
                 p_real_name: name,
-                p_real_avatar: newAvatar
+                p_real_avatar: newAvatar,
+                p_real_email: email
              });
              await this.travelStore.refreshData(); // Lấy data mới ngay lập tức
              this.toastService.show('Account merged successfully!', 'success');
