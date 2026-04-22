@@ -151,25 +151,29 @@ export class TripsComponent implements OnInit {
   // ─── Members ──────────────────────────────────────────────────────────────
   addMember() {
     this.emailError.set('');
-    const email = this.emailInput.trim().toLowerCase();
-    if (!email) return;
+    const input = this.emailInput.trim();
+    if (!input) return;
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      this.emailError.set('Invalid email format.');
-      return;
-    }
-    if (this.members().includes(email)) {
-      this.emailError.set('Email already added.');
-      return;
+    if (input.includes('@')) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(input)) {
+        this.emailError.set('Invalid email format.');
+        return;
+      }
     }
 
-    this.members.update(list => [email, ...list]);
+    const exists = this.members().some(m => m.toLowerCase() === input.toLowerCase());
+    if (exists) {
+      this.emailError.set('Member already added.');
+      return;
+    }
+
+    this.members.update(list => [input, ...list]);
     this.emailInput = '';
   }
 
-  removeMember(email: string) {
-    this.members.update(list => list.filter(e => e !== email));
+  removeMember(identifier: string) {
+    this.members.update(list => list.filter(e => e !== identifier));
   }
 
   // ─── Create Trip ──────────────────────────────────────────────────────────
@@ -211,28 +215,32 @@ export class TripsComponent implements OnInit {
       };
 
       const guestMembers = await Promise.all(
-        this.members().map(async (email) => {
+        this.members().map(async (inputStr) => {
           let userId: string | null = null;
-          let userName = email.split('@')[0];
+          const isEmail = inputStr.includes('@');
+          let userName = isEmail ? inputStr.split('@')[0] : inputStr;
+          let email: string | undefined = isEmail ? inputStr : undefined;
           let userAvatar: string | undefined = undefined;
           
-          try {
-            const { data, error } = await db.functions.invoke('invite-member', { body: { email } });
-            if (!error && data?.userId) {
-              userId = data.userId;
-              try {
-                const { data: userData } = await db.from('users').select('full_name, avatar_url').eq('id', userId).maybeSingle();
-                if (userData?.['full_name']) userName = userData['full_name'];
-                if (userData?.['avatar_url']) userAvatar = userData['avatar_url'];
-              } catch(e) {}
+          if (email) {
+            try {
+              const { data, error } = await db.functions.invoke('invite-member', { body: { email } });
+              if (!error && data?.userId) {
+                userId = data.userId;
+                try {
+                  const { data: userData } = await db.from('users').select('full_name, avatar_url').eq('id', userId).maybeSingle();
+                  if (userData?.['full_name']) userName = userData['full_name'];
+                  if (userData?.['avatar_url']) userAvatar = userData['avatar_url'];
+                } catch(e) {}
+              }
+            } catch (err) {
+              console.warn('invite-member failed for', email, err);
             }
-          } catch (err) {
-            console.warn('invite-member failed for', email, err);
           }
           
           if (!userId) userId = crypto.randomUUID();
           
-          return { id: userId, name: userName, email, isMe: false, avatar: userAvatar };
+          return { id: userId, name: userName, email: email, isMe: false, avatar: userAvatar };
         })
       );
 
