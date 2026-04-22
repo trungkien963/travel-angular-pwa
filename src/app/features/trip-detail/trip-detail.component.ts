@@ -30,7 +30,7 @@ const CATEGORY_META: Record<string, { emoji: string; label: string; color: strin
 };
 
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
-
+import { TranslationService } from '../../core/i18n/translation.service';
 import { LowerCasePipe } from '@angular/common';
 
 @Component({
@@ -47,6 +47,7 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
   private supabaseService = inject(SupabaseService);
   private toastService = inject(ToastService);
   private confirmService = inject(ConfirmService);
+  private translationService = inject(TranslationService);
   private cdr = inject(ChangeDetectorRef);
   private ngZone = inject(NgZone);
 
@@ -321,7 +322,7 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
 
   async closeExpenseModal() {
     if (this.expForm.amount > 0 || this.expForm.desc.trim().length > 0 || this.pendingReceipts().length > 0) {
-      if (await this.confirmService.confirm('Bạn đang nhập dở chi phí. Bạn có chắc muốn thoát?', 'Cảnh báo', 'Đóng', 'Tiếp tục')) {
+      if (await this.confirmService.confirm(this.translationService.translate('modal.unsavedExpense'), this.translationService.translate('modal.warning'), this.translationService.translate('action.close'), this.translationService.translate('action.continue'))) {
         this.expenseModalOpen.set(false);
       }
     } else {
@@ -372,7 +373,7 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
 
   async closeEditPostLocal() {
     if (this.editPostContent.trim() !== (this.editPostObj?.content || '')) {
-      if (await this.confirmService.confirm('Bạn có thay đổi chưa lưu. Bạn có chắc muốn hủy bỏ?', 'Cảnh báo', 'Đóng', 'Tiếp tục')) {
+      if (await this.confirmService.confirm(this.translationService.translate('modal.unsavedChanges'), this.translationService.translate('modal.warning'), this.translationService.translate('action.close'), this.translationService.translate('action.continue'))) {
         this.editPostOpen.set(false);
       }
     } else {
@@ -421,7 +422,7 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
 
   async closeAddMember() {
     if (this.newMemberName.trim() || this.newMemberEmail.trim()) {
-      if (await this.confirmService.confirm('Bạn đang nhập dở thông tin. Bạn có chắc muốn hủy bỏ?', 'Cảnh báo', 'Đóng', 'Tiếp tục')) {
+      if (await this.confirmService.confirm(this.translationService.translate('modal.unsavedInfo'), this.translationService.translate('modal.warning'), this.translationService.translate('action.close'), this.translationService.translate('action.continue'))) {
         this.addMemberOpen.set(false);
       }
     } else {

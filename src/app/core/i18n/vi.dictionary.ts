@@ -187,4 +187,11 @@ export const viDictionary = {
   // GENERAL
   'btn.cancel': 'Hủy',
   'btn.save': 'Lưu',
+
+  // MODALS
+  'modal.warning': 'Cảnh báo',
+  'modal.unsavedExpense': 'Bạn đang nhập dở chi phí. Bạn có chắc muốn thoát?',
+  'modal.unsavedChanges': 'Bạn có thay đổi chưa lưu. Bạn có chắc muốn hủy bỏ?',
+  'modal.unsavedInfo': 'Bạn đang nhập dở thông tin. Bạn có chắc muốn hủy bỏ?',
+  'action.continue': 'Tiếp tục',
 };

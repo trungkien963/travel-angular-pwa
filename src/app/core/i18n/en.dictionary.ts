@@ -187,4 +187,11 @@ export const enDictionary = {
   // GENERAL
   'btn.cancel': 'Cancel',
   'btn.save': 'Save',
+
+  // MODALS
+  'modal.warning': 'Warning',
+  'modal.unsavedExpense': 'You are entering an expense. Are you sure you want to exit?',
+  'modal.unsavedChanges': 'You have unsaved changes. Are you sure you want to discard them?',
+  'modal.unsavedInfo': 'You are entering information. Are you sure you want to exit?',
+  'action.continue': 'Continue',
 };
