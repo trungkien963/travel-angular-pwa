@@ -54,7 +54,7 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
   readonly defaultCover = 'https://images.unsplash.com/photo-1473496169904-6a58eb22bf2f?q=80&w=1000';
 
   readonly tabs = ['MOMENTS', 'SOCIAL', 'EXPENSES', 'BALANCES', 'MEMBERS', 'ACTIVITY'];
-  activeTab = 'EXPENSES';
+  activeTab = 'SOCIAL';
   quickPostMode = false;
 
   // ─── Edit Trip State ────────────────────────────────────────────────────────
