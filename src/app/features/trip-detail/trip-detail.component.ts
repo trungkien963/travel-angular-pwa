@@ -52,8 +52,8 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
 
   readonly defaultCover = 'https://images.unsplash.com/photo-1473496169904-6a58eb22bf2f?q=80&w=1000';
 
-  readonly tabs = ['MOMENTS', 'SOCIAL', 'EXPENSES', 'BALANCES', 'MEMBERS'];
-  activeTab = 'SOCIAL';
+  readonly tabs = ['MOMENTS', 'SOCIAL', 'EXPENSES', 'BALANCES', 'MEMBERS', 'ACTIVITY'];
+  activeTab = 'EXPENSES';
   quickPostMode = false;
 
   // ─── Edit Trip State ────────────────────────────────────────────────────────
@@ -279,7 +279,7 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
 
       const payload = {
          trip_id: this.tripId(),
-         description: 'Payment: ' + debt.fromName + ' -> ' + debt.toName,
+         description: debt.fromName + ' ➔ ' + debt.toName,
          amount: this.settleAmount,
          category: 'OTHER',
          payer_id: debt.fromId,
@@ -707,6 +707,12 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
       });
   });
 
+  readonly tripActivities = computed(() => {
+    return this.travelStore.activityLogs()
+      .filter(a => a.tripId === this.tripId())
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  });
+
   readonly activeExpenseFilter = signal<'ALL' | 'MINE'>('ALL');
 
   readonly displayExpenses = computed(() => {
@@ -739,7 +745,27 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
         ? (ex.payerId === uid || mySplitAmount > 0 || ex.splits?.[uid] !== undefined)
         : (hasSplit && mySplitAmount > 0);
       
-      return { ...ex, mySplitAmount, isInvolved };
+      let netImpact = 0;
+      if (ex.category === 'SETTLEMENT') {
+        if (ex.payerId === uid) {
+          netImpact = -ex.amount; // You sent money
+        } else if (ex.splits && ex.splits[uid] !== undefined) {
+          netImpact = ex.amount; // You received money
+        } else {
+          netImpact = 0;
+        }
+      } else {
+        const paid = ex.payerId === uid ? ex.amount : 0;
+        netImpact = paid - mySplitAmount;
+      }
+
+      // Cleanup "Payment: " prefix string if exists
+      let cleanDesc = ex.desc || this.getCategoryLabel(ex.category || 'OTHER');
+      if (ex.category === 'SETTLEMENT' && cleanDesc.startsWith('Payment: ')) {
+        cleanDesc = cleanDesc.substring(9).replace(' -> ', ' ➔ ');
+      }
+
+      return { ...ex, mySplitAmount, isInvolved, netImpact, cleanDesc };
     });
 
     if (filter === 'MINE') {
@@ -747,6 +773,22 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
     }
     
     return mapped;
+  });
+
+  readonly displayExpensesGrouped = computed(() => {
+     const list = this.displayExpenses();
+     const groups: { date: string; expenses: any[] }[] = [];
+     
+     list.forEach(exp => {
+        const d = exp.date || 'Unknown Date';
+        const lastGroup = groups[groups.length - 1];
+        if (lastGroup && lastGroup.date === d) {
+           lastGroup.expenses.push(exp);
+        } else {
+           groups.push({ date: d, expenses: [exp] });
+        }
+     });
+     return groups;
   });
 
   readonly tripPosts = computed<Post[]>(() =>
@@ -1526,6 +1568,16 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
           createdAt: data['created_at'], splits: data['splits'], receipts: data['receipt_urls'],
           isEdited: !!data['splits']?.['__isEdited']
         } as Expense);
+        
+        // Log action
+        this.travelStore.insertActivityLog(
+          this.tripId()!,
+          'UPDATED_EXPENSE',
+          'EXPENSE',
+          data['id'],
+          data['description'] || 'an expense',
+          { amount: data['amount'] }
+        );
       } else {
         const { data, error } = await db.from('expenses').insert(payload).select().single();
         if (error) throw error;
@@ -1536,6 +1588,16 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
           createdAt: data['created_at'], splits: data['splits'], receipts: data['receipt_urls'],
           isEdited: !!data['splits']?.['__isEdited']
         } as Expense);
+
+        // Log action
+        this.travelStore.insertActivityLog(
+          this.tripId()!,
+          'CREATED_EXPENSE',
+          'EXPENSE',
+          data['id'],
+          data['description'] || 'an expense',
+          { amount: data['amount'] }
+        );
       }
       this.expenseModalOpen.set(false);
       this.editingExpense = null;
@@ -1552,8 +1614,21 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
     const confirmed = await this.confirmService.confirm('Delete this expense?');
     if (!confirmed) return;
     const db = this.supabaseService.client;
+    // Find the expense before deleting to log it
+    const expenseToDelete = this.tripExpenses().find(e => e.id === expId);
+    
     const { error } = await db.from('expenses').delete().eq('id', expId);
     if (!error) {
+      if (expenseToDelete) {
+        this.travelStore.insertActivityLog(
+          this.tripId()!,
+          'DELETED_EXPENSE',
+          'EXPENSE',
+          expId,
+          expenseToDelete.desc || 'an expense',
+          { amount: expenseToDelete.amount }
+        );
+      }
       this.travelStore.removeExpense(expId);
       this.selectedExpense = null;
     }
@@ -1659,6 +1734,15 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
       // 5. Update local store
       this.travelStore.updateTrip(trip.id, { members: updatedMembers });
 
+      // Log action
+      this.travelStore.insertActivityLog(
+        trip.id,
+        'INVITED_MEMBER',
+        'MEMBER',
+        finalId,
+        newMember.name
+      );
+
       // 6. Success
       this.inviteSuccess.set(true);
       this.inviteStatus.set(`✅ ${name} has been added to the trip!`);
@@ -1762,6 +1846,15 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
       if (error) throw error;
 
       this.travelStore.updateTrip(trip.id, { members: newMembers });
+      
+      this.travelStore.insertActivityLog(
+        trip.id,
+        'UPDATED_MEMBER',
+        'MEMBER',
+        newUserId,
+        name
+      );
+
       this.editMemberOpen.set(false);
       this.editingMember = null;
     } catch (err: any) {
@@ -1789,8 +1882,19 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
     }
 
     const updated = dbMembers.filter((m: any) => m.id !== memberId);
+    const removedMember = dbMembers.find((m: any) => m.id === memberId);
     await db.from('trips').update({ members: updated }).eq('id', trip.id);
     this.travelStore.updateTrip(trip.id, { members: updated });
+
+    if (removedMember) {
+      this.travelStore.insertActivityLog(
+        trip.id,
+        'REMOVED_MEMBER',
+        'MEMBER',
+        memberId,
+        removedMember.name
+      );
+    }
   }
 
   // ─── Delete Trip ───────────────────────────────────────────────────────────
@@ -1968,20 +2072,39 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
   }
 
   formatDateShort(dateStr: string): string {
-    if (!dateStr) return '';
-    return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    if (!dateStr || dateStr === 'Unknown Date') return '';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return '';
+      return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    } catch {
+      return '';
+    }
   }
 
   formatRelative(ts: string): string {
-    const diff = Date.now() - new Date(ts).getTime();
-    if (diff < 60000) return 'just now';
-    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
-    return `${Math.floor(diff / 86400000)}d ago`;
+    if (!ts) return '';
+    try {
+      const diff = Date.now() - new Date(ts).getTime();
+      if (isNaN(diff)) return '';
+      if (diff < 60000) return 'just now';
+      if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+      if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+      return `${Math.floor(diff / 86400000)}d ago`;
+    } catch {
+      return '';
+    }
   }
 
-  formatCurrency(val: number): string { return `₫${val.toLocaleString('en-US')}`; }
-  formatNumber(val: number): string   { return val.toLocaleString('en-US'); }
+  formatCurrency(val: number): string { 
+    if (val === null || val === undefined) return '0₫';
+    return `${(val || 0).toLocaleString('en-US')}₫`; 
+  }
+  
+  formatNumber(val: number): string   { 
+    if (val === null || val === undefined) return '0';
+    return (val || 0).toLocaleString('en-US'); 
+  }
 
   getAvatarBg(name: string): string {
     if (!name) return '#F3F4F6';

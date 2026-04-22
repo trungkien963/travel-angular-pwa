@@ -66,6 +66,7 @@ export const viDictionary = {
   'detail.addMember': 'Thêm thành viên',
   'detail.export': 'Xuất Excel (CSV)',
   'detail.spent': 'BẠN ĐÃ CHI',
+  'detail.yourShare': 'PHẦN CỦA BẠN',
   'detail.total': 'TỔNG CHUYẾN ĐI',
   'detail.youOwe': 'Bạn nợ',
   'detail.owes': 'nợ',
@@ -175,6 +176,7 @@ export const viDictionary = {
   'expense.all': 'Tất cả',
   'expense.mine': 'Của tôi',
   'expense.totalPrefix': 'Tổng:',
+  'expense.settlement': 'Thanh toán nợ',
 
   // SHELL (Bottom Nav)
   'nav.home': 'Trang chủ',

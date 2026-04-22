@@ -249,7 +249,7 @@
           <!-- Summary Cards -->
           <div class="summary-row">
             <div class="summary-black" (click)="setTab('BALANCES')" style="cursor: pointer;">
-              <span class="summary-label">{{ 'detail.spent' | translate }}</span>
+              <span class="summary-label">{{ 'detail.yourShare' | translate }}</span>
               <span class="summary-value-white">{{ formatCurrency(yourShare()) }}</span>
             </div>
             <div class="summary-white">
@@ -282,37 +282,55 @@
           }
 
           <div class="expense-list">
-            @for (exp of displayExpenses(); track exp.id) {
-              <div class="expense-item" (click)="isMember() ? openExpenseDetail(exp) : null" [id]="'expense-' + exp.id">
-                <div class="expense-left">
-                  <div class="expense-icon" [style.background]="getCategoryBg(exp.category || 'OTHER')">
-                    <span>{{ getCategoryEmoji(exp.category || 'OTHER') }}</span>
-                  </div>
-                  <div class="expense-info">
-                    <p class="expense-desc">{{ exp.desc || getCategoryLabel(exp.category || 'OTHER') }}</p>
-                    <p class="expense-meta">
-                      {{ formatDateShort(exp.date) || 'No Date' }}
-                      @if (isMember()) {
-                        • {{ 'expense.paidBy' | translate | lowercase }} {{ getPayerName(exp.payerId) }}
-                      }
-                    </p>
-                  </div>
-                </div>
-                
-                <div class="expense-share-info" style="display: flex; flex-direction: column; align-items: flex-end; text-align: right; margin-left: 12px; flex-shrink: 0;">
-                  @if (exp.category === 'SETTLEMENT') {
-                    <span class="share-amount" style="color: #10B981; font-weight: 900; font-size: 16px; letter-spacing: -0.5px;">₫{{ formatNumber(exp.amount) }}</span>
-                  } @else if (exp.isInvolved) {
-                    <span class="share-amount" style="color: #1C1917; font-weight: 900; font-size: 17px; letter-spacing: -0.5px;">₫{{ formatNumber(exp.mySplitAmount) }}</span>
-                    @if (exp.mySplitAmount !== exp.amount) {
-                      <span class="expense-amount" style="font-size: 12px; color: #9CA3AF; font-weight: 600; margin-top: 4px;">{{ 'expense.totalPrefix' | translate }} ₫{{ formatNumber(exp.amount) }}</span>
-                    }
-                  } @else {
-                    <span class="share-amount" style="color: #9CA3AF; font-weight: 800; font-size: 17px;">-</span>
-                    <span class="expense-amount" style="font-size: 12px; color: #9CA3AF; font-weight: 600; margin-top: 4px;">{{ 'expense.totalPrefix' | translate }} ₫{{ formatNumber(exp.amount) }}</span>
-                  }
-                </div>
+            @for (group of displayExpensesGrouped(); track group.date) {
+              <div class="date-header" style="text-align: center; font-size: 13px; color: #6B7280; font-weight: 600; margin: 8px 0 8px; text-transform: uppercase; letter-spacing: 0.5px;">
+                {{ formatDateShort(group.date) !== '' ? formatDateShort(group.date) : ('No Date' | translate) }}
               </div>
+              @for (exp of group.expenses; track exp.id) {
+                <div class="expense-item" (click)="isMember() ? openExpenseDetail(exp) : null" [id]="'expense-' + exp.id">
+                  <div class="expense-left">
+                    <div class="expense-icon" [style.background]="getCategoryBg(exp.category || 'OTHER')">
+                      <span>{{ getCategoryEmoji(exp.category || 'OTHER') }}</span>
+                    </div>
+                    <div class="expense-info">
+                      <p class="expense-desc">{{ exp.cleanDesc }}</p>
+                      <p class="expense-meta">
+                        @if (exp.category === 'SETTLEMENT') {
+                          {{ 'expense.settlement' | translate }}
+                        } @else if (isMember()) {
+                          {{ 'expense.paidBy' | translate }} {{ getPayerName(exp.payerId) }}
+                        }
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div class="expense-share-info" style="display: flex; flex-direction: column; align-items: flex-end; text-align: right; margin-left: 12px; flex-shrink: 0;">
+                    @if (exp.category === 'SETTLEMENT') {
+                      @if (exp.netImpact > 0) {
+                        <span class="share-amount" style="color: #10B981; font-weight: 800; font-size: 16px; letter-spacing: -0.5px;">+{{ formatNumber(exp.netImpact) }}₫</span>
+                      } @else if (exp.netImpact < 0) {
+                        <span class="share-amount" style="color: #DC2626; font-weight: 800; font-size: 16px; letter-spacing: -0.5px;">-{{ formatNumber(0 - exp.netImpact) }}₫</span>
+                      } @else {
+                        <span class="share-amount" style="color: #1C1917; font-weight: 800; font-size: 16px; letter-spacing: -0.5px;">{{ formatNumber(exp.amount) }}₫</span>
+                      }
+                    } @else if (exp.isInvolved) {
+                      @if (exp.netImpact > 0) {
+                        <span class="share-amount" style="color: #10B981; font-weight: 900; font-size: 17px; letter-spacing: -0.5px;">+{{ formatNumber(exp.netImpact) }}₫</span>
+                      } @else if (exp.netImpact < 0) {
+                        <span class="share-amount" style="color: #DC2626; font-weight: 900; font-size: 17px; letter-spacing: -0.5px;">-{{ formatNumber(0 - exp.netImpact) }}₫</span>
+                      } @else {
+                        <span class="share-amount" style="color: #1C1917; font-weight: 900; font-size: 17px; letter-spacing: -0.5px;">{{ formatNumber(exp.mySplitAmount) }}₫</span>
+                      }
+                      @if (exp.mySplitAmount !== exp.amount) {
+                        <span class="expense-amount" style="font-size: 12px; color: #9CA3AF; font-weight: 600; margin-top: 4px;">{{ 'expense.totalPrefix' | translate }} {{ formatNumber(exp.amount) }}₫</span>
+                      }
+                    } @else {
+                      <span class="share-amount" style="color: #9CA3AF; font-weight: 800; font-size: 17px;">-</span>
+                      <span class="expense-amount" style="font-size: 12px; color: #9CA3AF; font-weight: 600; margin-top: 4px;">{{ 'expense.totalPrefix' | translate }} {{ formatNumber(exp.amount) }}₫</span>
+                    }
+                  </div>
+                </div>
+              }
             }
           </div>
         </div>
@@ -338,7 +356,7 @@
                     <div class="legend-dot" [style.background]="seg.color"></div>
                     <div>
                       <p class="legend-cat">{{ seg.category }}</p>
-                      <p class="legend-amt">₫{{ formatNumber(seg.amount) }}</p>
+                      <p class="legend-amt">{{ formatNumber(seg.amount) }}₫</p>
                     </div>
                   </div>
                 }
@@ -361,12 +379,12 @@
               @if (totalOwedToYou() > 0) {
                 <div class="summary-card" style="background: #FEF9C3; border-radius: 12px; padding: 16px; border: 1px solid #FEF08A; text-align: center;">
                   <span style="display: block; font-size: 11px; font-weight: 700; color: #CA8A04; text-transform: uppercase; margin-bottom: 4px;">{{ 'detail.owedToYouTotal' | translate }}</span>
-                  <span style="display: block; font-size: 24px; font-weight: 800; color: #854D0E;">₫{{ formatNumber(totalOwedToYou()) }}</span>
+                  <span style="display: block; font-size: 24px; font-weight: 800; color: #854D0E;">{{ formatNumber(totalOwedToYou()) }}₫</span>
                 </div>
               } @else if (totalYouOwe() > 0) {
                 <div class="summary-card" style="background: #FEF2F2; border-radius: 12px; padding: 16px; border: 1px solid #FEE2E2; text-align: center;">
                   <span style="display: block; font-size: 11px; font-weight: 700; color: #DC2626; text-transform: uppercase; margin-bottom: 4px;">{{ 'detail.youOweTotal' | translate }}</span>
-                  <span style="display: block; font-size: 24px; font-weight: 800; color: #991B1B;">₫{{ formatNumber(totalYouOwe()) }}</span>
+                  <span style="display: block; font-size: 24px; font-weight: 800; color: #991B1B;">{{ formatNumber(totalYouOwe()) }}₫</span>
                 </div>
               } @else {
                 <div class="summary-card" style="background: #ECFDF5; border-radius: 12px; padding: 16px; border: 1px solid #A7F3D0; text-align: center;">
@@ -403,7 +421,7 @@
                   <span class="expense-amount"
                     [class.amount-red]="debt.fromId === currentUserId()"
                     [class.amount-yellow]="debt.toId === currentUserId()">
-                    ₫{{ formatNumber(debt.amount) }}
+                    {{ formatNumber(debt.amount) }}₫
                   </span>
                   @if (isMember() && (debt.fromId === currentUserId() || debt.toId === currentUserId() || isOwner())) {
                     <span style="font-size: 11px; font-weight: 700; color: #3B82F6; background: #EFF6FF; padding: 4px 8px; border-radius: 6px; text-transform: uppercase;">
@@ -474,6 +492,48 @@
                     </button>
                   </div>
                 }
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- ═══ ACTIVITY ═══ -->
+        <div class="tab-pane">
+          <div class="section-header">
+            <h2 class="section-title">Lịch sử hoạt động</h2>
+          </div>
+          <div class="activity-list" style="padding: 0 16px;">
+            @if (tripActivities().length === 0) {
+              <div class="empty-card" style="text-align: center; background: #F9FAFB; color: #9CA3AF; padding: 24px; font-size: 14px; border-radius: 12px;">Chưa có hoạt động nào</div>
+            }
+            @for (log of tripActivities(); track log.id) {
+              <div class="activity-item" style="display: flex; gap: 12px; margin-bottom: 20px;">
+                <div class="expense-icon member-avatar" style="width: 36px; height: 36px; flex-shrink: 0;" [style.background]="!log.userAvatar ? getAvatarBg(log.userName || '?') : ''">
+                  @if (log.userAvatar) {
+                    <img [src]="log.userAvatar" [alt]="log.userName" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" />
+                  } @else {
+                    <span [style.color]="getAvatarColor(log.userName || '?')" style="font-size: 14px;">{{ (log.userName || '?').charAt(0).toUpperCase() }}</span>
+                  }
+                </div>
+                <div>
+                  <p style="font-size: 14px; color: #1C1917; line-height: 1.4; margin: 0;">
+                    <strong>{{ log.userName }}</strong>
+                    @if (log.action === 'CREATED_EXPENSE') {
+                      <span style="color: #4B5563;"> đã thêm khoản chi </span>
+                    } @else if (log.action === 'UPDATED_EXPENSE') {
+                      <span style="color: #4B5563;"> đã sửa khoản chi </span>
+                    } @else if (log.action === 'DELETED_EXPENSE') {
+                      <span style="color: #4B5563;"> đã xoá khoản chi  </span>
+                    } @else {
+                      <span style="color: #4B5563;"> {{ log.action }} </span>
+                    }
+                    <strong>{{ log.targetName }}</strong>
+                    @if (log.details?.['amount']) {
+                      <br><span style="color: #6B7280; font-size: 13px;">({{ formatNumber(log.details!['amount']) }}₫)</span>
+                    }
+                  </p>
+                  <p style="font-size: 12px; color: #9CA3AF; margin: 4px 0 0 0;">{{ formatRelative(log.createdAt) }}</p>
+                </div>
               </div>
             }
           </div>
@@ -715,7 +775,7 @@
             <div class="receipt-icon-wrapper" [style.background]="getCategoryBg(selectedExpense.category || 'OTHER')">
               <span class="receipt-emoji">{{ getCategoryEmoji(selectedExpense.category || 'OTHER') }}</span>
             </div>
-            <div class="receipt-amount-display">₫{{ formatNumber(selectedExpense.amount) }}</div>
+            <div class="receipt-amount-display">{{ formatNumber(selectedExpense.amount) }}₫</div>
             <h2 class="receipt-title">{{ selectedExpense.desc || getCategoryLabel(selectedExpense.category || 'OTHER') }}</h2>
             <div class="receipt-date">
               <span class="receipt-category-pill" [style.background]="getCategoryBg(selectedExpense.category || 'OTHER')">{{ getCategoryLabel(selectedExpense.category || 'OTHER') }}</span>
@@ -741,7 +801,7 @@
                 @if ((selectedExpense.splits && selectedExpense.splits[member.id] > 0) || (!selectedExpense.splits && selectedExpense.amount > 0)) {
                   <div class="receipt-split-item">
                     <span class="split-person">{{ member.name }}</span>
-                    <span class="split-share">₫{{ formatNumber(selectedExpense.splits ? selectedExpense.splits[member.id] : getFallbackSplit(selectedExpense)) }}</span>
+                    <span class="split-share">{{ formatNumber(selectedExpense.splits ? selectedExpense.splits[member.id] : getFallbackSplit(selectedExpense)) }}₫</span>
                   </div>
                 }
               }
@@ -762,7 +822,7 @@
             </div>
           }
 
-          @if (isOwner() || selectedExpense.payerId === currentUserId()) {
+          @if (isMember()) {
             <div class="receipt-divider"></div>
             <div class="receipt-footer-actions">
               @if (selectedExpense.category !== 'SETTLEMENT') {

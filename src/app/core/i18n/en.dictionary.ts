@@ -66,6 +66,7 @@ export const enDictionary = {
   'detail.addMember': 'Add Member',
   'detail.export': 'Export CSV',
   'detail.spent': 'YOU HAVE SPENT',
+  'detail.yourShare': 'YOUR SHARE',
   'detail.total': 'TOTAL TRIP',
   'detail.youOwe': 'You owe',
   'detail.owes': 'owes',
@@ -175,6 +176,7 @@ export const enDictionary = {
   'expense.all': 'All',
   'expense.mine': 'Mine',
   'expense.totalPrefix': 'Total:',
+  'expense.settlement': 'Settlement',
 
   // SHELL (Bottom Nav)
   'nav.home': 'Home',

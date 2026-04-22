@@ -1,5 +1,5 @@
 import { Injectable, signal, computed, inject, effect } from '@angular/core';
-import { Trip } from '../models/trip.model';
+import { Trip, ActivityLog } from '../models/trip.model';
 import { Expense } from '../models/expense.model';
 import { Post } from '../models/social.model';
 import { AppNotification } from '../models/notification.model';
@@ -32,6 +32,7 @@ export class TravelStore {
   readonly expenses = signal<Expense[]>([]);
   readonly posts = signal<Post[]>([]);
   readonly notifications = signal<AppNotification[]>([]);
+  readonly activityLogs = signal<ActivityLog[]>([]);
   readonly isSyncing = signal(false);
   readonly isGlobalLoading = signal(false);
 
@@ -178,6 +179,46 @@ export class TravelStore {
       }
     } catch (err) {
       console.error('Failed to mark all notifications as read', err);
+    }
+  }
+
+  // ─── Actions: Activity Logs ───────────────────────────────────────────────
+  async insertActivityLog(tripId: string, action: string, targetType: string, targetId?: string, targetName?: string, details?: any) {
+    const userId = this.currentUserId();
+    const profile = this.currentUserProfile();
+    const memberName = profile?.name || 'Unknown';
+    if (!userId || !tripId) return;
+
+    try {
+      const payload: any = {
+        trip_id: tripId,
+        user_id: userId,
+        action,
+        target_type: targetType,
+        target_id: targetId || null,
+        target_name: targetName || null,
+        details: details || null
+      };
+
+      const { data, error } = await this.supabase.client.from('activity_logs').insert(payload).select().single();
+      if (!error && data) {
+        const newLog: ActivityLog = {
+          id: data.id,
+          tripId: data.trip_id,
+          userId: data.user_id,
+          userName: memberName,
+          userAvatar: profile?.avatar,
+          action: data.action,
+          targetType: data.target_type,
+          targetId: data.target_id,
+          targetName: data.target_name,
+          details: data.details,
+          createdAt: data.created_at
+        };
+        this.activityLogs.update(list => [newLog, ...list]);
+      }
+    } catch (err) {
+      console.warn('Failed to insert activity log', err);
     }
   }
 
@@ -398,6 +439,31 @@ export class TravelStore {
               isRead: n['is_read']
             })));
           }
+        }
+
+        // Fetch activity logs
+        const { data: activitiesData } = await db.from('activity_logs')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(100);
+        
+        if (activitiesData) {
+          this.activityLogs.set(activitiesData.map(a => {
+            const u = userMap.get(a.user_id);
+            return {
+              id: a.id,
+              tripId: a.trip_id,
+              userId: a.user_id,
+              userName: u?.full_name || 'Traveler',
+              userAvatar: u?.avatar_url,
+              action: a.action,
+              targetType: a.target_type,
+              targetId: a.target_id,
+              targetName: a.target_name,
+              details: a.details,
+              createdAt: a.created_at
+            };
+          }));
         }
 
         this.trips.set(formattedTrips);

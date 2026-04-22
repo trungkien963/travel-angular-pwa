@@ -14,3 +14,17 @@ export interface Trip {
   likes?: string[];
   comments?: any[];
 }
+
+export interface ActivityLog {
+  id: string;
+  tripId: string;
+  userId: string;
+  userName?: string;
+  userAvatar?: string;
+  action: string;
+  targetType: string;
+  targetId?: string;
+  targetName?: string;
+  details?: Record<string, any>;
+  createdAt: string;
+}
