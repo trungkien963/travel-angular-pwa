@@ -22,6 +22,15 @@ export class ProfileComponent implements OnInit {
   readonly displayName = signal('Nomad Explorer');
   readonly email = signal('');
   readonly avatarUrl = signal<string | null>(null);
+  avatarError = false;
+  editAvatarError = false;
+
+  // ─── Edit State ─────────────────────────────────────────────────────────────
+  readonly isEditing = signal(false);
+  readonly editName = signal('');
+  readonly editAvatar = signal('');
+  readonly selectedFile = signal<File | null>(null);
+  readonly isSaving = signal(false);
 
   // ─── Real stats from store ────────────────────────────────────────────────
   readonly totalTrips = computed(() => this.travelStore.myTrips().length);
@@ -59,8 +68,81 @@ export class ProfileComponent implements OnInit {
   }
 
   // ─── Actions ──────────────────────────────────────────────────────────────
-  onAvatarError() {
-    this.avatarUrl.set(null);
+  openEditModal() {
+    this.editName.set(this.displayName());
+    this.editAvatar.set(this.avatarUrl() || '');
+    this.selectedFile.set(null);
+    this.avatarError = false;
+    this.editAvatarError = false;
+    this.isEditing.set(true);
+  }
+
+  closeEditModal() {
+    this.isEditing.set(false);
+  }
+
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      this.selectedFile.set(file);
+      // Create local preview URL
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.editAvatar.set(e.target?.result as string);
+        this.editAvatarError = false;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  async saveProfile() {
+    if (this.isSaving()) return;
+    this.isSaving.set(true);
+    try {
+      const newName = this.editName().trim();
+      let newAvatar = this.editAvatar().trim();
+      const uid = this.travelStore.currentUserId();
+      if (!uid) return;
+
+      if (this.selectedFile()) {
+        const file = this.selectedFile()!;
+        const ext = file.name.split('.').pop() || 'jpg';
+        const path = `avatars/${uid}-${Date.now()}.${ext}`;
+        const { error: uploadErr } = await this.supabaseService.client.storage.from('nomadsync-media').upload(path, file, { upsert: true });
+        if (!uploadErr) {
+          const { data: urlData } = this.supabaseService.client.storage.from('nomadsync-media').getPublicUrl(path);
+          newAvatar = urlData.publicUrl;
+        } else {
+          console.error('Avatar upload failed', uploadErr);
+        }
+      }
+
+      // Update in auth metadata (so it persists across sessions without querying users table)
+      await this.supabaseService.client.auth.updateUser({
+        data: { full_name: newName, avatar_url: newAvatar || null }
+      });
+
+      // Update in public.users
+      await this.supabaseService.client.from('users').update({
+        full_name: newName,
+        avatar_url: newAvatar || null
+      }).eq('id', uid);
+
+      // Update local state
+      this.displayName.set(newName || 'Nomad Explorer');
+      this.avatarUrl.set(newAvatar || null);
+      this.avatarError = false;
+      
+      // Update store so it reflects across the app immediately
+      this.travelStore.refreshData();
+      
+      this.closeEditModal();
+    } catch (err) {
+      console.error('Failed to update profile', err);
+    } finally {
+      this.isSaving.set(false);
+    }
   }
 
   async signOut() {

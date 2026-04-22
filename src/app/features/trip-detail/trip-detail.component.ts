@@ -1723,6 +1723,7 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
       const newMember: Member = {
         id: finalId,
         name,
+        nickname: name,
         email: email || undefined,
         avatar: userAvatar,
         isMe: false
@@ -1810,7 +1811,7 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
       let newUserId = this.editingMember.id;
       let newAvatar = this.editingMember.avatar;
       
-      if (email) {
+      if (email && email !== this.editingMember.email) {
           const { data: userData } = await db.from('users').select('id, avatar_url').eq('email', email).maybeSingle();
           if (userData) {
              newUserId = userData['id'];
@@ -1855,7 +1856,7 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
          if (Array.isArray(raw)) dbMembers = raw;
       }
 
-      const updatedMember: Member = { ...this.editingMember, id: newUserId, name, email: email || undefined, avatar: newAvatar };
+      const updatedMember: Member = { ...this.editingMember, id: newUserId, name, nickname: name, email: email || undefined, avatar: newAvatar };
       const newMembers = dbMembers.map(m => m.id === this.editingMember!.id ? updatedMember : m);
 
       const { error } = await db.from('trips').update({ members: newMembers }).eq('id', trip.id);

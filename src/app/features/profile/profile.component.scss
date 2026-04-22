@@ -272,3 +272,145 @@ $border: #F0F0F0;
   font-weight: 500;
   padding-bottom: 24px;
 }
+
+// ─── Modal ──────────────────────────────────────────────────────────────────
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-content {
+  background: $bg-white;
+  width: 100%;
+  max-width: 400px;
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+
+  h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+    color: $text-dark;
+  }
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: $text-inactive;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  &:hover { color: $text-dark; }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  label {
+    font-size: 12px;
+    font-weight: 700;
+    color: $text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+.form-control {
+  background: #F9F9F9;
+  border: 1px solid #E5E5E5;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 15px;
+  font-family: inherit;
+  font-weight: 500;
+  color: $text-dark;
+  transition: all 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    background: #FFF;
+    border-color: $text-dark;
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+  }
+}
+
+.btn-cancel {
+  background: #F5F5F5;
+  color: $text-dark;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  &:hover { background: #E5E5E5; }
+}
+
+.avatar-upload-container {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  cursor: pointer;
+  margin: 0 auto;
+  transition: transform 0.2s ease;
+  
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+.avatar-preview {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid $bg-white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #F5F5F5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #A8A29E;
+  border: 2px dashed #D4D4D4;
+}
+
+.avatar-edit-badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 28px;
+  height: 28px;
+  background: $text-dark;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid $bg-white;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}

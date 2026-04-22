@@ -2,6 +2,7 @@ export interface Member {
   id: string;
   tripId?: string;
   name: string;
+  nickname?: string;
   isMe?: boolean;
   avatar?: string;
   email?: string;
