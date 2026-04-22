@@ -2074,6 +2074,48 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
     return this.trip()?.members.find(m => m.id === payerId)?.name || 'Someone';
   }
 
+  getExpenseSummaryContext(expense: Expense): { type: 'lent' | 'owe' | 'neutral', message: string } | null {
+    if (!expense || expense.category === 'SETTLEMENT') return null;
+
+    const uid = this.currentUserId();
+    const isPayer = expense.payerId === uid;
+    
+    let myShare = 0;
+    if (expense.splits && Object.keys(expense.splits).filter(k => !k.startsWith('__')).length > 0) {
+      if (expense.splits[uid] !== undefined) {
+         myShare = expense.splits[uid];
+      }
+    } else {
+       const tripObj = this.trip();
+       if (tripObj && tripObj.members) {
+         const membersCount = tripObj.members.length || 1;
+         const isMember = tripObj.members.some(m => m.id === uid);
+         if (isMember) {
+            myShare = Math.round(expense.amount / membersCount);
+         }
+       }
+    }
+
+    if (isPayer) {
+       if (myShare === 0) {
+          return { type: 'lent', message: `${this.translationService.translate('expense.summary.lentAll')} ${this.formatNumber(expense.amount)}đ` };
+       } else if (myShare > 0 && myShare < expense.amount) {
+          return { type: 'lent', message: `${this.translationService.translate('expense.summary.lentPart1')} ${this.formatNumber(expense.amount)}đ ${this.translationService.translate('expense.summary.lentPart2')} ${this.formatNumber(expense.amount - myShare)}đ` };
+       } else if (myShare >= expense.amount) {
+          return { type: 'neutral', message: this.translationService.translate('expense.summary.lentFull') };
+       }
+    } else {
+       if (myShare > 0) {
+          const payerName = this.getPayerName(expense.payerId);
+          return { type: 'owe', message: `${this.translationService.translate('expense.summary.owe')} ${payerName} ${this.formatNumber(myShare)}đ` };
+       } else {
+          return { type: 'neutral', message: this.translationService.translate('expense.summary.notInvolved') };
+       }
+    }
+    return null;
+  }
+
+
   getCategoryEmoji(cat: string): string { return CATEGORY_META[cat]?.emoji || '💸'; }
   getCategoryLabel(cat: string): string { return CATEGORY_META[cat]?.label || 'Other'; }
   getCategoryBg(cat: string): string    { return CATEGORY_META[cat]?.bg    || '#F3F4F6'; }

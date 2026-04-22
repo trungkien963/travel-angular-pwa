@@ -177,6 +177,12 @@ export const enDictionary = {
   'expense.mine': 'Mine',
   'expense.totalPrefix': 'Total:',
   'expense.settlement': 'Settlement',
+  'expense.summary.lentAll': 'You paid for everyone. You lent',
+  'expense.summary.lentPart1': 'You paid',
+  'expense.summary.lentPart2': 'and lent',
+  'expense.summary.lentFull': 'You paid for yourself.',
+  'expense.summary.owe': 'You owe',
+  'expense.summary.notInvolved': 'You are not involved in this expense.',
 
   // SHELL (Bottom Nav)
   'nav.home': 'Home',

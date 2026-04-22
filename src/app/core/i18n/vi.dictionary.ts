@@ -177,6 +177,12 @@ export const viDictionary = {
   'expense.mine': 'Của tôi',
   'expense.totalPrefix': 'Tổng:',
   'expense.settlement': 'Thanh toán nợ',
+  'expense.summary.lentAll': 'Bạn thanh toán toàn bộ. Bạn cho mượn',
+  'expense.summary.lentPart1': 'Bạn thanh toán',
+  'expense.summary.lentPart2': 'và cho mượn',
+  'expense.summary.lentFull': 'Bạn đã thanh toán cho chính mình.',
+  'expense.summary.owe': 'Bạn nợ',
+  'expense.summary.notInvolved': 'Bạn không tham gia vào khoản chi này.',
 
   // SHELL (Bottom Nav)
   'nav.home': 'Trang chủ',

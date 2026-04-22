@@ -788,6 +788,12 @@
           
           <div class="receipt-divider"></div>
           
+          @if (getExpenseSummaryContext(selectedExpense); as summary) {
+            <div class="receipt-summary-box" [class]="'summary-' + summary.type">
+              {{ summary.message }}
+            </div>
+          }
+          
           <div class="receipt-pay-info">
             <span class="receipt-label">{{ 'expense.paidBy' | translate | lowercase }}</span>
             <span class="receipt-value">{{ getPayerName(selectedExpense.payerId) }}</span>
