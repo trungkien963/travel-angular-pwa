@@ -129,7 +129,7 @@
                   <div class="ig-user">
                     <div class="ig-avatar" [style.background]="!post.authorAvatar ? getAvatarBg(post.authorName || '?') : ''">
                       @if (post.authorAvatar) {
-                        <img [src]="post.authorAvatar" alt="avatar" class="ig-avatar-img" />
+                        <img [src]="post.authorAvatar" alt="avatar" class="ig-avatar-img" referrerpolicy="no-referrer" />
                       } @else {
                         <span class="ig-avatar-initial" [style.color]="getAvatarColor(post.authorName || '?')">{{ (post.authorName || '?').charAt(0).toUpperCase() }}</span>
                       }
@@ -454,7 +454,7 @@
                 <div class="expense-left">
                   <div class="expense-icon member-avatar" [style.background]="!member.avatar ? getAvatarBg(member.name) : ''">
                     @if (member.avatar) {
-                      <img [src]="member.avatar" [alt]="member.name" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" />
+                      <img [src]="member.avatar" [alt]="member.name" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" referrerpolicy="no-referrer" />
                     } @else {
                       <span [style.color]="getAvatarColor(member.name)">{{ member.name.charAt(0).toUpperCase() }}</span>
                     }
@@ -510,7 +510,7 @@
               <div class="activity-item" style="display: flex; gap: 12px; margin-bottom: 20px;">
                 <div class="expense-icon member-avatar" style="width: 36px; height: 36px; flex-shrink: 0;" [style.background]="!log.userAvatar ? getAvatarBg(log.userName || '?') : ''">
                   @if (log.userAvatar) {
-                    <img [src]="log.userAvatar" [alt]="log.userName" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" />
+                    <img [src]="log.userAvatar" [alt]="log.userName" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" referrerpolicy="no-referrer" />
                   } @else {
                     <span [style.color]="getAvatarColor(log.userName || '?')" style="font-size: 14px;">{{ (log.userName || '?').charAt(0).toUpperCase() }}</span>
                   }
@@ -898,7 +898,7 @@
               <!-- Avatar -->
               <div class="comment-avatar" [style.background]="!c.authorAvatar ? getAvatarBg(c.authorName || '?') : ''">
                 @if (c.authorAvatar) {
-                  <img [src]="c.authorAvatar" [alt]="c.authorName" class="comment-avatar-img" />
+                  <img [src]="c.authorAvatar" [alt]="c.authorName" class="comment-avatar-img" referrerpolicy="no-referrer" />
                 } @else {
                   <span class="comment-avatar-initial" [style.color]="getAvatarColor(c.authorName || '?')">{{ (c.authorName || '?').charAt(0).toUpperCase() }}</span>
                 }
