@@ -1617,8 +1617,23 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
     // Find the expense before deleting to log it
     const expenseToDelete = this.tripExpenses().find(e => e.id === expId);
     
+    // 1. Collect Storage paths before deletion
+    const pathsToDelete = (expenseToDelete?.receipts || [])
+      .filter(url => url && url.includes('/nomadsync-media/'))
+      .map(url => url.split('/nomadsync-media/')[1]);
+
+    // 2. Clear receipt_urls first to bypass Postgres storage triggers (which block DELETE)
+    if (pathsToDelete.length > 0) {
+      await db.from('expenses').update({ receipt_urls: null }).eq('id', expId);
+    }
+
     const { error } = await db.from('expenses').delete().eq('id', expId);
     if (!error) {
+      // 3. Remove orphaned files from Storage bucket
+      if (pathsToDelete.length > 0) {
+        await db.storage.from('nomadsync-media').remove(pathsToDelete);
+      }
+
       if (expenseToDelete) {
         this.travelStore.insertActivityLog(
           this.tripId()!,
