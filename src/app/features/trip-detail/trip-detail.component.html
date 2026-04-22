@@ -717,7 +717,7 @@
     <div class="modal-overlay" (click)="closeSettleModal()">
       <div class="modal" (click)="$event.stopPropagation()" appSwipeToClose (swipeClose)="closeSettleModal()">
         <div class="modal-header">
-          <h3>Thanh toán nợ</h3>
+          <h3>{{ 'detail.settleDebt' | translate }}</h3>
           <button class="btn-close" (click)="closeSettleModal()">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
           </button>
@@ -726,8 +726,13 @@
         <div class="input-card" style="margin-top:20px; text-align: center;">
           <div style="display: flex; justify-content: center; align-items: center; gap: 16px; margin-bottom: 24px;">
             <div style="text-align: center;">
-               <div style="width: 56px; height: 56px; border-radius: 50%; background: #F3F4F6; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 20px; color: #1C1917;">
-                 {{ settleDebt()!.fromName.charAt(0).toUpperCase() }}
+               <div style="width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 20px; color: #1C1917; overflow: hidden;"
+                    [style.background]="!settleDebt()!.fromAvatar ? getAvatarBg(settleDebt()!.fromName) : ''">
+                 @if (settleDebt()!.fromAvatar) {
+                   <img [src]="settleDebt()!.fromAvatar" [alt]="settleDebt()!.fromName" style="width: 100%; height: 100%; object-fit: cover;" referrerpolicy="no-referrer" />
+                 } @else {
+                   <span [style.color]="getAvatarColor(settleDebt()!.fromName)">{{ settleDebt()!.fromName.charAt(0).toUpperCase() }}</span>
+                 }
                </div>
                <span style="font-size: 13px; font-weight: 600; color: #4B5563;">{{ settleDebt()!.fromId === currentUserId() ? 'You' : settleDebt()!.fromName }}</span>
             </div>
@@ -735,8 +740,13 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
             
             <div style="text-align: center;">
-               <div style="width: 56px; height: 56px; border-radius: 50%; background: #F3F4F6; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 20px; color: #1C1917;">
-                 {{ settleDebt()!.toName.charAt(0).toUpperCase() }}
+               <div style="width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 20px; color: #1C1917; overflow: hidden;"
+                    [style.background]="!settleDebt()!.toAvatar ? getAvatarBg(settleDebt()!.toName) : ''">
+                 @if (settleDebt()!.toAvatar) {
+                   <img [src]="settleDebt()!.toAvatar" [alt]="settleDebt()!.toName" style="width: 100%; height: 100%; object-fit: cover;" referrerpolicy="no-referrer" />
+                 } @else {
+                   <span [style.color]="getAvatarColor(settleDebt()!.toName)">{{ settleDebt()!.toName.charAt(0).toUpperCase() }}</span>
+                 }
                </div>
                <span style="font-size: 13px; font-weight: 600; color: #4B5563;">{{ settleDebt()!.toId === currentUserId() ? 'You' : settleDebt()!.toName }}</span>
             </div>
@@ -748,17 +758,44 @@
               <app-calculator-input [amount]="settleAmount" (amountChange)="onSettleAmountChange($event)" placeholder="0" class="amount-input" style="text-align: center; font-size: 32px !important;"></app-calculator-input>
             </div>
           </div>
+
+          @if (settleRelatedExpenses().length > 0) {
+            <div style="text-align: left; margin-bottom: 24px;">
+              <h4 style="font-size: 13px; font-weight: 700; color: #4B5563; margin-bottom: 12px; text-transform: uppercase;">{{ 'detail.relatedExpenses' | translate }}</h4>
+              <div style="display: flex; flex-direction: column; gap: 12px; max-height: 200px; overflow-y: auto; padding-right: 4px;">
+                @for (item of settleRelatedExpenses(); track item.expense.id) {
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: white; border: 1px solid #F3F4F6; border-radius: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px; overflow: hidden;">
+                      <div class="expense-icon" style="width: 32px; height: 32px; font-size: 16px; flex-shrink: 0;" [style.background]="getCategoryBg(item.expense.category || 'OTHER')">
+                        <span>{{ getCategoryEmoji(item.expense.category || 'OTHER') }}</span>
+                      </div>
+                      <div style="overflow: hidden; text-align: left;">
+                        <p style="font-size: 14px; font-weight: 600; color: #1C1917; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ item.cleanDesc }}</p>
+                        <p style="font-size: 12px; color: #6B7280; margin: 2px 0 0 0;">{{ formatDateShort(item.expense.date) }}</p>
+                      </div>
+                    </div>
+                    <div style="text-align: right; flex-shrink: 0;">
+                      <p style="font-size: 14px; font-weight: 700; color: #DC2626; margin: 0;">{{ formatNumber(item.unpaidAmount) }}₫</p>
+                      @if (item.isPartial) {
+                        <p style="font-size: 10px; color: #9CA3AF; margin: 2px 0 0 0;">{{ 'detail.remaining' | translate }}</p>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
         </div>
         
         <button class="btn-receipt-close" (click)="submitSettle()" [disabled]="isSavingSettle() || settleAmount <= 0" style="margin-top: 16px; width: 100%; border:none; padding:18px; border-radius:100px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); font-size:16px; font-weight:800; cursor:pointer;" [style.background]="(isSavingSettle() || settleAmount <= 0) ? '#F5F5F5' : '#FFC800'" [style.color]="(isSavingSettle() || settleAmount <= 0) ? '#A8A29E' : '#1C1917'">
           @if (isSavingSettle()) {
-            Vui lòng chờ...
+            {{ 'detail.pleaseWait' | translate }}
           } @else if (settleDebt()!.toId === currentUserId()) {
-            Xác nhận đã thu tiền
+            {{ 'detail.confirmReceived' | translate }}
           } @else if (settleDebt()!.fromId === currentUserId()) {
-            Báo đã chuyển khoản
+            {{ 'detail.reportTransferred' | translate }}
           } @else {
-            Đánh dấu đã thanh toán
+            {{ 'detail.markAsPaid' | translate }}
           }
         </button>
       </div>

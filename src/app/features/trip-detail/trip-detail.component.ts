@@ -14,8 +14,8 @@ import { CalculatorInputComponent } from '../../shared/components/calculator-inp
 import * as XLSX from 'xlsx';
 
 export interface Debt {
-  fromId: string; fromName: string;
-  toId: string; toName: string;
+  fromId: string; fromName: string; fromAvatar?: string;
+  toId: string; toName: string; toAvatar?: string;
   amount: number;
 }
 
@@ -244,6 +244,76 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
   // ─── Settlement state ──────────────────────────────────────────
   readonly settleModalOpen = signal(false);
   readonly settleDebt = signal<Debt | null>(null);
+  
+  readonly settleRelatedExpenses = computed(() => {
+    const debt = this.settleDebt();
+    if (!debt) return [];
+    
+    const A = debt.fromId; // Debtor
+    const B = debt.toId;   // Creditor
+    
+    // Sort chronologically (oldest first)
+    const expenses = [...this.tripExpenses()].reverse();
+    
+    const type1Expenses: { exp: Expense; originalOwe: number }[] = [];
+    let totalOffsets = 0;
+    
+    expenses.forEach(exp => {
+      const payerId = exp.payerId;
+      if (!payerId) return;
+      
+      let splits = exp.splits;
+      if (!splits || Object.keys(splits).filter(k => !k.startsWith('__')).length === 0) {
+         splits = {};
+         const members = this.trip()?.members || [];
+         const share = exp.amount / members.length;
+         members.forEach(m => splits![m.id] = share);
+      }
+      
+      const shareA = splits[A] as number || 0;
+      const shareB = splits[B] as number || 0;
+      
+      if (payerId === B && shareA > 0) {
+        type1Expenses.push({ exp, originalOwe: shareA });
+      } else if (payerId === A && shareB > 0) {
+        totalOffsets += shareB;
+      }
+    });
+    
+    const result: { expense: Expense; unpaidAmount: number; isPartial: boolean; cleanDesc: string }[] = [];
+    
+    type1Expenses.forEach(item => {
+      let remain = item.originalOwe;
+      
+      let cleanDesc = item.exp.desc || this.getCategoryLabel(item.exp.category || 'OTHER');
+      if (item.exp.category === 'SETTLEMENT' && cleanDesc.startsWith('Payment: ')) {
+        cleanDesc = cleanDesc.substring(9).replace(' -> ', ' ➔ ');
+      }
+
+      if (totalOffsets >= remain) {
+        totalOffsets -= remain;
+      } else if (totalOffsets > 0) {
+        remain -= totalOffsets;
+        totalOffsets = 0;
+        result.push({
+           expense: item.exp,
+           unpaidAmount: Math.round(remain),
+           isPartial: true,
+           cleanDesc
+        });
+      } else {
+        result.push({
+           expense: item.exp,
+           unpaidAmount: Math.round(remain),
+           isPartial: false,
+           cleanDesc
+        });
+      }
+    });
+    
+    return result.reverse(); // Newest first
+  });
+
   settleAmount = 0;
   readonly isSavingSettle = signal(false);
   
@@ -949,8 +1019,8 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
         const toMember = members.find(m => m.id === creditor.id);
         
         result.push({
-          fromId: debtor.id, fromName: fromMember?.name || debtor.id,
-          toId: creditor.id, toName: toMember?.name || creditor.id,
+          fromId: debtor.id, fromName: fromMember?.name || debtor.id, fromAvatar: fromMember?.avatar,
+          toId: creditor.id, toName: toMember?.name || creditor.id, toAvatar: toMember?.avatar,
           amount: Math.round(settled)
         });
       }
