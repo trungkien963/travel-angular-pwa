@@ -452,8 +452,23 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
   readonly editingMemberId = signal<string | null>(null);
 
   readonly pendingNewMembers = signal<any[]>([]);
+  readonly orderedMemberIds = signal<string[] | null>(null);
+  
   readonly currentTripMembersForSplit = computed(() => {
-    return [...(this.trip()?.members ?? []), ...this.pendingNewMembers()];
+    let members = [...(this.trip()?.members ?? []), ...this.pendingNewMembers()];
+    const order = this.orderedMemberIds();
+    
+    if (order) {
+      members.sort((a, b) => {
+        let idxA = order.indexOf(a.id);
+        let idxB = order.indexOf(b.id);
+        if (idxA === -1) idxA = 9999;
+        if (idxB === -1) idxB = 9999;
+        return idxA - idxB;
+      });
+    }
+    
+    return members;
   });
 
   get formattedTotalAmount(): string {
@@ -466,8 +481,40 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
   }
 
   onTotalAmountChange(val: any) {
-    this.expForm.amount = val || 0;
-    this.lockedShares.set({});
+    const oldTotal = this.expForm.amount || 0;
+    const newTotal = val || 0;
+    this.expForm.amount = newTotal;
+
+    let totalLocked = 0;
+    let floatCount = 0;
+    const activeIds: string[] = [];
+    
+    Object.keys(this.includedMembers()).forEach(id => {
+      if (this.includedMembers()[id]) {
+        activeIds.push(id);
+        const l = this.lockedShares()[id];
+        if (l != null) totalLocked += l;
+        else floatCount++;
+      }
+    });
+
+    if (floatCount === 0 && totalLocked > 0 && oldTotal > 0 && newTotal !== oldTotal) {
+      const ratio = newTotal / totalLocked;
+      this.lockedShares.update(locks => {
+        const newLocks = { ...locks };
+        let sum = 0;
+        activeIds.forEach((id, index) => {
+          if (index === activeIds.length - 1) {
+            newLocks[id] = newTotal - sum;
+          } else {
+            const scaled = Math.round(newLocks[id]! * ratio);
+            newLocks[id] = scaled;
+            sum += scaled;
+          }
+        });
+        return newLocks;
+      });
+    }
   }
 
   showPayerList = false;
@@ -602,12 +649,15 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
     if (this.activeMemberCount() <= 1) return false;
     const total = this.expForm.amount || 0;
     let totalLocked = 0;
+    let floatCount = 0;
     Object.keys(this.includedMembers()).forEach(id => {
       if (this.includedMembers()[id]) {
         const l = this.lockedShares()[id];
         if (l != null) totalLocked += l;
+        else floatCount++;
       }
     });
+    if (floatCount === 0 && totalLocked !== total) return true;
     return totalLocked > total;
   }
 
@@ -1333,8 +1383,8 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
     if (trip) trip.members.forEach(m => inc[m.id] = true);
     this.includedMembers.set(inc);
     this.lockedShares.set({});
-    this.lockedShares.set({});
     this.pendingReceipts.set([]);
+    this.orderedMemberIds.set(null);
     this.expenseModalOpen.set(true);
   }
 
@@ -1398,12 +1448,31 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
     const trip = this.trip();
     if (trip) {
       if (exp.splits && Object.keys(exp.splits).filter(k => !k.startsWith('__')).length > 0) {
+        const splitKeys = Object.keys(exp.splits).filter(k => !k.startsWith('__') && exp.splits![k] > 0);
+        
+        let isEqualSplit = false;
+        if (splitKeys.length > 0) {
+          const firstAmount = exp.splits[splitKeys[0]];
+          const allSame = splitKeys.every(k => Math.abs(exp.splits![k] - firstAmount) <= 1);
+          const totalSplit = splitKeys.reduce((sum, k) => sum + exp.splits![k], 0);
+          isEqualSplit = allSame && Math.abs(totalSplit - exp.amount) <= splitKeys.length;
+        }
+
+        const fixedIds = (exp.splits as any)['__fixed'] as string[] | undefined;
+
         trip.members.forEach(m => {
           const share = exp.splits![m.id];
           if (share !== undefined && share > 0) {
             inc[m.id] = true;
-            // Best effort state reconstruction: keep previous exact values as locked if edited
-            lock[m.id] = share;
+            if (fixedIds) {
+               if (fixedIds.includes(m.id)) {
+                 lock[m.id] = share;
+               }
+            } else {
+               if (!isEqualSplit) {
+                 lock[m.id] = share;
+               }
+            }
           } else {
             inc[m.id] = false;
           }
@@ -1412,9 +1481,21 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
         trip.members.forEach(m => inc[m.id] = true);
       }
     }
+    
+    if (trip && exp.splits) {
+      const splits = exp.splits;
+      const sorted = [...trip.members].sort((a, b) => {
+        const aInc = (splits[a.id] !== undefined && splits[a.id] > 0) ? 1 : 0;
+        const bInc = (splits[b.id] !== undefined && splits[b.id] > 0) ? 1 : 0;
+        return bInc - aInc;
+      }).map(m => m.id);
+      this.orderedMemberIds.set(sorted);
+    } else {
+      this.orderedMemberIds.set(null);
+    }
+
     this.includedMembers.set(inc);
     this.lockedShares.set(lock);
-    this.selectedExpense = null;
     this.selectedExpense = null;
     const urls = exp.receipts || [];
     this.pendingReceipts.set(urls.map(url => ({ url })));
@@ -1504,6 +1585,7 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
     const splits: Record<string, any> = {};
     let totalAssigned = 0;
     let lastMemberId: string | null = null;
+    let fixedIds: string[] = [];
     
     try {
       this.currentTripMembersForSplit().forEach(m => {
@@ -1512,6 +1594,10 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
           splits[m.id] = share;
           totalAssigned += share;
           lastMemberId = m.id;
+          
+          if (this.lockedShares()[m.id] != null) {
+            fixedIds.push(m.id);
+          }
         }
       });
 
@@ -1523,6 +1609,9 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
       splits['__date'] = this.expForm.date;
       if (this.editingExpense) {
          splits['__isEdited'] = true;
+      }
+      if (fixedIds.length > 0) {
+         splits['__fixed'] = fixedIds;
       }
 
       const payload: any = {
