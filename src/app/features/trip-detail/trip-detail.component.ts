@@ -315,21 +315,48 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
   });
 
   settleAmount = 0;
+  settleNote = '';
+  readonly settleReceipts = signal<{url: string, file?: File}[]>([]);
   readonly isSavingSettle = signal(false);
   
   openSettleModal(debt: Debt) {
     this.settleDebt.set(debt);
     this.settleAmount = debt.amount;
+    this.settleNote = '';
+    this.settleReceipts.set([]);
     this.settleModalOpen.set(true);
   }
   
   closeSettleModal() {
     this.settleModalOpen.set(false);
     this.settleDebt.set(null);
+    this.settleNote = '';
+    this.settleReceipts.set([]);
   }
   
   onSettleAmountChange(val: any) {
     this.settleAmount = val || 0;
+  }
+  
+  onSettleReceiptSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files) {
+      const newFiles = Array.from(input.files).map(file => ({
+        url: URL.createObjectURL(file),
+        file
+      }));
+      this.settleReceipts.update(prev => [...prev, ...newFiles]);
+    }
+    input.value = '';
+  }
+
+  removeSettleReceipt(index: number, event: Event) {
+    event.stopPropagation();
+    const arr = this.settleReceipts();
+    if (arr[index].url.startsWith('blob:')) URL.revokeObjectURL(arr[index].url);
+    const newArr = [...arr];
+    newArr.splice(index, 1);
+    this.settleReceipts.set(newArr);
   }
   
   async submitSettle() {
@@ -347,8 +374,28 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
         '__date': expDate,
         '__isSettlement': true
       };
+      
+      if (this.settleNote.trim()) {
+        splits['__note'] = this.settleNote.trim();
+      }
 
-      const payload = {
+      let finalReceiptUrls: string[] = [];
+      const currentReceipts = this.settleReceipts();
+      for (const rec of currentReceipts) {
+         if (rec.file) {
+            const uid = this.currentUserId();
+            const rPath = `receipts/${uid}/${Date.now()}_${rec.file.name.replace(/[^a-zA-Z0-9.\\-]/g,'_')}`;
+            const { data: rData, error: uploadErr } = await db.storage.from('nomadsync-media').upload(rPath, rec.file, { upsert: true });
+            if (rData) {
+               const { data: rUrlData } = db.storage.from('nomadsync-media').getPublicUrl(rPath);
+               finalReceiptUrls.push(rUrlData.publicUrl);
+            }
+         } else {
+            finalReceiptUrls.push(rec.url);
+         }
+      }
+
+      const payload: any = {
          trip_id: this.tripId(),
          description: debt.fromName + ' ➔ ' + debt.toName,
          amount: this.settleAmount,
@@ -358,6 +405,10 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
          created_at: new Date().toISOString()
       };
       
+      if (finalReceiptUrls.length > 0) {
+        payload.receipt_urls = finalReceiptUrls;
+      }
+      
       const { data, error } = await db.from('expenses').insert(payload).select().single();
       if (error) throw error;
       
@@ -366,7 +417,7 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
            id: data['id'], tripId: data['trip_id'], desc: data['description'],
            amount: data['amount'], category: (splits['__isSettlement'] ? 'SETTLEMENT' : data['category']) as ExpenseCategory,
            payerId: data['payer_id'], date: expDate, 
-           createdAt: data['created_at'], splits: data['splits']
+           createdAt: data['created_at'], splits: data['splits'], receipts: data['receipt_urls']
         });
       }
       

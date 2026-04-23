@@ -202,11 +202,23 @@ $border: #F0F0F0;
 .tab-pane {
   flex: 0 0 100%;
   width: 100%;
-  padding: 24px;
+  padding: 0 24px;
   scroll-snap-align: start;
   box-sizing: border-box;
-  /* Prevent horizontal browser actions (like going back) from snapping here if we drag vertical */
   touch-action: pan-y;
+  
+  /* Collapse inactive tabs to prevent container from taking max height */
+  height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  
+  &.active-pane {
+    padding: 24px;
+    height: auto;
+    overflow: visible;
+    opacity: 1;
+  }
 }
 
 .section-header {

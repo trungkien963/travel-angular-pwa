@@ -32,7 +32,7 @@ export class SwipeToCloseDirective implements OnInit, OnDestroy {
     const scrollableElement = this.getClosestScrollable(target);
     
     // If we are touching a scrollable element and it's not at the top, don't initiate drag
-    if (scrollableElement && scrollableElement.scrollTop > 0) {
+    if (scrollableElement && scrollableElement.scrollTop > 2) {
       return;
     }
 
@@ -48,8 +48,8 @@ export class SwipeToCloseDirective implements OnInit, OnDestroy {
     this.currentY = event.touches[0].clientY;
     const deltaY = this.currentY - this.startY;
 
-    // If pushing up, user wants to scroll the content down, abort drag!
-    if (deltaY < 0) {
+    // If pushing up significantly, user wants to scroll the content down, abort drag!
+    if (deltaY < -5) {
       this.isDragging = false;
       this.renderer.setStyle(this.el.nativeElement, 'transition', 'transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)');
       this.renderer.removeStyle(this.el.nativeElement, 'transform');

@@ -73,7 +73,7 @@
       <div class="tab-content" #tabCarousel (scroll)="onTabScroll($event)">
 
         <!-- ═══ MOMENTS ═══ -->
-        <div class="tab-pane">
+        <div class="tab-pane" [class.active-pane]="activeTab === 'MOMENTS'">
           <app-moments [tripId]="tripId()" (onTabSwitch)="setTab($event)"></app-moments>
           
           @if (isOwner()) {
@@ -102,7 +102,7 @@
         </div>
 
         <!-- ═══ SOCIAL ═══ -->
-        <div class="tab-pane">
+        <div class="tab-pane" [class.active-pane]="activeTab === 'SOCIAL'">
           <div class="section-header">
             <h2 class="section-title">{{ 'detail.diary' | translate }}</h2>
             @if (isMember()) {
@@ -245,7 +245,7 @@
         </div>
 
         <!-- ═══ EXPENSES ═══ -->
-        <div class="tab-pane">
+        <div class="tab-pane" [class.active-pane]="activeTab === 'EXPENSES'">
           <!-- Summary Cards -->
           <div class="summary-row">
             <div class="summary-black" (click)="setTab('BALANCES')" style="cursor: pointer;">
@@ -321,9 +321,8 @@
                       } @else {
                         <span class="share-amount" style="color: #1C1917; font-weight: 900; font-size: 17px; letter-spacing: -0.5px;">{{ formatNumber(exp.mySplitAmount) }}₫</span>
                       }
-                      @if (exp.mySplitAmount !== exp.amount) {
-                        <span class="expense-amount" style="font-size: 12px; color: #9CA3AF; font-weight: 600; margin-top: 4px;">{{ 'expense.totalPrefix' | translate }} {{ formatNumber(exp.amount) }}₫</span>
-                      }
+                      <span class="expense-amount" style="font-size: 12px; color: #9CA3AF; font-weight: 600; margin-top: 4px;">{{ 'expense.totalPrefix' | translate }} {{ formatNumber(exp.amount) }}₫</span>
+
                     } @else {
                       <span class="share-amount" style="color: #9CA3AF; font-weight: 800; font-size: 17px;">-</span>
                       <span class="expense-amount" style="font-size: 12px; color: #9CA3AF; font-weight: 600; margin-top: 4px;">{{ 'expense.totalPrefix' | translate }} {{ formatNumber(exp.amount) }}₫</span>
@@ -336,7 +335,7 @@
         </div>
 
         <!-- ═══ BALANCES ═══ -->
-        <div class="tab-pane">
+        <div class="tab-pane" [class.active-pane]="activeTab === 'BALANCES'">
           @if (totalTripCost() > 0) {
             <div class="chart-card">
               <h3 class="chart-title">{{ 'detail.spendingBreakdown' | translate }}</h3>
@@ -435,7 +434,7 @@
         </div>
 
         <!-- ═══ MEMBERS ═══ -->
-        <div class="tab-pane">
+        <div class="tab-pane" [class.active-pane]="activeTab === 'MEMBERS'">
           <div class="section-header">
             <h2 class="section-title">{{ 'detail.members' | translate }}</h2>
             @if (isOwner()) {
@@ -498,7 +497,7 @@
         </div>
 
         <!-- ═══ ACTIVITY ═══ -->
-        <div class="tab-pane">
+        <div class="tab-pane" [class.active-pane]="activeTab === 'ACTIVITY'">
           <div class="section-header">
             <h2 class="section-title">Lịch sử hoạt động</h2>
           </div>
@@ -708,6 +707,10 @@
           }
         </button>
 
+        <button (click)="closeExpenseModal()" style="width: 100%; background: transparent; border: none; padding: 12px; margin-top: 8px; color: #9CA3AF; font-size: 15px; font-weight: 700; cursor: pointer;">
+          {{ 'action.close' | translate }}
+        </button>
+
       </div>
     </div>
   }
@@ -759,6 +762,41 @@
             </div>
           </div>
 
+          <div style="text-align: left; margin-bottom: 24px;">
+            <p class="field-label" style="margin-top: 0; margin-bottom: 8px;">Note (Optional)</p>
+            <input type="text" [(ngModel)]="settleNote" placeholder="e.g. Bank transfer..." class="caption-input" />
+          </div>
+
+          <div style="text-align: left; margin-bottom: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+               <p class="field-label" style="margin: 0;">Attachment (Optional)</p>
+               @if (settleReceipts().length > 0) {
+                 <span style="font-size: 12px; color: #666; font-weight: 500;">{{ settleReceipts().length }} selected</span>
+               }
+            </div>
+            <div class="receipt-picker" style="border-radius: 12px; background: #fafafa; border: 2px dashed #e5e5e5; display: flex; flex-direction:column; padding: 16px; gap: 16px;">
+               <!-- Image Previews -->
+               @if (settleReceipts().length > 0) {
+                 <div style="display:flex; gap:12px; overflow-x:auto; padding-bottom:4px; max-width: 100%; -webkit-overflow-scrolling: touch;">
+                    @for (rec of settleReceipts(); track rec.url; let i = $index) {
+                       <div style="position:relative; width: 64px; height: 64px; flex-shrink:0; border-radius:8px; overflow:hidden; border:1px solid #e5e5e5;">
+                          <img [src]="rec.url" style="width:100%; height:100%; object-fit:cover;" />
+                          <button (click)="removeSettleReceipt(i, $event)" style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.6); color:white; border:none; border-radius:50%; width:20px; height:20px; font-size:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:10;">✕</button>
+                       </div>
+                    }
+                 </div>
+               }
+               
+               <div style="display:flex; width: 100%; gap:12px;">
+                 <label style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 12px; background: white; border: 1px solid #e5e5e5; border-radius: 12px; gap:8px; cursor: pointer; position: relative;">
+                   <input type="file" accept="image/*" multiple style="position:absolute; width:1px; height:1px; opacity:0; overflow:hidden;" (change)="onSettleReceiptSelected($event)" />
+                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                   <span style="font-size:11px; font-weight:600; color:#666;">Upload Image</span>
+                 </label>
+               </div>
+            </div>
+          </div>
+
           @if (settleRelatedExpenses().length > 0) {
             <div style="text-align: left; margin-bottom: 24px;">
               <h4 style="font-size: 13px; font-weight: 700; color: #4B5563; margin-bottom: 12px; text-transform: uppercase;">{{ 'detail.relatedExpenses' | translate }}</h4>
@@ -798,6 +836,10 @@
             {{ 'detail.markAsPaid' | translate }}
           }
         </button>
+        
+        <button (click)="closeSettleModal()" style="width: 100%; background: transparent; border: none; padding: 12px; margin-top: 8px; color: #9CA3AF; font-size: 15px; font-weight: 700; cursor: pointer;">
+          {{ 'action.close' | translate }}
+        </button>
       </div>
     </div>
   }
@@ -835,6 +877,13 @@
             <span class="receipt-label">{{ 'expense.paidBy' | translate | lowercase }}</span>
             <span class="receipt-value">{{ getPayerName(selectedExpense.payerId) }}</span>
           </div>
+          
+          @if (selectedExpense.splits && selectedExpense.splits['__note']) {
+            <div class="receipt-pay-info" style="margin-top: 12px; border-top: 1px dashed #E5E5E5; padding-top: 12px;">
+              <span class="receipt-label" style="text-transform: lowercase;">note</span>
+              <span class="receipt-value" style="text-align: right; word-break: break-word; font-weight: 500;">{{ selectedExpense.splits['__note'] }}</span>
+            </div>
+          }
 
           <div class="receipt-split-section">
             <h4 class="receipt-split-title">{{ 'expense.splitDetails' | translate }}</h4>
