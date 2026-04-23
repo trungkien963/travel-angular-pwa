@@ -1,6 +1,8 @@
-import { Component, Input, Output, EventEmitter, signal, computed } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, computed, OnChanges, SimpleChanges } from '@angular/core';
 import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 import { Debt } from '../../trip-detail.component';
+import { getAvatarBg, getAvatarColor } from '../../../../core/utils/avatar.util';
+import { formatNumber } from '../../../../core/utils/format.util';
 
 @Component({
   selector: 'app-trip-balances',
@@ -9,7 +11,7 @@ import { Debt } from '../../trip-detail.component';
   templateUrl: './trip-balances.html',
   styleUrl: './trip-balances.css',
 })
-export class TripBalances {
+export class TripBalances implements OnChanges {
   @Input({ required: true }) totalTripCost: number = 0;
   @Input({ required: true }) chartData: any[] = [];
   @Input({ required: true }) debts: Debt[] = [];
@@ -23,8 +25,14 @@ export class TripBalances {
   @Output() onExportExcel = new EventEmitter<void>();
 
   readonly activeBalanceFilter = signal<'ALL' | 'MINE'>('ALL');
+  private _refresh = signal(0);
+
+  ngOnChanges(changes: SimpleChanges) {
+    this._refresh.update(v => v + 1);
+  }
 
   readonly displayDebts = computed(() => {
+    this._refresh();
     const allDebts = this.debts || [];
     const filter = this.activeBalanceFilter();
     const uid = this.currentUserId;
@@ -36,21 +44,8 @@ export class TripBalances {
   });
 
   // UI Helpers
-  formatNumber(val: number): string {
-    return new Intl.NumberFormat('vi-VN').format(Math.round(val));
-  }
+  formatNumber = formatNumber;
 
-  getAvatarBg(name: string): string {
-    const colors = ['#FEE2E2', '#FEF3C7', '#D1FAE5', '#DBEAFE', '#F3E8FF', '#FCE7F3'];
-    let hash = 0;
-    for (let i = 0; i < (name || '').length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-    return colors[Math.abs(hash) % colors.length];
-  }
-
-  getAvatarColor(name: string): string {
-    const colors = ['#DC2626', '#D97706', '#059669', '#2563EB', '#7C3AED', '#DB2777'];
-    let hash = 0;
-    for (let i = 0; i < (name || '').length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-    return colors[Math.abs(hash) % colors.length];
-  }
+  getAvatarBg = getAvatarBg;
+  getAvatarColor = getAvatarColor;
 }

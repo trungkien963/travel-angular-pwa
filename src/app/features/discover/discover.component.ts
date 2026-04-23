@@ -22,8 +22,9 @@ interface FeedItem {
 }
 
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
-
 import { LowerCasePipe } from '@angular/common';
+import { getAvatarBg, getAvatarColor } from '../../core/utils/avatar.util';
+import { formatRelative } from '../../core/utils/format.util';
 
 @Component({
   selector: 'app-discover',
@@ -375,27 +376,9 @@ export class DiscoverComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ─── Helpers ───
-  getAvatarBg(name: string): string {
-    const colors = ['#FCA5A5', '#FCD34D', '#86EFAC', '#93C5FD', '#C4B5FD', '#F9A8D4'];
-    const charCode = name.charCodeAt(0) || 0;
-    return colors[charCode % colors.length];
-  }
-
-  getAvatarColor(name: string): string {
-    const colors = ['#991B1B', '#B45309', '#166534', '#1E3A8A', '#5B21B6', '#9D174D'];
-    const charCode = name.charCodeAt(0) || 0;
-    return colors[charCode % colors.length];
-  }
-
-  formatRelative(dateStr: string): string {
-    const date = new Date(dateStr);
-    const diff = (Date.now() - date.getTime()) / 1000;
-    if (diff < 60) return 'Just now';
-    if (diff < 3600) return Math.floor(diff / 60) + 'm';
-    if (diff < 86400) return Math.floor(diff / 3600) + 'h';
-    return Math.floor(diff / 86400) + 'd';
-  }
+  getAvatarBg = getAvatarBg;
+  getAvatarColor = getAvatarColor;
+  formatRelative = formatRelative;
 
   // ─── Image Viewer Handlers ───
   openImageViewer(event: Event, images?: { url: string; location?: string }[], startIndex: number = 0) {

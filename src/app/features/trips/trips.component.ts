@@ -5,6 +5,7 @@ import { TravelStore } from '../../core/store/travel.store';
 import { ToastService } from '../../core/services/toast.service';
 import { Trip } from '../../core/models/trip.model';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { formatDate } from '../../core/utils/format.util';
 
 @Component({
   selector: 'app-trips',
@@ -282,12 +283,7 @@ export class TripsComponent implements OnInit {
     }
   }
 
-  // ─── Helpers ──────────────────────────────────────────────────────────────
-  formatDate(dateStr: string): string {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-  }
+  formatDate = formatDate;
 
   isUpcoming(startDate: string): boolean {
     return new Date(startDate) > new Date();

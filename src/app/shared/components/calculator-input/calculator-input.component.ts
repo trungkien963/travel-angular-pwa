@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, ElementRef, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { formatNumber } from '../../../core/utils/format.util';
 
 @Component({
   selector: 'app-calculator-input',
@@ -23,9 +24,7 @@ export class CalculatorInputComponent {
   private el = inject(ElementRef);
   
   // Format number to VNĐ format (e.g. 100,000)
-  formatNumber(val: number): string {
-    return val.toLocaleString('en-US');
-  }
+  formatNumber = formatNumber;
 
   // Handle clicking the input
   openKeyboard(event?: Event) {

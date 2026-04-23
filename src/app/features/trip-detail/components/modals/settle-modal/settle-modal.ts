@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, signal, computed, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../../../core/i18n/translate.pipe';
@@ -11,6 +11,8 @@ import { Expense } from '../../../../../core/models/expense.model';
 import { Trip } from '../../../../../core/models/trip.model';
 import { calculateSettleRelatedExpenses } from '../../../../../core/utils/settlement.util';
 import { Debt, CATEGORY_META } from '../../../trip-detail.component';
+import { getAvatarBg, getAvatarColor } from '../../../../../core/utils/avatar.util';
+import { formatNumber, formatDateShort } from '../../../../../core/utils/format.util';
 
 @Component({
   selector: 'app-settle-modal',
@@ -19,7 +21,7 @@ import { Debt, CATEGORY_META } from '../../../trip-detail.component';
   templateUrl: './settle-modal.html',
   styleUrl: './settle-modal.css'
 })
-export class SettleModalComponent implements OnInit {
+export class SettleModalComponent implements OnInit, OnChanges {
   @Input({ required: true }) debt!: Debt;
   @Input({ required: true }) trip!: Trip;
   @Input({ required: true }) tripExpenses!: Expense[];
@@ -34,12 +36,18 @@ export class SettleModalComponent implements OnInit {
   settleNote = '';
   readonly settleReceipts = signal<{url: string, file?: File}[]>([]);
   readonly isSavingSettle = signal(false);
+  private _refresh = signal(0);
+
+  ngOnChanges(changes: SimpleChanges) {
+    this._refresh.update(v => v + 1);
+  }
 
   ngOnInit() {
     this.settleAmount = this.debt.amount;
   }
 
   readonly settleRelatedExpenses = computed(() => {
+    this._refresh();
     return calculateSettleRelatedExpenses(
       this.debt,
       this.tripExpenses,
@@ -60,29 +68,11 @@ export class SettleModalComponent implements OnInit {
     return CATEGORY_META[cat as keyof typeof CATEGORY_META]?.emoji || '🏷️';
   }
 
-  getAvatarBg(name: string): string {
-    if (!name) return '#F3F4F6';
-    const colors = ['#FEE2E2', '#FFEDD5', '#FEF3C7', '#D1FAE5', '#DBEAFE', '#E0E7FF', '#EDE9FE', '#FCE7F3'];
-    return colors[name.charCodeAt(0) % colors.length];
-  }
+  getAvatarBg = getAvatarBg;
+  getAvatarColor = getAvatarColor;
 
-  getAvatarColor(name: string): string {
-    if (!name) return '#6B7280';
-    const colors = ['#DC2626', '#EA580C', '#D97706', '#059669', '#2563EB', '#4F46E5', '#7C3AED', '#DB2777'];
-    return colors[name.charCodeAt(0) % colors.length];
-  }
-
-  formatDateShort(dateStr: string): string {
-    if (!dateStr) return '';
-    try {
-      const d = new Date(dateStr);
-      return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
-    } catch(e) { return dateStr; }
-  }
-
-  formatNumber(val: number): string {
-    return val.toLocaleString('vi-VN');
-  }
+  formatDateShort = formatDateShort;
+  formatNumber = formatNumber;
 
   onSettleAmountChange(val: any) {
     this.settleAmount = val || 0;
@@ -166,7 +156,7 @@ export class SettleModalComponent implements OnInit {
       if (error) throw error;
       
       if (data) {
-        this.travelStore.addExpense({
+        this.travelStore.upsertExpense({
            id: data['id'], tripId: data['trip_id'], desc: data['description'],
            amount: data['amount'], category: (splits['__isSettlement'] ? 'SETTLEMENT' : data['category']) as unknown as any,
            payerId: data['payer_id'], date: expDate, 

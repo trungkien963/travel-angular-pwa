@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, inject, signal, computed, OnInit, NgZone } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, signal, computed, OnInit, NgZone, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../../../core/i18n/translate.pipe';
@@ -20,7 +20,7 @@ import { Trip } from '../../../../../core/models/trip.model';
   templateUrl: './expense-modal.html',
   styleUrl: './expense-modal.css',
 })
-export class ExpenseModalComponent implements OnInit {
+export class ExpenseModalComponent implements OnInit, OnChanges {
   @Input({ required: true }) trip!: Trip;
   @Input() editingExpense: Expense | null = null;
   @Input({ required: true }) currentUserId!: string;
@@ -39,7 +39,10 @@ export class ExpenseModalComponent implements OnInit {
   expForm = { desc: '', amount: 0, category: 'OTHER', payerId: '', date: '' };
   
   readonly includedMembers = signal<Record<string, boolean>>({});
-  readonly activeMemberCount = computed(() => Object.values(this.includedMembers()).filter(v => v).length);
+  readonly activeMemberCount = computed(() => {
+    this._refresh();
+    return Object.values(this.includedMembers()).filter(v => v).length;
+  });
   readonly lockedShares = signal<Record<string, number | null>>({});
   
   readonly pendingNewMembers = signal<any[]>([]);
@@ -57,6 +60,12 @@ export class ExpenseModalComponent implements OnInit {
   readonly lightboxImages = signal<string[]>([]);
   readonly lightboxIndex = signal<number | null>(null);
   readonly lightboxContext = signal<'PENDING' | 'SAVED' | null>(null);
+
+  private _refresh = signal(0);
+
+  ngOnChanges(changes: SimpleChanges) {
+    this._refresh.update(v => v + 1);
+  }
 
   ngOnInit() {
     if (this.editingExpense) {
@@ -241,6 +250,7 @@ export class ExpenseModalComponent implements OnInit {
 
   // Split Logic
   readonly currentTripMembersForSplit = computed(() => {
+    this._refresh();
     let members = [...(this.trip?.members ?? []), ...this.pendingNewMembers()];
     const order = this.orderedMemberIds();
     
@@ -517,8 +527,8 @@ export class ExpenseModalComponent implements OnInit {
         splits
       };
       
-      if (!this.editingExpense && this.expForm.date) {
-        try { payload.created_at = new Date(this.expForm.date).toISOString(); } catch(e) {}
+      if (!this.editingExpense) {
+        payload.created_at = new Date().toISOString();
       }
 
       let finalReceiptUrls: string[] = [];

@@ -9,6 +9,7 @@ import { Trip } from '../../core/models/trip.model';
 import { Expense } from '../../core/models/expense.model';
 import { Post } from '../../core/models/social.model';
 import { CalculatorInputComponent } from '../../shared/components/calculator-input/calculator-input.component';
+import { formatNumber, formatDate } from '../../core/utils/format.util';
 
 interface LocationResult {
   placeId: string;
@@ -1121,10 +1122,6 @@ export class AddMomentComponent implements OnInit, OnDestroy {
     history.length > 1 ? history.back() : this.router.navigate(['/discover']);
   }
 
-  formatDate(dateStr: string): string {
-    if (!dateStr) return '';
-    return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-  }
-
-  formatNumber(val: number): string { return val.toLocaleString('en-US'); }
+  formatDate = formatDate;
+  formatNumber = formatNumber;
 }

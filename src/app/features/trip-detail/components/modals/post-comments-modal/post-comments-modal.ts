@@ -8,7 +8,8 @@ import { ToastService } from '../../../../../core/services/toast.service';
 import { SwipeToCloseDirective } from '../../../../../shared/directives/swipe-to-close.directive';
 import { Post, Comment } from '../../../../../core/models/social.model';
 import { Member } from '../../../../../core/models/expense.model';
-import { formatRelativeTime } from '../../../../../core/utils/time.utils';
+import { getAvatarBg, getAvatarColor } from '../../../../../core/utils/avatar.util';
+import { formatRelative } from '../../../../../core/utils/format.util';
 
 @Component({
   selector: 'app-post-comments-modal',
@@ -34,22 +35,9 @@ export class PostCommentsModalComponent {
     this.onClose.emit();
   }
 
-  getAvatarBg(name: string): string {
-    if (!name) return '#F3F4F6';
-    const colors = ['#FEE2E2', '#FFEDD5', '#FEF3C7', '#D1FAE5', '#DBEAFE', '#E0E7FF', '#EDE9FE', '#FCE7F3'];
-    return colors[name.charCodeAt(0) % colors.length];
-  }
-
-  getAvatarColor(name: string): string {
-    if (!name) return '#6B7280';
-    const colors = ['#DC2626', '#EA580C', '#D97706', '#059669', '#2563EB', '#4F46E5', '#7C3AED', '#DB2777'];
-    return colors[name.charCodeAt(0) % colors.length];
-  }
-
-  formatRelative(dateStr: string): string {
-    if (!dateStr) return '';
-    return formatRelativeTime(dateStr);
-  }
+  getAvatarBg = getAvatarBg;
+  getAvatarColor = getAvatarColor;
+  formatRelative = formatRelative;
 
   async sendComment() {
     const text = this.commentText.trim();

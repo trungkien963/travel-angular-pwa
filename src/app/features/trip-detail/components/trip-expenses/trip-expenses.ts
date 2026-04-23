@@ -1,7 +1,8 @@
-import { Component, Input, Output, EventEmitter, signal, computed } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, computed, OnChanges, SimpleChanges } from '@angular/core';
 import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 import { Expense, Member } from '../../../../core/models/expense.model';
 import { CATEGORY_META } from '../../trip-detail.component';
+import { formatDateShort, formatCurrency, formatNumber } from '../../../../core/utils/format.util';
 
 @Component({
   selector: 'app-trip-expenses',
@@ -10,7 +11,7 @@ import { CATEGORY_META } from '../../trip-detail.component';
   templateUrl: './trip-expenses.html',
   styleUrl: './trip-expenses.css',
 })
-export class TripExpensesComponent {
+export class TripExpensesComponent implements OnChanges {
   @Input({ required: true }) tripExpenses: Expense[] = [];
   @Input({ required: true }) members: Member[] = [];
   @Input({ required: true }) currentUserId: string = '';
@@ -22,9 +23,15 @@ export class TripExpensesComponent {
   @Output() onOpenExpenseModal = new EventEmitter<void>();
   @Output() onOpenExpenseDetail = new EventEmitter<Expense>();
 
-  readonly activeExpenseFilter = signal<'ALL' | 'MINE'>('ALL');
+  readonly activeExpenseFilter = signal<'EXPENSES' | 'MINE' | 'SETTLEMENTS'>('EXPENSES');
+  private _refresh = signal(0);
+
+  ngOnChanges(changes: SimpleChanges) {
+    this._refresh.update(v => v + 1);
+  }
 
   readonly displayExpenses = computed(() => {
+    this._refresh();
     const expenses = this.tripExpenses || [];
     const uid = this.currentUserId;
     const filter = this.activeExpenseFilter();
@@ -49,7 +56,7 @@ export class TripExpensesComponent {
 
       const isInvolved = ex.category === 'SETTLEMENT' 
         ? (ex.payerId === uid || mySplitAmount > 0 || ex.splits?.[uid] !== undefined)
-        : (hasSplit && mySplitAmount > 0);
+        : (ex.payerId === uid || (hasSplit && mySplitAmount > 0));
       
       let netImpact = 0;
       if (ex.category === 'SETTLEMENT') {
@@ -74,17 +81,33 @@ export class TripExpensesComponent {
       return { ...ex, mySplitAmount, isInvolved, netImpact, cleanDesc };
     });
 
+    if (filter === 'EXPENSES') {
+       return mapped.filter(ex => ex.category !== 'SETTLEMENT');
+    }
+    if (filter === 'SETTLEMENTS') {
+       return mapped.filter(ex => ex.category === 'SETTLEMENT');
+    }
     if (filter === 'MINE') {
-       return mapped.filter(ex => ex.isInvolved);
+       return mapped.filter(ex => ex.isInvolved && ex.category !== 'SETTLEMENT');
     }
     
     return mapped;
   });
 
   readonly displayExpensesGrouped = computed(() => {
-     const list = this.displayExpenses();
+     const list = [...this.displayExpenses()].sort((a, b) => {
+        const dateA = a.date || '';
+        const dateB = b.date || '';
+        if (dateA !== dateB) {
+           return dateB.localeCompare(dateA); // Sort dates descending
+        }
+        // Same date, sort by updated time (createdAt) descending
+        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return timeB - timeA;
+     });
+
      const groups: { date: string; expenses: any[] }[] = [];
-     
      list.forEach(exp => {
         const d = exp.date || 'Unknown Date';
         const lastGroup = groups[groups.length - 1];
@@ -106,24 +129,7 @@ export class TripExpensesComponent {
     return this.members.find(m => m.id === payerId)?.name || 'Someone';
   }
 
-  formatDateShort(dateStr: string): string {
-    if (!dateStr || dateStr === 'Unknown Date') return '';
-    try {
-      const d = new Date(dateStr);
-      if (isNaN(d.getTime())) return '';
-      return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-    } catch {
-      return '';
-    }
-  }
-
-  formatCurrency(val: number): string { 
-    if (val === null || val === undefined) return '0₫';
-    return `${(val || 0).toLocaleString('en-US')}₫`; 
-  }
-  
-  formatNumber(val: number): string { 
-    if (val === null || val === undefined) return '0';
-    return (val || 0).toLocaleString('en-US'); 
-  }
+  formatDateShort = formatDateShort;
+  formatCurrency = formatCurrency;
+  formatNumber = formatNumber;
 }

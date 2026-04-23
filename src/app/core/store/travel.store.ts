@@ -114,7 +114,8 @@ export class TravelStore {
 
   // ─── Actions: Expenses ────────────────────────────────────────────────────
   addExpense(expense: Expense) {
-    this.expenses.update(list => [expense, ...list]);
+    const parsed = this._parseExpenseDetails(expense);
+    this.expenses.update(list => [parsed, ...list]);
   }
 
   updateExpense(id: string, data: Partial<Expense>) {
@@ -128,10 +129,27 @@ export class TravelStore {
   removeExpense(id: string) { this.deleteExpense(id); }
 
   upsertExpense(expense: Expense) {
+    const parsed = this._parseExpenseDetails(expense);
     this.expenses.update(list => {
-      const idx = list.findIndex(e => e.id === expense.id);
-      return idx >= 0 ? list.map(e => e.id === expense.id ? expense : e) : [expense, ...list];
+      const idx = list.findIndex(e => e.id === parsed.id);
+      return idx >= 0 ? list.map(e => e.id === parsed.id ? parsed : e) : [parsed, ...list];
     });
+  }
+
+  private _parseExpenseDetails(expense: Expense): Expense {
+    let splits = expense.splits;
+    if (typeof splits === 'string') {
+      try { splits = JSON.parse(splits); } catch (e) { splits = {}; }
+    }
+    if (!splits || typeof splits !== 'object') splits = {};
+
+    let receipts = expense.receipts;
+    if (typeof receipts === 'string') {
+      try { receipts = JSON.parse(receipts); } catch (e) { receipts = []; }
+    }
+    if (!Array.isArray(receipts)) receipts = [];
+
+    return { ...expense, splits, receipts };
   }
 
   // ─── Actions: Posts ───────────────────────────────────────────────────────

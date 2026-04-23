@@ -2,6 +2,8 @@ import { Component, Input, Output, EventEmitter, signal } from '@angular/core';
 import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 import { LowerCasePipe } from '@angular/common';
 import { Post } from '../../../../core/models/social.model';
+import { getAvatarBg, getAvatarColor } from '../../../../core/utils/avatar.util';
+import { formatRelative } from '../../../../core/utils/format.util';
 
 @Component({
   selector: 'app-trip-social',
@@ -46,29 +48,7 @@ export class TripSocialComponent {
     return this.activeImageIndex()[postId] || 0;
   }
 
-  getAvatarBg(name: string): string {
-    if (!name) return '#F3F4F6';
-    const colors = ['#FEE2E2', '#FFEDD5', '#FEF3C7', '#D1FAE5', '#DBEAFE', '#E0E7FF', '#EDE9FE', '#FCE7F3'];
-    return colors[name.charCodeAt(0) % colors.length];
-  }
-
-  getAvatarColor(name: string): string {
-    if (!name) return '#6B7280';
-    const colors = ['#DC2626', '#EA580C', '#D97706', '#059669', '#2563EB', '#4F46E5', '#7C3AED', '#DB2777'];
-    return colors[name.charCodeAt(0) % colors.length];
-  }
-
-  formatRelative(ts: string): string {
-    if (!ts) return '';
-    try {
-      const date = new Date(ts);
-      const diff = Date.now() - date.getTime();
-      if (diff < 60000) return 'Just now';
-      if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-      if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
-      return `${Math.floor(diff / 86400000)}d ago`;
-    } catch {
-      return '';
-    }
-  }
+  getAvatarBg = getAvatarBg;
+  getAvatarColor = getAvatarColor;
+  formatRelative = formatRelative;
 }
