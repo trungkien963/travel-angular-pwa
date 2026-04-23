@@ -192,6 +192,32 @@
           0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
           40% { transform: scale(1); opacity: 1; }
         }
+
+        /* Landscape Blocker Overlay */
+        @media screen and (max-width: 900px) and (orientation: landscape) {
+          body::after {
+            content: "🔄 Vui lòng xoay dọc màn hình để sử dụng WanderPool";
+            position: fixed;
+            inset: 0;
+            z-index: 2147483647;
+            background: #1C1917;
+            color: #FFC800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 800;
+            padding: 40px;
+            font-family: 'Inter', sans-serif;
+            line-height: 1.5;
+            box-sizing: border-box;
+          }
+          
+          app-root {
+            display: none !important;
+          }
+        }
       </style>
 
       <div class="splash-container">
