@@ -1,0 +1,86 @@
+<!-- Summary Cards -->
+<div class="summary-row">
+  <div class="summary-black" (click)="onSetTab.emit('BALANCES')" style="cursor: pointer;">
+    <span class="summary-label">{{ 'detail.yourShare' | translate }}</span>
+    <span class="summary-value-white">{{ formatCurrency(yourShare) }}</span>
+  </div>
+  <div class="summary-white">
+    <span class="summary-label">{{ 'detail.total' | translate }}</span>
+    <span class="summary-value-dark">{{ formatCurrency(totalTripCost) }}</span>
+  </div>
+</div>
+
+<div class="section-header" style="flex-wrap: wrap;">
+  <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+    <h2 class="section-title">{{ 'detail.transactions' | translate }}</h2>
+    @if (isMember) {
+      <button class="btn-action btn-action--primary" (click)="onOpenExpenseModal.emit()" id="btn-log-expense">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14"/><path d="M12 5v14"/>
+        </svg>
+        {{ 'detail.logExpense' | translate }}
+      </button>
+    }
+  </div>
+  <!-- Filter Pills -->
+  <div class="expense-filters" style="display: flex; gap: 8px; margin-top: 16px; width: 100%;">
+    <button class="filter-pill" [class.active]="activeExpenseFilter() === 'ALL'" (click)="activeExpenseFilter.set('ALL')">{{ 'expense.all' | translate }}</button>
+    <button class="filter-pill" [class.active]="activeExpenseFilter() === 'MINE'" (click)="activeExpenseFilter.set('MINE')">{{ 'expense.mine' | translate }}</button>
+  </div>
+</div>
+
+@if (displayExpenses().length === 0) {
+  <div class="empty-card">{{ 'detail.emptyExpenses' | translate }}</div>
+}
+
+<div class="expense-list">
+  @for (group of displayExpensesGrouped(); track group.date) {
+    <div class="date-header" style="text-align: center; font-size: 13px; color: #6B7280; font-weight: 600; margin: 8px 0 8px; text-transform: uppercase; letter-spacing: 0.5px;">
+      {{ formatDateShort(group.date) !== '' ? formatDateShort(group.date) : ('No Date' | translate) }}
+    </div>
+    @for (exp of group.expenses; track exp.id) {
+      <div class="expense-item" (click)="isMember ? onOpenExpenseDetail.emit(exp) : null" [id]="'expense-' + exp.id">
+        <div class="expense-left">
+          <div class="expense-icon" [style.background]="getCategoryBg(exp.category || 'OTHER')">
+            <span>{{ getCategoryEmoji(exp.category || 'OTHER') }}</span>
+          </div>
+          <div class="expense-info">
+            <p class="expense-desc">{{ exp.cleanDesc }}</p>
+            <p class="expense-meta">
+              @if (exp.category === 'SETTLEMENT') {
+                {{ 'expense.settlement' | translate }}
+              } @else if (isMember) {
+                {{ 'expense.paidBy' | translate }} {{ getPayerName(exp.payerId) }}
+              }
+            </p>
+          </div>
+        </div>
+        
+        <div class="expense-share-info" style="display: flex; flex-direction: column; align-items: flex-end; text-align: right; margin-left: 12px; flex-shrink: 0;">
+          @if (exp.category === 'SETTLEMENT') {
+            @if (exp.netImpact > 0) {
+              <span class="share-amount" style="color: #10B981; font-weight: 800; font-size: 16px; letter-spacing: -0.5px;">+{{ formatNumber(exp.netImpact) }}₫</span>
+            } @else if (exp.netImpact < 0) {
+              <span class="share-amount" style="color: #DC2626; font-weight: 800; font-size: 16px; letter-spacing: -0.5px;">-{{ formatNumber(0 - exp.netImpact) }}₫</span>
+            } @else {
+              <span class="share-amount" style="color: #1C1917; font-weight: 800; font-size: 16px; letter-spacing: -0.5px;">{{ formatNumber(exp.amount) }}₫</span>
+            }
+          } @else if (exp.isInvolved) {
+            @if (exp.netImpact > 0) {
+              <span class="share-amount" style="color: #10B981; font-weight: 900; font-size: 17px; letter-spacing: -0.5px;">+{{ formatNumber(exp.netImpact) }}₫</span>
+            } @else if (exp.netImpact < 0) {
+              <span class="share-amount" style="color: #DC2626; font-weight: 900; font-size: 17px; letter-spacing: -0.5px;">-{{ formatNumber(0 - exp.netImpact) }}₫</span>
+            } @else {
+              <span class="share-amount" style="color: #1C1917; font-weight: 900; font-size: 17px; letter-spacing: -0.5px;">{{ formatNumber(exp.mySplitAmount) }}₫</span>
+            }
+            <span class="expense-amount" style="font-size: 12px; color: #9CA3AF; font-weight: 600; margin-top: 4px;">{{ 'expense.totalPrefix' | translate }} {{ formatNumber(exp.amount) }}₫</span>
+
+          } @else {
+            <span class="share-amount" style="color: #9CA3AF; font-weight: 800; font-size: 17px;">-</span>
+            <span class="expense-amount" style="font-size: 12px; color: #9CA3AF; font-weight: 600; margin-top: 4px;">{{ 'expense.totalPrefix' | translate }} {{ formatNumber(exp.amount) }}₫</span>
+          }
+        </div>
+      </div>
+    }
+  }
+</div>

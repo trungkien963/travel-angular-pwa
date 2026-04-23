@@ -103,341 +103,49 @@
 
         <!-- ═══ SOCIAL ═══ -->
         <div class="tab-pane" [class.active-pane]="activeTab === 'SOCIAL'">
-          <div class="section-header">
-            <h2 class="section-title">{{ 'detail.diary' | translate }}</h2>
-            @if (isMember()) {
-              <button class="btn-action" (click)="navigateToAddMoment()" id="btn-add-post">
-                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
-                  <circle cx="12" cy="13" r="3"/>
-                </svg>
-                {{ 'expense.takePhoto' | translate }}
-              </button>
-            }
-          </div>
-
-          @if (tripPosts().length === 0) {
-            <div class="empty-card">{{ 'detail.emptyPosts' | translate }}</div>
-          }
-
-          <div class="ig-feed">
-            @for (post of tripPosts(); track post.id) {
-              <div class="ig-post" [id]="'post-' + post.id">
-                
-                <!-- IG Header -->
-                <div class="ig-header">
-                  <div class="ig-user">
-                    <div class="ig-avatar" [style.background]="!post.authorAvatar ? getAvatarBg(post.authorName || '?') : ''">
-                      @if (post.authorAvatar) {
-                        <img [src]="post.authorAvatar" alt="avatar" class="ig-avatar-img" referrerpolicy="no-referrer" />
-                      } @else {
-                        <span class="ig-avatar-initial" [style.color]="getAvatarColor(post.authorName || '?')">{{ (post.authorName || '?').charAt(0).toUpperCase() }}</span>
-                      }
-                    </div>
-                    <div class="ig-user-info">
-                      <span class="ig-author">{{ post.authorName }}</span>
-                      <span class="ig-time">{{ formatRelative(post.timestamp) }}</span>
-                    </div>
-                  </div>
-                  <div class="ig-options">
-                    @if (isOwner() || post.authorId === currentUserId()) {
-                      <button class="ig-icon-btn" (click)="toggleMenu(post.id); $event.stopPropagation()">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="12" r="1.5"/>
-                        </svg>
-                      </button>
-
-                      @if (activeMenuId() === post.id) {
-                        <!-- Invisible backdrop to close menu -->
-                        <div class="menu-backdrop" (click)="activeMenuId.set(null); $event.stopPropagation()"></div>
-                        <!-- Dropdown -->
-                        <div class="ig-dropdown-menu">
-                          <button class="ig-dropdown-item" (click)="openEditPost(post); activeMenuId.set(null); $event.stopPropagation()">{{ 'action.edit' | translate }}</button>
-                          <button class="ig-dropdown-item delete-item" (click)="deletePost(post.id); activeMenuId.set(null); $event.stopPropagation()">{{ 'action.delete' | translate }}</button>
-                        </div>
-                      }
-                    } @else {
-                      <div class="ig-more">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="12" r="1.5"/>
-                        </svg>
-                      </div>
-                    }
-                  </div>
-                </div>
-
-                <!-- IG Images Carousel -->
-                @if (post.images.length > 0) {
-                  <div class="ig-carousel-container">
-                    <div class="ig-images" [class.dual]="post.isDual" (scroll)="onImageScroll(post.id, $event)" (touchstart)="$event.stopPropagation()" (touchend)="$event.stopPropagation()">
-                      @for (img of post.images; track img) {
-                        <img [src]="img" [alt]="post.content" class="ig-img" loading="lazy" #imgRefPost (error)="imgRefPost.style.display='none'" />
-                      }
-                    </div>
-                    
-                    @if (post.images.length > 1 && !post.isDual) {
-                      <div class="ig-carousel-badge">
-                        {{ getActiveImageIndex(post.id) + 1 }}/{{ post.images.length }}
-                      </div>
-                      <div class="ig-carousel-dots">
-                        @for (img of post.images; track img; let i = $index) {
-                          <div class="ig-dot" [class.active]="getActiveImageIndex(post.id) === i"></div>
-                        }
-                      </div>
-                    }
-                  </div>
-                }
-
-                <!-- IG Actions Row -->
-                <div class="ig-actions">
-                  <div class="ig-actions-left">
-                    <button class="ig-action-btn" [class.liked]="post.hasLiked" (click)="toggleLike(post.id)">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" [attr.fill]="post.hasLiked ? '#EF4444' : 'none'" [attr.stroke]="post.hasLiked ? '#EF4444' : '#1C1917'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                      </svg>
-                    </button>
-                    <button class="ig-action-btn" (click)="openComments(post)">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                      </svg>
-                    </button>
-                  </div>
-                  <button class="ig-action-btn ig-action-share" (click)="sharePost(post)">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-                    </svg>
-                  </button>
-                </div>
-
-                <!-- IG Likes Info -->
-                <div class="ig-likes-count">
-                  @if (post.hasLiked) {
-                    Liked by <strong>You</strong> {{ post.likes > 1 ? 'and others' : '' }}
-                  } @else {
-                    @if (post.likes > 0) {
-                      <strong>{{ post.likes }} likes</strong>
-                    }
-                  }
-                </div>
-
-                <!-- IG Caption -->
-                @if (post.content) {
-                  <div class="ig-caption">
-                    <span class="ig-caption-author">{{ post.authorName }}</span>
-                    <span class="ig-caption-text">{{ post.content }}</span>
-                  </div>
-                }
-
-                <!-- IG Comments Preview -->
-                @if (post.comments.length > 0) {
-                  <div class="ig-comments-link" (click)="openComments(post)">
-                    {{ 'comment.viewAll' | translate }} {{ post.comments.length }} {{ 'comment.comments' | translate | lowercase }}
-                  </div>
-                  <div class="ig-comment-preview">
-                    <span class="ig-caption-author">{{ post.comments[post.comments.length - 1].authorName }}</span>
-                    <span class="ig-caption-text">{{ post.comments[post.comments.length - 1].text }}</span>
-                  </div>
-                }
-
-              </div>
-            }
-          </div>
+          <app-trip-social
+            [tripPosts]="tripPosts()"
+            [currentUserId]="currentUserId()"
+            [isMember]="isMember()"
+            [isOwner]="isOwner()"
+            (onNavigateToAddMoment)="navigateToAddMoment()"
+            (onOpenEditPost)="openEditPost($event)"
+            (onDeletePost)="deletePost($event)"
+            (onToggleLike)="toggleLike($event)"
+            (onOpenComments)="openComments($event)"
+            (onSharePost)="sharePost($event)">
+          </app-trip-social>
         </div>
 
         <!-- ═══ EXPENSES ═══ -->
         <div class="tab-pane" [class.active-pane]="activeTab === 'EXPENSES'">
-          <!-- Summary Cards -->
-          <div class="summary-row">
-            <div class="summary-black" (click)="setTab('BALANCES')" style="cursor: pointer;">
-              <span class="summary-label">{{ 'detail.yourShare' | translate }}</span>
-              <span class="summary-value-white">{{ formatCurrency(yourShare()) }}</span>
-            </div>
-            <div class="summary-white">
-              <span class="summary-label">{{ 'detail.total' | translate }}</span>
-              <span class="summary-value-dark">{{ formatCurrency(totalTripCost()) }}</span>
-            </div>
-          </div>
-
-          <div class="section-header" style="flex-wrap: wrap;">
-            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-              <h2 class="section-title">{{ 'detail.transactions' | translate }}</h2>
-              @if (isMember()) {
-                <button class="btn-action btn-action--primary" (click)="openExpenseModal()" id="btn-log-expense">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M5 12h14"/><path d="M12 5v14"/>
-                  </svg>
-                  {{ 'detail.logExpense' | translate }}
-                </button>
-              }
-            </div>
-            <!-- Filter Pills -->
-            <div class="expense-filters" style="display: flex; gap: 8px; margin-top: 16px; width: 100%;">
-              <button class="filter-pill" [class.active]="activeExpenseFilter() === 'ALL'" (click)="activeExpenseFilter.set('ALL')">{{ 'expense.all' | translate }}</button>
-              <button class="filter-pill" [class.active]="activeExpenseFilter() === 'MINE'" (click)="activeExpenseFilter.set('MINE')">{{ 'expense.mine' | translate }}</button>
-            </div>
-          </div>
-
-          @if (displayExpenses().length === 0) {
-            <div class="empty-card">{{ 'detail.emptyExpenses' | translate }}</div>
-          }
-
-          <div class="expense-list">
-            @for (group of displayExpensesGrouped(); track group.date) {
-              <div class="date-header" style="text-align: center; font-size: 13px; color: #6B7280; font-weight: 600; margin: 8px 0 8px; text-transform: uppercase; letter-spacing: 0.5px;">
-                {{ formatDateShort(group.date) !== '' ? formatDateShort(group.date) : ('No Date' | translate) }}
-              </div>
-              @for (exp of group.expenses; track exp.id) {
-                <div class="expense-item" (click)="isMember() ? openExpenseDetail(exp) : null" [id]="'expense-' + exp.id">
-                  <div class="expense-left">
-                    <div class="expense-icon" [style.background]="getCategoryBg(exp.category || 'OTHER')">
-                      <span>{{ getCategoryEmoji(exp.category || 'OTHER') }}</span>
-                    </div>
-                    <div class="expense-info">
-                      <p class="expense-desc">{{ exp.cleanDesc }}</p>
-                      <p class="expense-meta">
-                        @if (exp.category === 'SETTLEMENT') {
-                          {{ 'expense.settlement' | translate }}
-                        } @else if (isMember()) {
-                          {{ 'expense.paidBy' | translate }} {{ getPayerName(exp.payerId) }}
-                        }
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div class="expense-share-info" style="display: flex; flex-direction: column; align-items: flex-end; text-align: right; margin-left: 12px; flex-shrink: 0;">
-                    @if (exp.category === 'SETTLEMENT') {
-                      @if (exp.netImpact > 0) {
-                        <span class="share-amount" style="color: #10B981; font-weight: 800; font-size: 16px; letter-spacing: -0.5px;">+{{ formatNumber(exp.netImpact) }}₫</span>
-                      } @else if (exp.netImpact < 0) {
-                        <span class="share-amount" style="color: #DC2626; font-weight: 800; font-size: 16px; letter-spacing: -0.5px;">-{{ formatNumber(0 - exp.netImpact) }}₫</span>
-                      } @else {
-                        <span class="share-amount" style="color: #1C1917; font-weight: 800; font-size: 16px; letter-spacing: -0.5px;">{{ formatNumber(exp.amount) }}₫</span>
-                      }
-                    } @else if (exp.isInvolved) {
-                      @if (exp.netImpact > 0) {
-                        <span class="share-amount" style="color: #10B981; font-weight: 900; font-size: 17px; letter-spacing: -0.5px;">+{{ formatNumber(exp.netImpact) }}₫</span>
-                      } @else if (exp.netImpact < 0) {
-                        <span class="share-amount" style="color: #DC2626; font-weight: 900; font-size: 17px; letter-spacing: -0.5px;">-{{ formatNumber(0 - exp.netImpact) }}₫</span>
-                      } @else {
-                        <span class="share-amount" style="color: #1C1917; font-weight: 900; font-size: 17px; letter-spacing: -0.5px;">{{ formatNumber(exp.mySplitAmount) }}₫</span>
-                      }
-                      <span class="expense-amount" style="font-size: 12px; color: #9CA3AF; font-weight: 600; margin-top: 4px;">{{ 'expense.totalPrefix' | translate }} {{ formatNumber(exp.amount) }}₫</span>
-
-                    } @else {
-                      <span class="share-amount" style="color: #9CA3AF; font-weight: 800; font-size: 17px;">-</span>
-                      <span class="expense-amount" style="font-size: 12px; color: #9CA3AF; font-weight: 600; margin-top: 4px;">{{ 'expense.totalPrefix' | translate }} {{ formatNumber(exp.amount) }}₫</span>
-                    }
-                  </div>
-                </div>
-              }
-            }
-          </div>
+          <app-trip-expenses
+            [tripExpenses]="tripExpenses()"
+            [members]="trip()?.members || []"
+            [currentUserId]="currentUserId()"
+            [isMember]="isMember()"
+            [yourShare]="yourShare()"
+            [totalTripCost]="totalTripCost()"
+            (onSetTab)="setTab($event)"
+            (onOpenExpenseModal)="openExpenseModal()"
+            (onOpenExpenseDetail)="openExpenseDetail($event)">
+          </app-trip-expenses>
         </div>
 
         <!-- ═══ BALANCES ═══ -->
         <div class="tab-pane" [class.active-pane]="activeTab === 'BALANCES'">
-          @if (totalTripCost() > 0) {
-            <div class="chart-card">
-              <h3 class="chart-title">{{ 'detail.spendingBreakdown' | translate }}</h3>
-              <div class="chart-bar">
-                @for (seg of chartData(); track seg.category; let i = $index) {
-                  <div class="chart-segment"
-                    [style.width.%]="seg.percent"
-                    [style.background]="seg.color"
-                    [class.first]="i === 0"
-                    [class.last]="i === chartData().length - 1">
-                  </div>
-                }
-              </div>
-              <div class="chart-legend">
-                @for (seg of chartData(); track seg.category) {
-                  <div class="legend-item">
-                    <div class="legend-dot" [style.background]="seg.color"></div>
-                    <div>
-                      <p class="legend-cat">{{ seg.category }}</p>
-                      <p class="legend-amt">{{ formatNumber(seg.amount) }}₫</p>
-                    </div>
-                  </div>
-                }
-              </div>
-            </div>
-          }
-
-          <div class="section-header" style="flex-wrap: wrap;">
-            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-              <h2 class="section-title">{{ 'detail.balances' | translate }}</h2>
-              <button class="btn-export" (click)="exportExcel()" id="btn-export">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
-                {{ 'detail.export' | translate }}
-              </button>
-            </div>
-            <!-- Filter Pills -->
-            <div class="expense-filters" style="display: flex; gap: 8px; margin-top: 16px; width: 100%;">
-              <button class="filter-pill" [class.active]="activeBalanceFilter() === 'ALL'" (click)="activeBalanceFilter.set('ALL')">{{ 'expense.all' | translate }}</button>
-              <button class="filter-pill" [class.active]="activeBalanceFilter() === 'MINE'" (click)="activeBalanceFilter.set('MINE')">{{ 'expense.mine' | translate }}</button>
-            </div>
-          </div>
-
-          @if (debts().length > 0) {
-            <div class="balances-summary-row" style="margin-bottom: 24px;">
-              @if (totalOwedToYou() > 0) {
-                <div class="summary-card" style="background: #FEF9C3; border-radius: 12px; padding: 16px; border: 1px solid #FEF08A; text-align: center;">
-                  <span style="display: block; font-size: 11px; font-weight: 700; color: #CA8A04; text-transform: uppercase; margin-bottom: 4px;">{{ 'detail.owedToYouTotal' | translate }}</span>
-                  <span style="display: block; font-size: 24px; font-weight: 800; color: #854D0E;">{{ formatNumber(totalOwedToYou()) }}₫</span>
-                </div>
-              } @else if (totalYouOwe() > 0) {
-                <div class="summary-card" style="background: #FEF2F2; border-radius: 12px; padding: 16px; border: 1px solid #FEE2E2; text-align: center;">
-                  <span style="display: block; font-size: 11px; font-weight: 700; color: #DC2626; text-transform: uppercase; margin-bottom: 4px;">{{ 'detail.youOweTotal' | translate }}</span>
-                  <span style="display: block; font-size: 24px; font-weight: 800; color: #991B1B;">{{ formatNumber(totalYouOwe()) }}₫</span>
-                </div>
-              } @else {
-                <div class="summary-card" style="background: #ECFDF5; border-radius: 12px; padding: 16px; border: 1px solid #A7F3D0; text-align: center;">
-                  <span style="display: block; font-size: 11px; font-weight: 700; color: #059669; text-transform: uppercase; margin-bottom: 4px;">{{ 'detail.status' | translate }}</span>
-                  <span style="display: block; font-size: 18px; font-weight: 800; color: #065F46;">{{ 'detail.youAreSettledUser' | translate }}</span>
-                </div>
-              }
-            </div>
-          }
-
-          @if (displayDebts().length === 0) {
-            <div class="empty-card">{{ 'detail.settled' | translate }}</div>
-          }
-
-          <div class="expense-list">
-            @for (debt of displayDebts(); track debt.fromId + debt.toId) {
-              <div class="expense-item" (click)="(isMember() && (debt.fromId === currentUserId() || debt.toId === currentUserId() || isOwner())) ? openSettleModal(debt) : null" [style.cursor]="(isMember() && (debt.fromId === currentUserId() || debt.toId === currentUserId() || isOwner())) ? 'pointer' : 'default'">
-                <div class="expense-left">
-                  <div class="expense-icon" [class.debt-me]="debt.fromId === currentUserId()" [class.debt-owed]="debt.toId === currentUserId()">
-                    @if (debt.fromId === currentUserId()) {
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                    } @else if (debt.toId === currentUserId()) {
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC800" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
-                    } @else {
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>
-                    }
-                  </div>
-                  <div class="expense-info">
-                    <p class="expense-desc">{{ debt.fromId === currentUserId() ? ('detail.youOwe' | translate) : (debt.fromName + ' ' + ('detail.owes' | translate)) }}</p>
-                    <p class="expense-meta">{{ debt.fromId === currentUserId() ? debt.toName : (debt.toId === currentUserId() ? 'you' : debt.toName) }}</p>
-                  </div>
-                </div>
-                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
-                  <span class="expense-amount"
-                    [class.amount-red]="debt.fromId === currentUserId()"
-                    [class.amount-yellow]="debt.toId === currentUserId()">
-                    {{ formatNumber(debt.amount) }}₫
-                  </span>
-                  @if (isMember() && (debt.fromId === currentUserId() || debt.toId === currentUserId() || isOwner())) {
-                    <span style="font-size: 11px; font-weight: 700; color: #3B82F6; background: #EFF6FF; padding: 4px 8px; border-radius: 6px; text-transform: uppercase;">
-                      Settle Up
-                    </span>
-                  }
-                </div>
-              </div>
-            }
-          </div>
+          <app-trip-balances
+            [totalTripCost]="totalTripCost()"
+            [chartData]="chartData()"
+            [debts]="debts()"
+            [totalOwedToYou]="totalOwedToYou()"
+            [totalYouOwe]="totalYouOwe()"
+            [isMember]="isMember()"
+            [isOwner]="isOwner()"
+            [currentUserId]="currentUserId()"
+            (onOpenSettleModal)="openSettleModal($event)"
+            (onExportExcel)="exportExcel()">
+          </app-trip-balances>
         </div>
 
         <!-- ═══ MEMBERS ═══ -->
@@ -552,303 +260,23 @@
 
   <!-- ═══ EXPENSE LOG MODAL ═══ -->
   @if (expenseModalOpen()) {
-    <div class="modal-overlay" (click)="closeExpenseModal()">
-      <div class="modal" (click)="$event.stopPropagation()" appSwipeToClose (swipeClose)="closeExpenseModal()">
-        <div class="modal-header">
-          <h3>{{ editingExpense ? ('detail.editExpense' | translate) : ('detail.logExpense' | translate) }}</h3>
-          <button class="btn-close" (click)="closeExpenseModal()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-          </button>
-        </div>
-
-        <div class="input-card" style="margin-top:20px;">
-          
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-             <p class="field-label" style="margin: 0;">{{ 'expense.addReceipt' | translate }}</p>
-             @if (pendingReceipts().length > 0) {
-               <span style="font-size: 12px; color: #666; font-weight: 500;">{{ pendingReceipts().length }} selected</span>
-             }
-          </div>
-          
-          <div class="receipt-picker" style="border-radius: 12px; background: #fafafa; border: 2px dashed #e5e5e5; display: flex; flex-direction:column; padding: 16px; margin-bottom: 24px; gap: 16px;">
-             <!-- Image Previews -->
-             @if (pendingReceipts().length > 0) {
-               <div style="display:flex; gap:12px; overflow-x:auto; padding-bottom:4px; max-width: 100%; -webkit-overflow-scrolling: touch;">
-                  @for (rec of pendingReceipts(); track rec.url; let i = $index) {
-                     <div style="position:relative; width: 80px; height: 80px; flex-shrink:0; border-radius:8px; overflow:hidden; border:1px solid #e5e5e5; cursor:pointer;" (click)="openPendingReceiptViewer(i)">
-                        <img [src]="rec.url" style="width:100%; height:100%; object-fit:cover;" />
-                        <button (click)="removeReceipt(i, $event)" style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.6); color:white; border:none; border-radius:50%; width:22px; height:22px; font-size:12px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:10;">✕</button>
-                     </div>
-                  }
-               </div>
-             }
-             
-             <!-- Buttons horizontally -->
-             <div style="display:flex; width: 100%; gap:12px;">
-               <label style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 16px; background: white; border: 1px solid #e5e5e5; border-radius: 12px; gap:8px; cursor: pointer; position: relative;">
-                 <input type="file" accept="image/*" multiple style="position:absolute; width:1px; height:1px; opacity:0; overflow:hidden;" (change)="onReceiptSelected($event)" />
-                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-                 <span style="font-size:12px; font-weight:600; color:#666;">{{ 'expense.upload' | translate }}</span>
-               </label>
-               <label style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 16px; background: white; border: 1px solid #e5e5e5; border-radius: 12px; gap:8px; cursor: pointer; position: relative;">
-                 <input type="file" accept="image/*" capture="environment" style="position:absolute; width:1px; height:1px; opacity:0; overflow:hidden;" (change)="onReceiptSelected($event)" />
-                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-                 <span style="font-size:12px; font-weight:600; color:#666;">{{ 'expense.takePhoto' | translate }}</span>
-               </label>
-             </div>
-          </div>
-
-          <!-- Category picker -->
-          <p class="field-label">{{ 'expense.category' | translate }}</p>
-          <div class="category-scroll">
-            @for (cat of categories; track cat.id) {
-              <button class="category-pill" [class.active]="expForm.category === cat.id" (click)="expForm.category = cat.id" [id]="'cat-' + cat.id">
-                <span>{{ cat.emoji }}</span> {{ cat.label }}
-              </button>
-            }
-          </div>
-
-          <!-- Description -->
-          <p class="field-label" style="margin-top: 24px;">{{ 'expense.whatFor' | translate }} <span class="req">*</span></p>
-          <input type="text" [(ngModel)]="expForm.desc" placeholder="e.g. Lunch at beachside..." class="caption-input" id="exp-desc" />
-          
-          <!-- Amount -->
-          <p class="field-label" style="margin-top: 24px;">{{ 'expense.totalPrice' | translate }} <span class="req">*</span></p>
-          <div class="amount-row">
-            <span class="currency-symbol">₫</span>
-            <app-calculator-input [amount]="expForm.amount" (amountChange)="onTotalAmountChange($event)" placeholder="0" class="amount-input" id="exp-amount"></app-calculator-input>
-          </div>
-
-          <!-- Paid By -->
-          <p class="field-label" style="margin-top: 24px; margin-bottom: 8px;">{{ 'expense.paidBy' | translate }}</p>
-          <div class="paidby-row" style="display: flex; flex-wrap: wrap; gap: 8px;">
-            @if (!showPayerList) {
-              <button class="member-pill active" (click)="showPayerList = true" style="display: flex; align-items: center; gap: 6px; padding-right: 12px;">
-                {{ getPayerNameLocal(expForm.payerId) || 'Select' }}
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-              </button>
-            } @else {
-              @for (member of currentTripMembersForSplit(); track member.id) {
-                <button class="member-pill" [class.active]="expForm.payerId === member.id" (click)="expForm.payerId = member.id; showPayerList = false">{{ member.name }}</button>
-              }
-            }
-          </div>
-
-          <!-- Date -->
-          <p class="field-label" style="margin-top: 24px;">{{ 'expense.date' | translate }}</p>
-          <div class="date-row">
-            <input type="date" [(ngModel)]="expForm.date" class="caption-input" id="exp-date" />
-          </div>
-
-          <!-- Split Logic UI (Hybrid Lock & Float) -->
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; margin-bottom: 12px;">
-            <p class="field-label" style="margin: 0;">{{ 'expense.splitDetails' | translate }}</p>
-            <div style="display: flex; gap: 8px;">
-              <button (click)="selectAllForSplit()" style="background: #EFF6FF; color: #3B82F6; padding: 6px 12px; border-radius: 100px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s;">{{ 'action.selectAll' | translate }}</button>
-              <button (click)="clearAllForSplit()" style="background: #F3F4F6; color: #4B5563; padding: 6px 12px; border-radius: 100px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s;">{{ 'action.clearAll' | translate }}</button>
-            </div>
-          </div>
-          <div class="split-list">
-          @for (member of currentTripMembersForSplit(); track member.id) {
-            <div class="split-row" [class.excluded]="!includedMembers()[member.id]">
-              <div class="split-left" (click)="toggleMember(member.id)">
-                <button class="split-check">
-                  @if (includedMembers()[member.id]) {
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFC800" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                  } @else {
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4D4D4" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
-                  }
-                </button>
-                <span class="split-name" [class.strikethrough]="!includedMembers()[member.id]">{{ member.name }}</span>
-              </div>
-                <div class="split-right" (click)="$event.stopPropagation()">
-                  <div class="amount-val-container" [class.is-locked]="lockedShares()[member.id] != null && activeMemberCount() > 1" style="display: flex; align-items: center; justify-content: flex-end; width: 100%;">
-                    @if (lockedShares()[member.id] != null && activeMemberCount() > 1) {
-                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="lock-icon" style="margin-right: 4px;"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                    }
-                    <span class="currency-symbol-small" style="margin-right: 2px;">₫</span>
-                    <app-calculator-input 
-                      [amount]="calcShare(member.id)"
-                      (amountChange)="setLockedAmountNum(member.id, $event)"
-                      (commitBtn)="onMemberShareCommit(member.id, $event)"
-                      placeholder="0"
-                      customClass="inline-edit"
-                    ></app-calculator-input>
-                  </div>
-                </div>
-              </div>
-            }
-          </div>
-          
-          <!-- Quick add member -->
-          <div class="quick-add-member">
-            <input type="text" [(ngModel)]="newMemberEmail" [placeholder]="'expense.emailPrompt' | translate" class="quick-add-input" (keyup.enter)="quickInviteMember()" />
-            <button class="btn-quick-add" [disabled]="isInviting() || !newMemberEmail.trim()" (click)="quickInviteMember()">
-               @if (isInviting()) {<div class="spinner-sm"></div>} @else {
-                 @if (newMemberEmail.includes('@')) {
-                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                 } @else {
-                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFC800" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-                 }
-               }
-            </button>
-          </div>
-          
-          @if (isSplitExceedingTotal()) {
-            <div style="color: #DC2626; font-size: 13px; font-weight: 700; text-align: center; margin-top: 16px;">
-              ⚠ {{ 'expense.exceeds' | translate }}
-            </div>
-          }
-          
-        </div> <!-- Close input-card -->
-        
-        <button class="btn-receipt-close" (click)="saveExpense()" [disabled]="isSavingExpense() || isSplitExceedingTotal() || !expForm.desc || expForm.amount <= 0 || newMemberEmail.trim().length > 0" [class.btn-warning]="newMemberEmail.trim().length > 0" style="margin-top: 16px; width: 100%; border:none; padding:18px; border-radius:100px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); font-size:16px; font-weight:800; cursor:pointer;" [style.background]="(isSavingExpense() || isSplitExceedingTotal() || !expForm.desc || expForm.amount <= 0 || newMemberEmail.trim().length > 0) ? '#F5F5F5' : '#FFC800'" [style.color]="(isSavingExpense() || isSplitExceedingTotal() || !expForm.desc || expForm.amount <= 0 || newMemberEmail.trim().length > 0) ? '#A8A29E' : '#1C1917'">
-          @if (isSavingExpense()) {
-            {{ 'expense.saving' | translate }}
-          } @else if (newMemberEmail.trim().length > 0) {
-            {{ 'trip.addEmailFirst' | translate }}
-          } @else if (isSplitExceedingTotal()) {
-            {{ 'expense.fixSplit' | translate }}
-          } @else {
-            {{ editingExpense ? ('expense.update' | translate) : ('detail.logExpense' | translate) }}
-          }
-        </button>
-
-        <button (click)="closeExpenseModal()" style="width: 100%; background: transparent; border: none; padding: 12px; margin-top: 8px; color: #9CA3AF; font-size: 15px; font-weight: 700; cursor: pointer;">
-          {{ 'action.close' | translate }}
-        </button>
-
-      </div>
-    </div>
+    <app-expense-modal
+      [trip]="trip()!"
+      [editingExpense]="editingExpense"
+      [currentUserId]="currentUserId()"
+      (onClose)="closeExpenseModal()"
+    ></app-expense-modal>
   }
 
   <!-- ═══ SETTLE UP MODAL ═══ -->
   @if (settleModalOpen() && settleDebt()) {
-    <div class="modal-overlay" (click)="closeSettleModal()">
-      <div class="modal" (click)="$event.stopPropagation()" appSwipeToClose (swipeClose)="closeSettleModal()">
-        <div class="modal-header">
-          <h3>{{ 'detail.settleDebt' | translate }}</h3>
-          <button class="btn-close" (click)="closeSettleModal()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-          </button>
-        </div>
-        
-        <div class="input-card" style="margin-top:20px; text-align: center;">
-          <div style="display: flex; justify-content: center; align-items: center; gap: 16px; margin-bottom: 24px;">
-            <div style="text-align: center;">
-               <div style="width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 20px; color: #1C1917; overflow: hidden;"
-                    [style.background]="!settleDebt()!.fromAvatar ? getAvatarBg(settleDebt()!.fromName) : ''">
-                 @if (settleDebt()!.fromAvatar) {
-                   <img [src]="settleDebt()!.fromAvatar" [alt]="settleDebt()!.fromName" style="width: 100%; height: 100%; object-fit: cover;" referrerpolicy="no-referrer" />
-                 } @else {
-                   <span [style.color]="getAvatarColor(settleDebt()!.fromName)">{{ settleDebt()!.fromName.charAt(0).toUpperCase() }}</span>
-                 }
-               </div>
-               <span style="font-size: 13px; font-weight: 600; color: #4B5563;">{{ settleDebt()!.fromId === currentUserId() ? 'You' : settleDebt()!.fromName }}</span>
-            </div>
-            
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-            
-            <div style="text-align: center;">
-               <div style="width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 20px; color: #1C1917; overflow: hidden;"
-                    [style.background]="!settleDebt()!.toAvatar ? getAvatarBg(settleDebt()!.toName) : ''">
-                 @if (settleDebt()!.toAvatar) {
-                   <img [src]="settleDebt()!.toAvatar" [alt]="settleDebt()!.toName" style="width: 100%; height: 100%; object-fit: cover;" referrerpolicy="no-referrer" />
-                 } @else {
-                   <span [style.color]="getAvatarColor(settleDebt()!.toName)">{{ settleDebt()!.toName.charAt(0).toUpperCase() }}</span>
-                 }
-               </div>
-               <span style="font-size: 13px; font-weight: 600; color: #4B5563;">{{ settleDebt()!.toId === currentUserId() ? 'You' : settleDebt()!.toName }}</span>
-            </div>
-          </div>
-          
-          <div style="background: #F9FAFB; padding: 16px; border-radius: 12px; margin-bottom: 24px;">
-            <div class="amount-row" style="justify-content: center;">
-              <span class="currency-symbol">₫</span>
-              <app-calculator-input [amount]="settleAmount" (amountChange)="onSettleAmountChange($event)" placeholder="0" class="amount-input" style="text-align: center; font-size: 32px !important;"></app-calculator-input>
-            </div>
-          </div>
-
-          <div style="text-align: left; margin-bottom: 24px;">
-            <p class="field-label" style="margin-top: 0; margin-bottom: 8px;">Note (Optional)</p>
-            <input type="text" [(ngModel)]="settleNote" placeholder="e.g. Bank transfer..." class="caption-input" />
-          </div>
-
-          <div style="text-align: left; margin-bottom: 24px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-               <p class="field-label" style="margin: 0;">Attachment (Optional)</p>
-               @if (settleReceipts().length > 0) {
-                 <span style="font-size: 12px; color: #666; font-weight: 500;">{{ settleReceipts().length }} selected</span>
-               }
-            </div>
-            <div class="receipt-picker" style="border-radius: 12px; background: #fafafa; border: 2px dashed #e5e5e5; display: flex; flex-direction:column; padding: 16px; gap: 16px;">
-               <!-- Image Previews -->
-               @if (settleReceipts().length > 0) {
-                 <div style="display:flex; gap:12px; overflow-x:auto; padding-bottom:4px; max-width: 100%; -webkit-overflow-scrolling: touch;">
-                    @for (rec of settleReceipts(); track rec.url; let i = $index) {
-                       <div style="position:relative; width: 64px; height: 64px; flex-shrink:0; border-radius:8px; overflow:hidden; border:1px solid #e5e5e5;">
-                          <img [src]="rec.url" style="width:100%; height:100%; object-fit:cover;" />
-                          <button (click)="removeSettleReceipt(i, $event)" style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.6); color:white; border:none; border-radius:50%; width:20px; height:20px; font-size:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:10;">✕</button>
-                       </div>
-                    }
-                 </div>
-               }
-               
-               <div style="display:flex; width: 100%; gap:12px;">
-                 <label style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 12px; background: white; border: 1px solid #e5e5e5; border-radius: 12px; gap:8px; cursor: pointer; position: relative;">
-                   <input type="file" accept="image/*" multiple style="position:absolute; width:1px; height:1px; opacity:0; overflow:hidden;" (change)="onSettleReceiptSelected($event)" />
-                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-                   <span style="font-size:11px; font-weight:600; color:#666;">Upload Image</span>
-                 </label>
-               </div>
-            </div>
-          </div>
-
-          @if (settleRelatedExpenses().length > 0) {
-            <div style="text-align: left; margin-bottom: 24px;">
-              <h4 style="font-size: 13px; font-weight: 700; color: #4B5563; margin-bottom: 12px; text-transform: uppercase;">{{ 'detail.relatedExpenses' | translate }}</h4>
-              <div style="display: flex; flex-direction: column; gap: 12px; max-height: 200px; overflow-y: auto; padding-right: 4px;">
-                @for (item of settleRelatedExpenses(); track item.expense.id) {
-                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: white; border: 1px solid #F3F4F6; border-radius: 12px;">
-                    <div style="display: flex; align-items: center; gap: 12px; overflow: hidden;">
-                      <div class="expense-icon" style="width: 32px; height: 32px; font-size: 16px; flex-shrink: 0;" [style.background]="getCategoryBg(item.expense.category || 'OTHER')">
-                        <span>{{ getCategoryEmoji(item.expense.category || 'OTHER') }}</span>
-                      </div>
-                      <div style="overflow: hidden; text-align: left;">
-                        <p style="font-size: 14px; font-weight: 600; color: #1C1917; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ item.cleanDesc }}</p>
-                        <p style="font-size: 12px; color: #6B7280; margin: 2px 0 0 0;">{{ formatDateShort(item.expense.date) }}</p>
-                      </div>
-                    </div>
-                    <div style="text-align: right; flex-shrink: 0;">
-                      <p style="font-size: 14px; font-weight: 700; color: #DC2626; margin: 0;">{{ formatNumber(item.unpaidAmount) }}₫</p>
-                      @if (item.isPartial) {
-                        <p style="font-size: 10px; color: #9CA3AF; margin: 2px 0 0 0;">{{ 'detail.remaining' | translate }}</p>
-                      }
-                    </div>
-                  </div>
-                }
-              </div>
-            </div>
-          }
-        </div>
-        
-        <button class="btn-receipt-close" (click)="submitSettle()" [disabled]="isSavingSettle() || settleAmount <= 0" style="margin-top: 16px; width: 100%; border:none; padding:18px; border-radius:100px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); font-size:16px; font-weight:800; cursor:pointer;" [style.background]="(isSavingSettle() || settleAmount <= 0) ? '#F5F5F5' : '#FFC800'" [style.color]="(isSavingSettle() || settleAmount <= 0) ? '#A8A29E' : '#1C1917'">
-          @if (isSavingSettle()) {
-            {{ 'detail.pleaseWait' | translate }}
-          } @else if (settleDebt()!.toId === currentUserId()) {
-            {{ 'detail.confirmReceived' | translate }}
-          } @else if (settleDebt()!.fromId === currentUserId()) {
-            {{ 'detail.reportTransferred' | translate }}
-          } @else {
-            {{ 'detail.markAsPaid' | translate }}
-          }
-        </button>
-        
-        <button (click)="closeSettleModal()" style="width: 100%; background: transparent; border: none; padding: 12px; margin-top: 8px; color: #9CA3AF; font-size: 15px; font-weight: 700; cursor: pointer;">
-          {{ 'action.close' | translate }}
-        </button>
-      </div>
-    </div>
+    <app-settle-modal
+      [debt]="settleDebt()!"
+      [trip]="trip()!"
+      [tripExpenses]="tripExpenses()"
+      [currentUserId]="currentUserId()"
+      (onClose)="closeSettleModal()"
+    ></app-settle-modal>
   }
 
   <!-- ═══ EXPENSE DETAIL MODAL ═══ -->
@@ -954,12 +382,6 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>
 
-      @if (lightboxContext() === 'PENDING') {
-        <button style="position: absolute; bottom: max(48px, calc(env(safe-area-inset-bottom, 24px) + 24px)); left: 50%; transform: translateX(-50%); background: rgba(239, 68, 68, 0.4); border: none; width: 56px; height: 56px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 1001; box-shadow: 0 4px 12px rgba(0,0,0,0.5);" (click)="removeCurrentLightboxImage(); $event.stopPropagation()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-        </button>
-      }
-
       <div class="receipt-carousel-badge" style="position:absolute; top:32px; left:24px; background:rgba(255,255,255,0.2); color:white; padding:4px 10px; border-radius:12px; font-size:14px; font-weight:600; z-index:1001;">
         {{ lightboxIndex()! + 1 }} / {{ lightboxImages().length }}
       </div>
@@ -976,284 +398,45 @@
 
   <!-- ═══ COMMENTS MODAL ═══ -->
   @if (activeCommentPost()) {
-    <div class="modal-overlay" (click)="closeComments()">
-      <div class="modal comments-modal" (click)="$event.stopPropagation()" appSwipeToClose (swipeClose)="closeComments()">
-
-        <!-- Header -->
-        <div class="modal-header">
-          <h3>{{ 'comment.comments' | translate }} ({{ activeCommentPost()!.comments.length }})</h3>
-          <button class="btn-close" (click)="closeComments()" id="btn-close-comments">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A8A29E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-          </button>
-        </div>
-
-        <!-- Comments list -->
-        <div class="comments-list">
-          @if (activeCommentPost()!.comments.length === 0) {
-            <p class="comments-empty">{{ 'comment.empty' | translate }}</p>
-          }
-          @for (c of activeCommentPost()!.comments; track c.id) {
-            <div class="comment-item" [id]="'comment-' + c.id">
-              <!-- Avatar -->
-              <div class="comment-avatar" [style.background]="!c.authorAvatar ? getAvatarBg(c.authorName || '?') : ''">
-                @if (c.authorAvatar) {
-                  <img [src]="c.authorAvatar" [alt]="c.authorName" class="comment-avatar-img" referrerpolicy="no-referrer" />
-                } @else {
-                  <span class="comment-avatar-initial" [style.color]="getAvatarColor(c.authorName || '?')">{{ (c.authorName || '?').charAt(0).toUpperCase() }}</span>
-                }
-              </div>
-              <!-- Bubble -->
-              <div class="comment-bubble">
-                <div class="comment-meta-row">
-                  <span class="comment-author">{{ c.authorName }}</span>
-                  <span class="comment-time">{{ formatRelative(c.timestamp) }}</span>
-                </div>
-                <p class="comment-text">{{ c.text }}</p>
-              </div>
-            </div>
-          }
-        </div>
-
-        <!-- Input area -->
-        @if (isMember()) {
-          <div class="comment-input-area">
-            <textarea
-              class="comment-input"
-              [placeholder]="'comment.write' | translate"
-              [(ngModel)]="commentText"
-              rows="1"
-              id="input-comment"
-              (keydown.enter)="$event.preventDefault(); sendComment()"
-            ></textarea>
-            <button
-              class="btn-send"
-              (click)="sendComment()"
-              [disabled]="!commentText.trim() || isSendingComment()"
-              id="btn-send-comment"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                [attr.stroke]="commentText.trim() ? '#FFC800' : '#E5E5E5'"
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>
-              </svg>
-            </button>
-          </div>
-        }
-
-      </div>
-    </div>
+    <app-post-comments-modal
+      [post]="activeCommentPost()!"
+      [isMember]="isMember()"
+      [tripMembers]="trip()?.members || []"
+      (onClose)="closeComments()"
+    ></app-post-comments-modal>
   }
   <!-- ═══ ADD MEMBER MODAL ═══ -->
   @if (addMemberOpen()) {
-    <div class="modal-overlay" (click)="closeAddMember()">
-      <div class="modal" (click)="$event.stopPropagation()" appSwipeToClose (swipeClose)="closeAddMember()">
-
-        <div class="modal-header">
-          <h3>{{ 'detail.addMember' | translate }}</h3>
-          <button class="btn-close" (click)="closeAddMember()" id="btn-close-add-member">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A8A29E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-          </button>
-        </div>
-
-        <p class="member-invite-hint" [innerHTML]="'trip.inviteHint' | translate">
-        </p>
-
-        <div class="form-field">
-          <label>{{ 'detail.fullNameReq' | translate }}</label>
-          <input
-            type="text"
-            class="form-input"
-            [placeholder]="'detail.placeholderName' | translate"
-            [(ngModel)]="newMemberName"
-            id="input-member-name"
-          />
-        </div>
-
-        <p class="member-invite-hint" style="margin-top: -8px; margin-bottom: 16px; font-size: 12px;" [innerHTML]="'trip.addGuestHint' | translate"></p>
-
-        <div class="form-field">
-          <label>{{ 'detail.emailReq' | translate }}</label>
-          <input
-            type="email"
-            class="form-input"
-            [placeholder]="'detail.placeholderEmail' | translate"
-            [(ngModel)]="newMemberEmail"
-            autocomplete="email"
-            id="input-member-email"
-          />
-        </div>
-
-        <!-- Status message -->
-        @if (inviteStatus()) {
-          <div class="invite-status" [class.success]="inviteSuccess()" [class.error]="!inviteSuccess()">
-            {{ inviteStatus() }}
-          </div>
-        }
-
-        <button
-          class="btn-primary"
-          (click)="inviteMember()"
-          [disabled]="isInviting()"
-          id="btn-invite-member"
-        >
-          {{ isInviting() ? 'Adding...' : 'Add Member' }}
-        </button>
-
-      </div>
-    </div>
+    <app-add-member-modal
+      [trip]="trip()!"
+      (onClose)="addMemberOpen.set(false)"
+    ></app-add-member-modal>
   }
 
   <!-- ═══ EDIT MEMBER MODAL ═══ -->
-  @if (editMemberOpen()) {
-    <div class="modal-overlay" (click)="editMemberOpen.set(false)">
-      <div class="modal" (click)="$event.stopPropagation()" appSwipeToClose (swipeClose)="editMemberOpen.set(false)">
-        <div class="modal-header">
-          <h3>Edit Member</h3>
-          <button class="btn-close" (click)="editMemberOpen.set(false)" id="btn-close-edit-member">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A8A29E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-          </button>
-        </div>
-
-        <p class="member-invite-hint">
-          Update the display name or email for this member.
-        </p>
-
-        <div class="form-field mt-4">
-          <label>FULL NAME *</label>
-          <input type="text" class="form-input" [(ngModel)]="editMemberName" placeholder="Name" />
-        </div>
-
-        <div class="form-field mt-4">
-          <label>EMAIL ADDRESS</label>
-          <input type="email" class="form-input" [(ngModel)]="editMemberEmail" placeholder="Email" />
-        </div>
-
-        <button
-          class="btn-primary mt-6"
-          (click)="saveEditMember()"
-          [disabled]="isSavingMember()"
-        >
-          {{ isSavingMember() ? 'Saving...' : 'Save Changes' }}
-        </button>
-      </div>
-    </div>
+  @if (editMemberOpen() && editingMember) {
+    <app-edit-member-modal
+      [member]="editingMember"
+      [trip]="trip()!"
+      (onClose)="editMemberOpen.set(false); editingMember = null"
+    ></app-edit-member-modal>
   }
 
   <!-- ═══ EDIT POST MODAL ═══ -->
-  @if (editPostOpen()) {
-    <div class="modal-overlay" (click)="closeEditPostLocal()">
-      <div class="modal" (click)="$event.stopPropagation()" appSwipeToClose (swipeClose)="closeEditPostLocal()">
-        <div class="modal-header">
-          <h3>Edit Post</h3>
-          <button class="btn-close" (click)="closeEditPostLocal()" id="btn-close-edit-post">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A8A29E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-          </button>
-        </div>
-
-        <div class="form-field mt-4">
-          <label>CAPTION</label>
-          <textarea
-            class="form-input"
-            placeholder="Write a caption..."
-            [(ngModel)]="editPostContent"
-            rows="4"
-            id="input-edit-post"
-          ></textarea>
-        </div>
-
-        <button
-          class="btn-primary mt-6"
-          (click)="saveEditPost()"
-          [disabled]="isSavingPost()"
-          id="btn-save-edit-post"
-        >
-          {{ isSavingPost() ? 'Saving...' : 'Save Changes' }}
-        </button>
-      </div>
-    </div>
+  @if (editPostOpen() && editPostObj) {
+    <app-edit-post-modal
+      [post]="editPostObj"
+      (onClose)="editPostOpen.set(false); editPostObj = null"
+    ></app-edit-post-modal>
   }
 
   <!-- ═══ EDIT TRIP MODAL ═══ -->
   @if (editTripModal) {
-    <div class="modal-overlay" (click)="closeEditTrip()">
-      <div class="modal" (click)="$event.stopPropagation()" appSwipeToClose (swipeClose)="closeEditTrip()">
-        <div class="modal-header">
-          <h3>Edit Trip</h3>
-          <button class="btn-close" (click)="closeEditTrip()" id="btn-close-edit-trip">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A8A29E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-          </button>
-        </div>
-
-        <div class="form-field mt-4">
-          <label>TRIP NAME *</label>
-          <input type="text" class="form-input" [(ngModel)]="editTripTitle" placeholder="Trip Name" />
-        </div>
-
-        <div class="form-field mt-4">
-          <label>LOCATION</label>
-          <input 
-            type="text" 
-            class="form-input"
-            placeholder="Where to?"
-            [(ngModel)]="editTripLocation"
-            (ngModelChange)="onEditLocationChange($event)"
-            autocomplete="off"
-          />
-          @if (isEditLocationLoading() || editLocationSuggestions().length > 0) {
-            <ul class="suggestions-list" style="margin-top:4px; margin-bottom: 0;">
-              @if (isEditLocationLoading()) {
-                <li class="loc-loading">
-                   <div class="spinner-sm"></div>
-                   <span>Searching...</span>
-                </li>
-              } @else {
-                @for (loc of editLocationSuggestions(); track loc.place_id) {
-                  <li (click)="selectEditLocation(loc)">
-                    <div class="loc-text">
-                      <span class="loc-name" style="color:#000;">{{ loc.display_name.split(',')[0] }}</span>
-                    </div>
-                  </li>
-                }
-              }
-            </ul>
-          }
-        </div>
-
-        <div class="date-row" style="margin-top: 16px;">
-          <label class="date-field" for="input-edit-start-date" (click)="openEditDatePicker($event, editStartDateInput)">
-            <span class="date-label">FROM</span>
-            <input #editStartDateInput type="date" [(ngModel)]="editTripStartDate" class="date-input" id="input-edit-start-date" (click)="openEditDatePicker($event, editStartDateInput)" />
-          </label>
-          <label class="date-field" for="input-edit-end-date" (click)="openEditDatePicker($event, editEndDateInput)">
-            <span class="date-label">TO</span>
-            <input #editEndDateInput type="date" [(ngModel)]="editTripEndDate" class="date-input" id="input-edit-end-date" (click)="openEditDatePicker($event, editEndDateInput)" />
-          </label>
-        </div>
-
-        <div class="form-field mt-4">
-          <label>COVER IMAGE</label>
-          <div class="cover-picker mt-2" (click)="triggerEditImageInput()" style="min-height: 120px; border-radius: 12px; background: #F5F5F5; display: flex; align-items:center; justify-content:center; overflow:hidden; position:relative; cursor:pointer;">
-            @if (editTripCoverPreviewUrl) {
-              <img [src]="editTripCoverPreviewUrl" class="cover-img" alt="Cover" style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0;" />
-              <div class="cover-retake" style="position:absolute; bottom:8px; right:8px; background:rgba(0,0,0,0.5); padding:4px 8px; border-radius:12px; color:#fff; font-size:12px; display:flex; gap:4px; align-items:center;">
-                <span>Change</span>
-              </div>
-            } @else {
-              <span style="color:#888; font-size:14px;">Tap to select image</span>
-            }
-            <input #editFileInput type="file" accept="image/*" style="display:none" (change)="onEditImageSelected($event)" />
-          </div>
-        </div>
-
-        <button
-          class="btn-primary mt-6"
-          (click)="saveEditTrip()"
-          [disabled]="isSavingTrip()"
-        >
-          {{ isSavingTrip() ? 'Saving...' : 'Save Changes' }}
-        </button>
-      </div>
-    </div>
+    <app-edit-trip-modal
+      [trip]="trip()!"
+      (onClose)="editTripModal = false"
+      (onCoverUpload)="isCoverLoading.set(true)"
+    ></app-edit-trip-modal>
   }
 
 </div>

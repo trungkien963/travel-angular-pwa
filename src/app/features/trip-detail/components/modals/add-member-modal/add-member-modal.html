@@ -1,0 +1,56 @@
+<div class="modal-overlay" (click)="closeAddMember()">
+  <div class="modal" (click)="$event.stopPropagation()" appSwipeToClose (swipeClose)="closeAddMember()">
+
+    <div class="modal-header">
+      <h3>{{ 'detail.addMember' | translate }}</h3>
+      <button class="btn-close" (click)="closeAddMember()" id="btn-close-add-member">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A8A29E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+
+    <p class="member-invite-hint" [innerHTML]="'trip.inviteHint' | translate">
+    </p>
+
+    <div class="form-field">
+      <label>{{ 'detail.fullNameReq' | translate }}</label>
+      <input
+        type="text"
+        class="form-input"
+        [placeholder]="'detail.placeholderName' | translate"
+        [(ngModel)]="newMemberName"
+        id="input-member-name"
+      />
+    </div>
+
+    <p class="member-invite-hint" style="margin-top: -8px; margin-bottom: 16px; font-size: 12px;" [innerHTML]="'trip.addGuestHint' | translate"></p>
+
+    <div class="form-field">
+      <label>{{ 'detail.emailReq' | translate }}</label>
+      <input
+        type="email"
+        class="form-input"
+        [placeholder]="'detail.placeholderEmail' | translate"
+        [(ngModel)]="newMemberEmail"
+        autocomplete="email"
+        id="input-member-email"
+      />
+    </div>
+
+    <!-- Status message -->
+    @if (inviteStatus()) {
+      <div class="invite-status" [class.success]="inviteSuccess()" [class.error]="!inviteSuccess()">
+        {{ inviteStatus() }}
+      </div>
+    }
+
+    <button
+      class="btn-primary"
+      (click)="inviteMember()"
+      [disabled]="isInviting()"
+      id="btn-invite-member"
+    >
+      {{ isInviting() ? 'Adding...' : 'Add Member' }}
+    </button>
+
+  </div>
+</div>

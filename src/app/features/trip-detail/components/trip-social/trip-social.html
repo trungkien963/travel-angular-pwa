@@ -1,0 +1,139 @@
+<div class="section-header">
+  <h2 class="section-title">{{ 'detail.diary' | translate }}</h2>
+  @if (isMember) {
+    <button class="btn-action" (click)="onNavigateToAddMoment.emit()" id="btn-add-post">
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+        <circle cx="12" cy="13" r="3"/>
+      </svg>
+      {{ 'expense.takePhoto' | translate }}
+    </button>
+  }
+</div>
+
+@if (tripPosts.length === 0) {
+  <div class="empty-card">{{ 'detail.emptyPosts' | translate }}</div>
+}
+
+<div class="ig-feed">
+  @for (post of tripPosts; track post.id) {
+    <div class="ig-post" [id]="'post-' + post.id">
+      
+      <!-- IG Header -->
+      <div class="ig-header">
+        <div class="ig-user">
+          <div class="ig-avatar" [style.background]="!post.authorAvatar ? getAvatarBg(post.authorName || '?') : ''">
+            @if (post.authorAvatar) {
+              <img [src]="post.authorAvatar" alt="avatar" class="ig-avatar-img" referrerpolicy="no-referrer" />
+            } @else {
+              <span class="ig-avatar-initial" [style.color]="getAvatarColor(post.authorName || '?')">{{ (post.authorName || '?').charAt(0).toUpperCase() }}</span>
+            }
+          </div>
+          <div class="ig-user-info">
+            <span class="ig-author">{{ post.authorName }}</span>
+            <span class="ig-time">{{ formatRelative(post.timestamp) }}</span>
+          </div>
+        </div>
+        <div class="ig-options">
+          @if (isOwner || post.authorId === currentUserId) {
+            <button class="ig-icon-btn" (click)="toggleMenu(post.id); $event.stopPropagation()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="12" r="1.5"/>
+              </svg>
+            </button>
+
+            @if (activeMenuId() === post.id) {
+              <!-- Invisible backdrop to close menu -->
+              <div class="menu-backdrop" (click)="activeMenuId.set(null); $event.stopPropagation()"></div>
+              <!-- Dropdown -->
+              <div class="ig-dropdown-menu">
+                <button class="ig-dropdown-item" (click)="onOpenEditPost.emit(post); activeMenuId.set(null); $event.stopPropagation()">{{ 'action.edit' | translate }}</button>
+                <button class="ig-dropdown-item delete-item" (click)="onDeletePost.emit(post.id); activeMenuId.set(null); $event.stopPropagation()">{{ 'action.delete' | translate }}</button>
+              </div>
+            }
+          } @else {
+            <div class="ig-more">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="12" r="1.5"/>
+              </svg>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- IG Images Carousel -->
+      @if (post.images.length > 0) {
+        <div class="ig-carousel-container">
+          <div class="ig-images" [class.dual]="post.isDual" (scroll)="onImageScroll(post.id, $event)" (touchstart)="$event.stopPropagation()" (touchend)="$event.stopPropagation()">
+            @for (img of post.images; track img) {
+              <img [src]="img" [alt]="post.content" class="ig-img" loading="lazy" #imgRefPost (error)="imgRefPost.style.display='none'" />
+            }
+          </div>
+          
+          @if (post.images.length > 1 && !post.isDual) {
+            <div class="ig-carousel-badge">
+              {{ getActiveImageIndex(post.id) + 1 }}/{{ post.images.length }}
+            </div>
+            <div class="ig-carousel-dots">
+              @for (img of post.images; track img; let i = $index) {
+                <div class="ig-dot" [class.active]="getActiveImageIndex(post.id) === i"></div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- IG Actions Row -->
+      <div class="ig-actions">
+        <div class="ig-actions-left">
+          <button class="ig-action-btn" [class.liked]="post.hasLiked" (click)="onToggleLike.emit(post.id)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" [attr.fill]="post.hasLiked ? '#EF4444' : 'none'" [attr.stroke]="post.hasLiked ? '#EF4444' : '#1C1917'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+          </button>
+          <button class="ig-action-btn" (click)="onOpenComments.emit(post)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+          </button>
+        </div>
+        <button class="ig-action-btn ig-action-share" (click)="onSharePost.emit(post)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- IG Likes Info -->
+      <div class="ig-likes-count">
+        @if (post.hasLiked) {
+          Liked by <strong>You</strong> {{ post.likes > 1 ? 'and others' : '' }}
+        } @else {
+          @if (post.likes > 0) {
+            <strong>{{ post.likes }} likes</strong>
+          }
+        }
+      </div>
+
+      <!-- IG Caption -->
+      @if (post.content) {
+        <div class="ig-caption">
+          <span class="ig-caption-author">{{ post.authorName }}</span>
+          <span class="ig-caption-text">{{ post.content }}</span>
+        </div>
+      }
+
+      <!-- IG Comments Preview -->
+      @if (post.comments.length > 0) {
+        <div class="ig-comments-link" (click)="onOpenComments.emit(post)">
+          {{ 'comment.viewAll' | translate }} {{ post.comments.length }} {{ 'comment.comments' | translate | lowercase }}
+        </div>
+        <div class="ig-comment-preview">
+          <span class="ig-caption-author">{{ post.comments[post.comments.length - 1].authorName }}</span>
+          <span class="ig-caption-text">{{ post.comments[post.comments.length - 1].text }}</span>
+        </div>
+      }
+
+    </div>
+  }
+</div>

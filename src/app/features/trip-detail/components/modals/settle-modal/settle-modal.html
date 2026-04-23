@@ -1,0 +1,125 @@
+<div class="modal-overlay" (click)="handleClose()">
+  <div class="modal" (click)="$event.stopPropagation()" appSwipeToClose (swipeClose)="handleClose()">
+    <div class="modal-header">
+      <h3>{{ 'detail.settleDebt' | translate }}</h3>
+      <button class="btn-close" (click)="handleClose()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    
+    <div class="input-card" style="margin-top:20px; text-align: center;">
+      <div style="display: flex; justify-content: center; align-items: center; gap: 16px; margin-bottom: 24px;">
+        <div style="text-align: center;">
+           <div style="width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 20px; color: #1C1917; overflow: hidden;"
+                [style.background]="!debt.fromAvatar ? getAvatarBg(debt.fromName) : ''">
+             @if (debt.fromAvatar) {
+               <img [src]="debt.fromAvatar" [alt]="debt.fromName" style="width: 100%; height: 100%; object-fit: cover;" referrerpolicy="no-referrer" />
+             } @else {
+               <span [style.color]="getAvatarColor(debt.fromName)">{{ debt.fromName.charAt(0).toUpperCase() }}</span>
+             }
+           </div>
+           <span style="font-size: 13px; font-weight: 600; color: #4B5563;">{{ debt.fromId === currentUserId ? 'You' : debt.fromName }}</span>
+        </div>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        
+        <div style="text-align: center;">
+           <div style="width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 20px; color: #1C1917; overflow: hidden;"
+                [style.background]="!debt.toAvatar ? getAvatarBg(debt.toName) : ''">
+             @if (debt.toAvatar) {
+               <img [src]="debt.toAvatar" [alt]="debt.toName" style="width: 100%; height: 100%; object-fit: cover;" referrerpolicy="no-referrer" />
+             } @else {
+               <span [style.color]="getAvatarColor(debt.toName)">{{ debt.toName.charAt(0).toUpperCase() }}</span>
+             }
+           </div>
+           <span style="font-size: 13px; font-weight: 600; color: #4B5563;">{{ debt.toId === currentUserId ? 'You' : debt.toName }}</span>
+        </div>
+      </div>
+      
+      <div style="background: #F9FAFB; padding: 16px; border-radius: 12px; margin-bottom: 24px;">
+        <div class="amount-row" style="justify-content: center;">
+          <span class="currency-symbol">₫</span>
+          <app-calculator-input [amount]="settleAmount" (amountChange)="onSettleAmountChange($event)" placeholder="0" class="amount-input" style="text-align: center; font-size: 32px !important;"></app-calculator-input>
+        </div>
+      </div>
+
+      <div style="text-align: left; margin-bottom: 24px;">
+        <p class="field-label" style="margin-top: 0; margin-bottom: 8px;">Note (Optional)</p>
+        <input type="text" [(ngModel)]="settleNote" placeholder="e.g. Bank transfer..." class="caption-input" />
+      </div>
+
+      <div style="text-align: left; margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+           <p class="field-label" style="margin: 0;">Attachment (Optional)</p>
+           @if (settleReceipts().length > 0) {
+             <span style="font-size: 12px; color: #666; font-weight: 500;">{{ settleReceipts().length }} selected</span>
+           }
+        </div>
+        <div class="receipt-picker" style="border-radius: 12px; background: #fafafa; border: 2px dashed #e5e5e5; display: flex; flex-direction:column; padding: 16px; gap: 16px;">
+           <!-- Image Previews -->
+           @if (settleReceipts().length > 0) {
+             <div style="display:flex; gap:12px; overflow-x:auto; padding-bottom:4px; max-width: 100%; -webkit-overflow-scrolling: touch;">
+                @for (rec of settleReceipts(); track rec.url; let i = $index) {
+                   <div style="position:relative; width: 64px; height: 64px; flex-shrink:0; border-radius:8px; overflow:hidden; border:1px solid #e5e5e5;">
+                      <img [src]="rec.url" style="width:100%; height:100%; object-fit:cover;" />
+                      <button (click)="removeSettleReceipt(i, $event)" style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.6); color:white; border:none; border-radius:50%; width:20px; height:20px; font-size:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:10;">✕</button>
+                   </div>
+                }
+             </div>
+           }
+           
+           <div style="display:flex; width: 100%; gap:12px;">
+             <label style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 12px; background: white; border: 1px solid #e5e5e5; border-radius: 12px; gap:8px; cursor: pointer; position: relative;">
+               <input type="file" accept="image/*" multiple style="position:absolute; width:1px; height:1px; opacity:0; overflow:hidden;" (change)="onSettleReceiptSelected($event)" />
+               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+               <span style="font-size:11px; font-weight:600; color:#666;">Upload Image</span>
+             </label>
+           </div>
+        </div>
+      </div>
+
+      @if (settleRelatedExpenses().length > 0) {
+        <div style="text-align: left; margin-bottom: 24px;">
+          <h4 style="font-size: 13px; font-weight: 700; color: #4B5563; margin-bottom: 12px; text-transform: uppercase;">{{ 'detail.relatedExpenses' | translate }}</h4>
+          <div style="display: flex; flex-direction: column; gap: 12px; max-height: 200px; overflow-y: auto; padding-right: 4px;">
+            @for (item of settleRelatedExpenses(); track item.expense.id) {
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: white; border: 1px solid #F3F4F6; border-radius: 12px;">
+                <div style="display: flex; align-items: center; gap: 12px; overflow: hidden;">
+                  <div class="expense-icon" style="width: 32px; height: 32px; font-size: 16px; flex-shrink: 0;" [style.background]="getCategoryBg(item.expense.category || 'OTHER')">
+                    <span>{{ getCategoryEmoji(item.expense.category || 'OTHER') }}</span>
+                  </div>
+                  <div style="overflow: hidden; text-align: left;">
+                    <p style="font-size: 14px; font-weight: 600; color: #1C1917; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ item.cleanDesc }}</p>
+                    <p style="font-size: 12px; color: #6B7280; margin: 2px 0 0 0;">{{ formatDateShort(item.expense.date) }}</p>
+                  </div>
+                </div>
+                <div style="text-align: right; flex-shrink: 0;">
+                  <p style="font-size: 14px; font-weight: 700; color: #DC2626; margin: 0;">{{ formatNumber(item.unpaidAmount) }}₫</p>
+                  @if (item.isPartial) {
+                    <p style="font-size: 10px; color: #9CA3AF; margin: 2px 0 0 0;">{{ 'detail.remaining' | translate }}</p>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+    
+    <button class="btn-receipt-close" (click)="submitSettle()" [disabled]="isSavingSettle() || settleAmount <= 0" style="margin-top: 16px; width: 100%; border:none; padding:18px; border-radius:100px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); font-size:16px; font-weight:800; cursor:pointer;" [style.background]="(isSavingSettle() || settleAmount <= 0) ? '#F5F5F5' : '#FFC800'" [style.color]="(isSavingSettle() || settleAmount <= 0) ? '#A8A29E' : '#1C1917'">
+      @if (isSavingSettle()) {
+        {{ 'detail.pleaseWait' | translate }}
+      } @else if (debt.toId === currentUserId) {
+        {{ 'detail.confirmReceived' | translate }}
+      } @else if (debt.fromId === currentUserId) {
+        {{ 'detail.reportTransferred' | translate }}
+      } @else {
+        {{ 'detail.markAsPaid' | translate }}
+      }
+    </button>
+    
+    <button (click)="handleClose()" style="width: 100%; background: transparent; border: none; padding: 12px; margin-top: 8px; color: #9CA3AF; font-size: 15px; font-weight: 700; cursor: pointer;">
+      {{ 'action.close' | translate }}
+    </button>
+  </div>
+</div>
