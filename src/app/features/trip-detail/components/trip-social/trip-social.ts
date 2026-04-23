@@ -10,7 +10,7 @@ import { formatRelative } from '../../../../core/utils/format.util';
   standalone: true,
   imports: [TranslatePipe, LowerCasePipe],
   templateUrl: './trip-social.html',
-  styleUrl: './trip-social.css',
+  styleUrl: './trip-social.scss',
 })
 export class TripSocialComponent {
   @Input({ required: true }) tripPosts: Post[] = [];

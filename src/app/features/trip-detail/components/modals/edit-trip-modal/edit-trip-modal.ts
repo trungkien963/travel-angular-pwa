@@ -13,7 +13,7 @@ import { Trip } from '../../../../../core/models/trip.model';
   standalone: true,
   imports: [CommonModule, FormsModule, SwipeToCloseDirective],
   templateUrl: './edit-trip-modal.html',
-  styleUrl: './edit-trip-modal.css'
+  styleUrl: './edit-trip-modal.scss'
 })
 export class EditTripModalComponent implements OnInit {
   @Input({ required: true }) trip!: Trip;

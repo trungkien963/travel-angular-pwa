@@ -9,7 +9,7 @@ import { formatNumber } from '../../../../core/utils/format.util';
   standalone: true,
   imports: [TranslatePipe],
   templateUrl: './trip-balances.html',
-  styleUrl: './trip-balances.css',
+  styleUrl: './trip-balances.scss',
 })
 export class TripBalances implements OnChanges {
   @Input({ required: true }) totalTripCost: number = 0;

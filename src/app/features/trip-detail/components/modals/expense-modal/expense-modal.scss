@@ -1,0 +1,126 @@
+$primary: #FFC800;
+$text-dark: #1C1917;
+$text-muted: #78716C;
+$text-inactive: #A8A29E;
+$bg: #FFFFFF;
+$border: #F0F0F0;
+
+// ─── Expense Form ─────────────────────────────────────────────────────────────
+.cat-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.cat-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 4px;
+  border-radius: 16px;
+  border: 2px solid $border;
+  background: $bg;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  span { font-size: 22px; }
+
+  &.active {
+    border-color: $primary;
+    background: rgba(255, 200, 0, 0.1);
+  }
+}
+
+.cat-label { font-size: 9px; font-weight: 700; color: $text-muted; letter-spacing: 0.3px; }
+
+.form-field {
+  margin-bottom: 16px;
+
+  label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: $text-muted;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+}
+
+.form-input {
+  width: 100%;
+  padding: 14px 16px;
+  background: #F9F9F9;
+  border: 1.5px solid $border;
+  border-radius: 14px;
+  font-size: 15px;
+  color: $text-dark;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+
+  &:focus { border-color: $primary; }
+}
+
+// ─── Split Input (form) ───────────────────────────────────────────────────────
+.split-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 250px;
+  overflow-y: auto;
+  border: 1px solid $border;
+  border-radius: 20px;
+  padding: 8px;
+  background: #FAFAFA;
+}
+
+.split-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1.5px solid #FFC800;
+  background: $bg;
+  transition: border-color 0.15s ease, background 0.1s ease;
+  &.excluded { border-color: transparent; background: transparent; }
+}
+
+.split-left {
+  display: flex; align-items: center; flex: 1; gap: 12px; cursor: pointer;
+}
+
+.split-right {
+  display: flex; justify-content: flex-end; align-items: center; min-width: 80px; cursor: text;
+}
+
+.split-check {
+  background: none; border: none; pointer-events: none; padding: 0; display: flex; align-items: center; flex-shrink: 0;
+}
+
+.split-name {
+  font-size: 14px; font-weight: 800; color: $text-dark;
+  &.strikethrough { text-decoration: line-through; color: $text-inactive; }
+}
+
+.amount-val {
+  font-size: 14px; font-weight: 900; color: #FBBF24;
+  display: flex; align-items: center; gap: 4px;
+  &.is-locked { color: #D97706; }
+}
+
+.lock-icon { opacity: 0.9; }
+
+.currency-symbol-small { font-size: 12px; color: #A8A29E; margin-right: 4px; }
+
+.inline-edit {
+  width: 70px; border: none; border-bottom: 2px solid #FFC800; background: transparent;
+  font-size: 14px; font-weight: 900; color: $text-dark; text-align: right;
+  outline: none; font-family: inherit; padding: 2px 0;
+  &::placeholder { color: #D4D4D4; }
+}

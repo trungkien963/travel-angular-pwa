@@ -19,7 +19,7 @@ import { formatNumber, formatDateShort } from '../../../../../core/utils/format.
   standalone: true,
   imports: [CommonModule, FormsModule, TranslatePipe, CalculatorInputComponent, SwipeToCloseDirective],
   templateUrl: './settle-modal.html',
-  styleUrl: './settle-modal.css'
+  styleUrl: './settle-modal.scss'
 })
 export class SettleModalComponent implements OnInit, OnChanges {
   @Input({ required: true }) debt!: Debt;

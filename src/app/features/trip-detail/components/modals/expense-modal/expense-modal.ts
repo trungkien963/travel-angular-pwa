@@ -18,7 +18,7 @@ import { Trip } from '../../../../../core/models/trip.model';
   standalone: true,
   imports: [CommonModule, FormsModule, TranslatePipe, CalculatorInputComponent, SwipeToCloseDirective],
   templateUrl: './expense-modal.html',
-  styleUrl: './expense-modal.css',
+  styleUrl: './expense-modal.scss',
 })
 export class ExpenseModalComponent implements OnInit, OnChanges {
   @Input({ required: true }) trip!: Trip;

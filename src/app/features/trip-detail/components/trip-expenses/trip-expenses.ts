@@ -9,7 +9,7 @@ import { formatDateShort, formatCurrency, formatNumber } from '../../../../core/
   standalone: true,
   imports: [TranslatePipe],
   templateUrl: './trip-expenses.html',
-  styleUrl: './trip-expenses.css',
+  styleUrl: './trip-expenses.scss',
 })
 export class TripExpensesComponent implements OnChanges {
   @Input({ required: true }) tripExpenses: Expense[] = [];

@@ -1,0 +1,73 @@
+$primary: #FFC800;
+$text-dark: #1C1917;
+$text-muted: #78716C;
+$text-inactive: #A8A29E;
+$bg: #FFFFFF;
+$border: #F0F0F0;
+
+// Import shared expense styles
+@import '../trip-expenses/trip-expenses.scss';
+
+// ─── Chart ────────────────────────────────────────────────────────────────────
+.chart-card {
+  background: $bg;
+  border: 1px solid $border;
+  border-radius: 24px;
+  padding: 24px;
+  margin-bottom: 32px;
+}
+
+.chart-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: $text-inactive;
+  letter-spacing: 1px;
+  margin: 0 0 20px;
+}
+
+.chart-bar {
+  display: flex;
+  height: 14px;
+  border-radius: 100px;
+  background: $border;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.chart-segment {
+  height: 100%;
+  &.first { border-radius: 100px 0 0 100px; }
+  &.last { border-radius: 0 100px 100px 0; }
+  &.first.last { border-radius: 100px; }
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 40%;
+
+  p { margin: 0; }
+}
+
+.legend-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.legend-cat { font-size: 12px; font-weight: 800; color: $text-dark; }
+.legend-amt { font-size: 12px; font-weight: 700; color: $text-inactive; }
+
+.balances-summary-row {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}

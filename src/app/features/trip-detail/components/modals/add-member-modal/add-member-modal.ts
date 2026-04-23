@@ -15,7 +15,7 @@ import { Member } from '../../../../../core/models/expense.model';
   standalone: true,
   imports: [CommonModule, FormsModule, TranslatePipe, SwipeToCloseDirective],
   templateUrl: './add-member-modal.html',
-  styleUrl: './add-member-modal.css'
+  styleUrl: './add-member-modal.scss'
 })
 export class AddMemberModalComponent {
   @Input({ required: true }) trip!: Trip;

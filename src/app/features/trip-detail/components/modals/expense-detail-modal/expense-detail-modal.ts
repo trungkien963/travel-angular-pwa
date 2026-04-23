@@ -12,7 +12,7 @@ import { formatNumber, formatDate } from '../../../../../core/utils/format.util'
   standalone: true,
   imports: [CommonModule, TranslatePipe, SwipeToCloseDirective, LowerCasePipe],
   templateUrl: './expense-detail-modal.html',
-  styleUrl: './expense-detail-modal.css'
+  styleUrl: './expense-detail-modal.scss'
 })
 export class ExpenseDetailModalComponent {
   @Input({ required: true }) expense!: Expense;

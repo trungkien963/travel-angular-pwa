@@ -1,0 +1,175 @@
+$primary: #FFC800;
+$text-dark: #1C1917;
+$text-muted: #78716C;
+$text-inactive: #A8A29E;
+$bg: #FFFFFF;
+$border: #F0F0F0;
+
+// ─── Expense Detail Modal (Receipt Card) ──────────────────────────────────────
+.review-expense-modal {
+  padding: 32px 16px;
+  background: transparent;
+  box-shadow: none;
+}
+
+.receipt-card {
+  background: #FFFFFF;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 16px 32px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.05);
+  margin-bottom: 24px;
+}
+
+.receipt-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.receipt-icon-wrapper {
+  width: 56px;
+  height: 56px;
+  border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 16px;
+}
+
+.receipt-emoji { font-size: 28px; }
+
+.receipt-title {
+  font-size: 16px; font-weight: 600; color: $text-muted;
+  margin: 0 0 16px; line-height: 1.4; text-align: center;
+}
+
+.receipt-amount-display {
+  font-size: 44px; font-weight: 900; color: $text-dark;
+  letter-spacing: -1.5px; margin-bottom: 6px; text-align: center;
+  line-height: 1;
+}
+
+.receipt-date {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  font-size: 13px; font-weight: 600; color: $text-muted;
+  margin: 0 0 24px;
+}
+
+.receipt-category-pill {
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 800;
+  color: $text-dark;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.edited-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #D4D4D4;
+  font-style: italic;
+}
+
+.receipt-divider {
+  border-top: 2px dashed rgba(0,0,0,0.06);
+  margin: 0 -24px 24px;
+}
+
+.receipt-summary-box {
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 24px;
+  line-height: 1.4;
+  
+  &.summary-lent {
+    background: #ECFDF5;
+    color: #059669;
+    border: 1px solid #A7F3D0;
+  }
+  
+  &.summary-owe {
+    background: #FEF2F2;
+    color: #DC2626;
+    border: 1px solid #FECACA;
+  }
+  
+  &.summary-neutral {
+    background: #F3F4F6;
+    color: #4B5563;
+    border: 1px solid #E5E7EB;
+  }
+}
+
+.receipt-pay-info {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.receipt-label { font-size: 13px; font-weight: 600; color: $text-muted; }
+.receipt-value { font-size: 14px; font-weight: 800; color: $text-dark; }
+
+.receipt-split-section {
+  background: #F9FAFB;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.receipt-split-title {
+  font-size: 10px; font-weight: 800; color: $text-inactive;
+  letter-spacing: 1px; margin: 0 0 12px; text-transform: uppercase;
+}
+
+.receipt-split-list {
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+.receipt-split-item {
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.split-person { font-size: 14px; font-weight: 700; color: $text-dark; }
+.split-share { font-size: 14px; font-weight: 800; color: $primary; }
+
+.receipt-footer-actions {
+  display: flex; align-items: center; justify-content: center; gap: 32px;
+  padding-top: 8px;
+}
+
+.receipt-action-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  background: none; border: none; cursor: pointer; padding: 0;
+  
+  .icon-circle {
+    width: 48px; height: 48px; border-radius: 24px;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.15s ease;
+  }
+  
+  span { font-size: 12px; font-weight: 700; color: $text-muted; transition: color 0.15s ease; }
+
+  &.edit .icon-circle { background: #F3F4F6; color: $text-dark; }
+  &.delete .icon-circle { background: #FEF2F2; color: #DC2626; }
+  
+  &:hover .icon-circle { transform: scale(1.05); }
+  &:hover.edit span { color: $text-dark; }
+  &:hover.delete span { color: #DC2626; }
+}
+
+.btn-receipt-close {
+  width: 100%; padding: 18px;
+  background: #FFFFFF;
+  border: none; border-radius: 100px;
+  font-size: 16px; font-weight: 800; color: $text-dark;
+  cursor: pointer; font-family: inherit;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  transition: transform 0.15s ease;
+  margin-top: 16px;
+  
+  &:hover { transform: scale(1.02); }
+}

@@ -16,7 +16,7 @@ import { formatRelative } from '../../../../../core/utils/format.util';
   standalone: true,
   imports: [CommonModule, FormsModule, TranslatePipe, SwipeToCloseDirective],
   templateUrl: './post-comments-modal.html',
-  styleUrl: './post-comments-modal.css'
+  styleUrl: './post-comments-modal.scss'
 })
 export class PostCommentsModalComponent {
   @Input({ required: true }) post!: Post;
