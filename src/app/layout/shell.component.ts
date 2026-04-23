@@ -39,11 +39,12 @@ export class ShellComponent {
 
   onTabClick(index: number) {
     if (this.activeIndex() === index) {
+      // Depending on the device and layout constraints, either the window or .shell-content could be the scrolling container
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      
       const content = document.querySelector('.shell-content');
       if (content) {
         content.scrollTo({ top: 0, behavior: 'smooth' });
-      } else {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
   }
