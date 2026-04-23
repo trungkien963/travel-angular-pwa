@@ -363,14 +363,21 @@
             </div>
           }
 
-          <div class="section-header">
-            <h2 class="section-title">{{ 'detail.balances' | translate }}</h2>
-            <button class="btn-export" (click)="exportExcel()" id="btn-export">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-              {{ 'detail.export' | translate }}
-            </button>
+          <div class="section-header" style="flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+              <h2 class="section-title">{{ 'detail.balances' | translate }}</h2>
+              <button class="btn-export" (click)="exportExcel()" id="btn-export">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                {{ 'detail.export' | translate }}
+              </button>
+            </div>
+            <!-- Filter Pills -->
+            <div class="expense-filters" style="display: flex; gap: 8px; margin-top: 16px; width: 100%;">
+              <button class="filter-pill" [class.active]="activeBalanceFilter() === 'ALL'" (click)="activeBalanceFilter.set('ALL')">{{ 'expense.all' | translate }}</button>
+              <button class="filter-pill" [class.active]="activeBalanceFilter() === 'MINE'" (click)="activeBalanceFilter.set('MINE')">{{ 'expense.mine' | translate }}</button>
+            </div>
           </div>
 
           @if (debts().length > 0) {
@@ -394,12 +401,12 @@
             </div>
           }
 
-          @if (debts().length === 0) {
+          @if (displayDebts().length === 0) {
             <div class="empty-card">{{ 'detail.settled' | translate }}</div>
           }
 
           <div class="expense-list">
-            @for (debt of debts(); track debt.fromId + debt.toId) {
+            @for (debt of displayDebts(); track debt.fromId + debt.toId) {
               <div class="expense-item" (click)="(isMember() && (debt.fromId === currentUserId() || debt.toId === currentUserId() || isOwner())) ? openSettleModal(debt) : null" [style.cursor]="(isMember() && (debt.fromId === currentUserId() || debt.toId === currentUserId() || isOwner())) ? 'pointer' : 'default'">
                 <div class="expense-left">
                   <div class="expense-icon" [class.debt-me]="debt.fromId === currentUserId()" [class.debt-owed]="debt.toId === currentUserId()">

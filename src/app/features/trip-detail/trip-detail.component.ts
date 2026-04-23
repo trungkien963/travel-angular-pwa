@@ -886,6 +886,7 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
   });
 
   readonly activeExpenseFilter = signal<'ALL' | 'MINE'>('ALL');
+  readonly activeBalanceFilter = signal<'ALL' | 'MINE'>('ALL');
 
   readonly displayExpenses = computed(() => {
     const expenses = this.tripExpenses();
@@ -1113,6 +1114,17 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
     return this.debts()
       .filter(d => d.toId === uid)
       .reduce((sum, d) => sum + d.amount, 0);
+  });
+
+  readonly displayDebts = computed(() => {
+    const allDebts = this.debts();
+    const filter = this.activeBalanceFilter();
+    const uid = this.currentUserId();
+
+    if (filter === 'MINE') {
+      return allDebts.filter(d => d.fromId === uid || d.toId === uid);
+    }
+    return allDebts;
   });
 
   // ─── Lifecycle ────────────────────────────────────────────────────────────
