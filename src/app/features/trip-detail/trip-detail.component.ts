@@ -1127,6 +1127,12 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
       await this.travelStore.initSupabase();
     }
 
+    if (!this.trip()) {
+      this.toastService.show(this.translationService.translate('trip.notFound'), 'error');
+      this.router.navigate(['/discover']);
+      return;
+    }
+
     // Load isolated dependencies for this trip guaranteeing consistency regardless of Realtime dropouts
     await this.loadExpenses();
     await this.loadPosts();

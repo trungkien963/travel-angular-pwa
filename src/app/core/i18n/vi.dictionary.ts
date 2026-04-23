@@ -51,6 +51,7 @@ export const viDictionary = {
   'trip.creating': 'Đang tạo...',
   'trip.addEmailFirst': '☝️ Nhấn \'+\' để thêm email trước',
   'trip.launch': '🚀 Khởi hành',
+  'trip.notFound': 'Chuyến đi không tồn tại hoặc đã bị xoá',
 
   // TRIP DETAIL
   'detail.diary': 'Nhật ký',

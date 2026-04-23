@@ -51,6 +51,7 @@ export const enDictionary = {
   'trip.creating': 'Creating...',
   'trip.addEmailFirst': '☝️ Click \'+\' to add email first',
   'trip.launch': '🚀 Create Adventure',
+  'trip.notFound': 'Trip not found or has been deleted',
 
   // TRIP DETAIL
   'detail.diary': 'Trip Diary',
