@@ -25,12 +25,11 @@ import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { LowerCasePipe } from '@angular/common';
 import { getAvatarBg, getAvatarColor } from '../../core/utils/avatar.util';
 import { formatRelative } from '../../core/utils/format.util';
-import { PostCommentsModalComponent } from '../trip-detail/components/modals/post-comments-modal/post-comments-modal';
 
 @Component({
   selector: 'app-discover',
   standalone: true,
-  imports: [RouterLink, FormsModule, TranslatePipe, LowerCasePipe, PostCommentsModalComponent],
+  imports: [RouterLink, FormsModule, TranslatePipe, LowerCasePipe],
   templateUrl: './discover.component.html',
   styleUrl: './discover.component.scss'
 })
@@ -127,7 +126,7 @@ export class DiscoverComponent implements OnInit, OnDestroy {
         let totalComments = 0;
         tripPosts.forEach(p => {
           totalLikes += (p.likes || 0);
-          totalComments += (Array.isArray(p.comments) ? p.comments.length : 0);
+          totalComments += (p.commentCount || 0);
         });
 
         // Calculate Days & Nights (x Ngày x Đêm -> xNxD format)
@@ -478,6 +477,7 @@ export class DiscoverComponent implements OnInit, OnDestroy {
   }
 
   private tapTimers = new Map<string, number>();
+  private tapTimeouts = new Map<string, any>();
 
   onImageTap(event: Event, post: Post) {
     const target = event.currentTarget as HTMLElement | null;
@@ -492,11 +492,19 @@ export class DiscoverComponent implements OnInit, OnDestroy {
     const now = Date.now();
     const lastTap = this.tapTimers.get(post.id) || 0;
     
-    if (now - lastTap > 0 && now - lastTap < 500) { // 500ms allows easier tap
+    if (now - lastTap > 0 && now - lastTap < 300) { 
+      // Double tap!
+      clearTimeout(this.tapTimeouts.get(post.id));
       this.handleDoubleTapAnimation(event, post);
       this.tapTimers.set(post.id, 0); // reset
     } else {
       this.tapTimers.set(post.id, now);
+      // Single tap timeout
+      const timeout = setTimeout(() => {
+        // Navigate to post
+        this.openPostComments(post);
+      }, 300);
+      this.tapTimeouts.set(post.id, timeout);
     }
   }
 
@@ -537,22 +545,11 @@ export class DiscoverComponent implements OnInit, OnDestroy {
     }, 850);
   }
 
-  readonly commentPostId = signal<string | null>(null);
-  
-  readonly activeCommentPost = computed(() => {
-    const id = this.commentPostId();
-    if (!id) return null;
-    return this.travelStore.posts().find(p => p.id === id) || null;
-  });
-  
   openPostComments(post: Post) {
-    this.commentPostId.set(post.id);
-    this.commentText = '';
+    this.router.navigate(['/post', post.id]);
   }
 
-  closePostComments() {
-    this.commentPostId.set(null);
-  }
+
 
 
 

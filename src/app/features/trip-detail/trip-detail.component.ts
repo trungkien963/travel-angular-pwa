@@ -36,7 +36,6 @@ import { TripExpensesComponent } from './components/trip-expenses/trip-expenses'
 import { TripSocialComponent } from './components/trip-social/trip-social';
 import { ExpenseModalComponent } from './components/modals/expense-modal/expense-modal';
 import { SettleModalComponent } from './components/modals/settle-modal/settle-modal';
-import { PostCommentsModalComponent } from './components/modals/post-comments-modal/post-comments-modal';
 import { EditPostModalComponent } from './components/modals/edit-post-modal/edit-post-modal';
 import { AddMemberModalComponent } from './components/modals/add-member-modal/add-member-modal';
 import { EditMemberModalComponent } from './components/modals/edit-member-modal/edit-member-modal';
@@ -51,7 +50,7 @@ import { formatNumber, formatDate, formatRelative } from '../../core/utils/forma
 @Component({
   selector: 'app-trip-detail',
   standalone: true,
-  imports: [FormsModule, MomentsComponent, TranslatePipe, TripBalances, TripExpensesComponent, TripSocialComponent, ExpenseModalComponent, SettleModalComponent, PostCommentsModalComponent, EditPostModalComponent, AddMemberModalComponent, EditMemberModalComponent, EditTripModalComponent, ExpenseDetailModalComponent],
+  imports: [FormsModule, MomentsComponent, TranslatePipe, TripBalances, TripExpensesComponent, TripSocialComponent, ExpenseModalComponent, SettleModalComponent, EditPostModalComponent, AddMemberModalComponent, EditMemberModalComponent, EditTripModalComponent, ExpenseDetailModalComponent],
   templateUrl: './trip-detail.component.html',
   styleUrl: './trip-detail.component.scss',
   encapsulation: ViewEncapsulation.None
@@ -117,14 +116,7 @@ export class TripDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     this.expenseModalOpen.set(false);
   }
 
-  // ─── Comments modal state ──────────────────────────────────────────────
-  readonly commentPostId = signal<string | null>(null);
-  
-  readonly activeCommentPost = computed(() => {
-    const id = this.commentPostId();
-    if (!id) return null;
-    return this.tripPosts().find(p => p.id === id) || null;
-  });
+
 
   // ─── Edit Post modal state ─────────────────────────────────────────────
   readonly editPostOpen = signal(false);
@@ -338,11 +330,7 @@ export class TripDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   openComments(post: Post) {
-    this.commentPostId.set(post.id);
-  }
-
-  closeComments() {
-    this.commentPostId.set(null);
+    this.router.navigate(['/post', post.id]);
   }
 
   async deletePost(postId: string) {

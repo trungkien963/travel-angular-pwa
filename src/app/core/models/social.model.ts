@@ -25,5 +25,5 @@ export interface Post {
   date: string;
   likes: number;
   hasLiked: boolean;
-  comments: Comment[];
+  commentCount?: number;
 }

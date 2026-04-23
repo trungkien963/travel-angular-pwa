@@ -46,6 +46,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/trip-detail/trip-detail.component').then(m => m.TripDetailComponent)
       },
       {
+        // Post Detail Page
+        path: 'post/:id',
+        loadComponent: () => import('./features/post-detail/post-detail.component').then(m => m.PostDetailComponent)
+      },
+      {
         path: 'profile',
         loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent)
       },

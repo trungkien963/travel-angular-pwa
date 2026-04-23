@@ -184,7 +184,7 @@ export class AddMomentService {
     const postPayload = {
       trip_id: tripId, user_id: uid, content: payload.caption, image_urls: uploadedUrls,
       is_dual_camera: isAnyDual, location_name: payload.selectedLocation?.name ?? null,
-      location_city: payload.selectedLocation?.city ?? null, likes: [], comments: []
+      location_city: payload.selectedLocation?.city ?? null, likes: [], comment_count: 0
     };
     const { data: postData } = await db.from('posts').insert(postPayload).select().single();
     if (postData) {
@@ -192,7 +192,7 @@ export class AddMomentService {
         id: postData['id'], tripId: postData['trip_id'], authorId: uid, authorName,
         content: postData['content'], images: postData['image_urls'] ?? [], isDual: postData['is_dual_camera'],
         timestamp: postData['created_at'], date: postData['created_at']?.split('T')[0],
-        likes: 0, hasLiked: false, comments: []
+        likes: 0, hasLiked: false, commentCount: 0
       } as Post);
     }
 

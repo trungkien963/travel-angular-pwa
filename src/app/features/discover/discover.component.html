@@ -128,20 +128,16 @@
 
               <!-- IG Caption -->
               @if (post.content) {
-                <div class="ig-caption" [style.margin-bottom]="post.comments.length === 0 ? '0' : ''">
+                <div class="ig-caption" [style.margin-bottom]="(!post.commentCount) ? '0' : ''" (click)="openPostComments(post)" style="cursor: pointer;">
                   <span class="ig-caption-author">{{ post.authorName }}</span>
                   <span class="ig-caption-text">{{ post.content }}</span>
                 </div>
               }
 
               <!-- IG Comments Preview -->
-              @if (post.comments.length > 0) {
-                <div class="ig-comments-link" (click)="openPostComments(post)" style="margin: 4px 20px 0; color: #A8A29E; font-size: 14px; font-weight: 500; cursor: pointer;">
-                  {{ 'comment.viewAll' | translate }} {{ post.comments.length }} {{ 'comment.comments' | translate | lowercase }}
-                </div>
-                <div class="ig-comment-preview" style="margin: 4px 20px 0; padding-bottom: 20px; font-size: 14px; line-height: 1.5;">
-                  <span class="ig-caption-author" style="font-weight: 700; color: #1C1917; margin-right: 6px;">{{ post.comments[post.comments.length - 1].authorName }}</span>
-                  <span class="ig-caption-text" style="color: #1C1917;">{{ post.comments[post.comments.length - 1].text }}</span>
+              @if (post.commentCount && post.commentCount > 0) {
+                <div class="ig-comments-link" (click)="openPostComments(post)" style="margin: 4px 20px 20px; color: #A8A29E; font-size: 14px; font-weight: 500; cursor: pointer;">
+                  {{ 'comment.viewAll' | translate }} {{ post.commentCount }} {{ 'comment.comments' | translate | lowercase }}
                 </div>
               } @else {
                 <div style="height: 20px;"></div>
@@ -332,13 +328,7 @@
     </div>
   }
 
-  <!-- ═══ POST COMMENTS MODAL (CATCH UP) ═══ -->
-  @if (activeCommentPost()) {
-    <app-post-comments-modal
-      [post]="activeCommentPost()!"
-      (onClose)="closePostComments()"
-    ></app-post-comments-modal>
-  }
+
 
   <!-- ═══ IMAGE VIEWER MODAL ═══ -->
   @if (viewerOpen()) {

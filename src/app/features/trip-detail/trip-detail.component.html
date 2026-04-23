@@ -292,15 +292,7 @@
     ></app-expense-detail-modal>
   }
 
-  <!-- ═══ COMMENTS MODAL ═══ -->
-  @if (activeCommentPost()) {
-    <app-post-comments-modal
-      [post]="activeCommentPost()!"
-      [isMember]="isMember()"
-      [tripMembers]="trip()?.members || []"
-      (onClose)="closeComments()"
-    ></app-post-comments-modal>
-  }
+
   <!-- ═══ ADD MEMBER MODAL ═══ -->
   @if (addMemberOpen()) {
     <app-add-member-modal

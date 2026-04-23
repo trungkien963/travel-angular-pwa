@@ -66,7 +66,7 @@
         <div class="ig-carousel-container">
           <div class="ig-images" [class.dual]="post.isDual" (scroll)="onImageScroll(post.id, $event)" (touchstart)="$event.stopPropagation()" (touchend)="$event.stopPropagation()">
             @for (img of post.images; track img) {
-              <img [src]="img" [alt]="post.content" class="ig-img" loading="lazy" #imgRefPost (error)="imgRefPost.style.display='none'" />
+              <img [src]="img" [alt]="post.content" class="ig-img" loading="lazy" #imgRefPost (error)="imgRefPost.style.display='none'" (click)="onOpenComments.emit(post)" style="cursor: pointer;" />
             }
           </div>
           
@@ -117,20 +117,16 @@
 
       <!-- IG Caption -->
       @if (post.content) {
-        <div class="ig-caption">
+        <div class="ig-caption" (click)="onOpenComments.emit(post)" style="cursor: pointer;">
           <span class="ig-caption-author">{{ post.authorName }}</span>
           <span class="ig-caption-text">{{ post.content }}</span>
         </div>
       }
 
       <!-- IG Comments Preview -->
-      @if (post.comments.length > 0) {
+      @if (post.commentCount && post.commentCount > 0) {
         <div class="ig-comments-link" (click)="onOpenComments.emit(post)">
-          {{ 'comment.viewAll' | translate }} {{ post.comments.length }} {{ 'comment.comments' | translate | lowercase }}
-        </div>
-        <div class="ig-comment-preview">
-          <span class="ig-caption-author">{{ post.comments[post.comments.length - 1].authorName }}</span>
-          <span class="ig-caption-text">{{ post.comments[post.comments.length - 1].text }}</span>
+          {{ 'comment.viewAll' | translate }} {{ post.commentCount }} {{ 'comment.comments' | translate | lowercase }}
         </div>
       }
 

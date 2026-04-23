@@ -59,11 +59,7 @@ export class TripDetailService {
         }
         if (!Array.isArray(parsedLikes)) parsedLikes = [];
 
-        let parsedComments = p.comments;
-        if (typeof parsedComments === 'string') {
-          try { parsedComments = JSON.parse(parsedComments); } catch (e) { parsedComments = []; }
-        }
-        if (!Array.isArray(parsedComments)) parsedComments = [];
+
 
         let parsedImages = p.image_urls;
         if (typeof parsedImages === 'string') {
@@ -84,7 +80,7 @@ export class TripDetailService {
           date: p.created_at ? p.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
           likes: parsedLikes.length,
           hasLiked: parsedLikes.includes(currentUserId),
-          comments: parsedComments
+          commentCount: p.comment_count || 0
         };
         // Update local store ensuring we overwrite stale with fresh HTTP data
         this.travelStore.updatePost(post.id, post);

@@ -1,0 +1,51 @@
+<div class="post-detail-container" *ngIf="!isLoading(); else loadingTpl">
+  <ng-container *ngIf="post() as p; else errorTpl">
+    
+    <!-- HEADER (Sticky) -->
+    <app-post-header
+      [authorName]="p.authorName"
+      [authorAvatar]="p.authorAvatar"
+      [formattedTime]="formatTime(p.timestamp)"
+      (onBack)="goBack()">
+    </app-post-header>
+
+    <!-- SCROLLABLE CONTENT -->
+    <div class="scroll-area">
+      <!-- Media Carousel -->
+      <app-post-media 
+        [images]="p.images" 
+        [isDual]="p.isDual || false">
+      </app-post-media>
+
+      <!-- Actions, Likes, Caption -->
+      <app-post-actions
+        [hasLiked]="p.hasLiked"
+        [likes]="p.likes"
+        [authorName]="p.authorName"
+        [content]="p.content"
+        (onLike)="toggleLike()">
+      </app-post-actions>
+
+      <!-- Comments Section & Input -->
+      <app-post-comments
+        [comments]="comments()"
+        [isSubmitting]="isSubmitting()"
+        (onSubmitComment)="submitComment($event)">
+      </app-post-comments>
+    </div>
+
+  </ng-container>
+</div>
+
+<ng-template #loadingTpl>
+  <div class="loading-state">
+    <div class="spinner"></div>
+  </div>
+</ng-template>
+
+<ng-template #errorTpl>
+  <div class="error-state">
+    <p>{{ 'trip.notFound' | translate }}</p>
+    <button class="btn-back" (click)="goBack()">{{ 'action.back' | translate }}</button>
+  </div>
+</ng-template>
