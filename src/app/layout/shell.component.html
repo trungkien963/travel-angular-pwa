@@ -7,7 +7,7 @@
   <!-- Bottom Floating Glass Navigation -->
   <nav class="tab-bar glass-dock">
     <!-- Discover / Home -->
-    <a routerLink="/discover" class="tab-item" [class.active]="activeIndex() === 0" id="tab-discover">
+    <a routerLink="/discover" class="tab-item" [class.active]="activeIndex() === 0" (click)="onTabClick(0)" id="tab-discover">
       <div class="icon-wrapper">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
           <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
@@ -17,7 +17,7 @@
     </a>
 
     <!-- Trips / Map -->
-    <a routerLink="/trips" class="tab-item" [class.active]="activeIndex() === 1" id="tab-trips">
+    <a routerLink="/trips" class="tab-item" [class.active]="activeIndex() === 1" (click)="onTabClick(1)" id="tab-trips">
       <div class="icon-wrapper">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/>
@@ -37,7 +37,7 @@
     </a>
 
     <!-- Profile -->
-    <a routerLink="/profile" class="tab-item" [class.active]="activeIndex() === 3" id="tab-profile">
+    <a routerLink="/profile" class="tab-item" [class.active]="activeIndex() === 3" (click)="onTabClick(3)" id="tab-profile">
       <div class="icon-wrapper">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="8" r="5"/>
@@ -47,7 +47,7 @@
     </a>
 
     <!-- Notifications -->
-    <a routerLink="/notifications" class="tab-item" [class.active]="activeIndex() === 4" id="tab-notifications">
+    <a routerLink="/notifications" class="tab-item" [class.active]="activeIndex() === 4" (click)="onTabClick(4)" id="tab-notifications">
       <div class="icon-wrapper tab-notif-wrapper">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
           <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>

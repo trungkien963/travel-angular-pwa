@@ -36,4 +36,15 @@ export class ShellComponent {
     if (url.includes('/notifications')) return 4;
     return -1; // Default to no highlight if no match
   });
+
+  onTabClick(index: number) {
+    if (this.activeIndex() === index) {
+      const content = document.querySelector('.shell-content');
+      if (content) {
+        content.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+  }
 }
