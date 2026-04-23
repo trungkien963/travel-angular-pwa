@@ -204,10 +204,31 @@ export class AddMomentComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       if (this.videoElement) this.cameraService.startCamera(this.videoElement.nativeElement);
     }, 100);
+
+    this.lockOrientation();
   }
 
   ngOnDestroy() {
     this.cameraService.stopCamera();
+    this.unlockOrientation();
+  }
+
+  private lockOrientation() {
+    try {
+      if (screen.orientation && (screen.orientation as any).lock) {
+        (screen.orientation as any).lock('portrait').catch((err: any) => {
+          console.warn('Orientation lock failed:', err);
+        });
+      }
+    } catch (e) {}
+  }
+
+  private unlockOrientation() {
+    try {
+      if (screen.orientation && screen.orientation.unlock) {
+        screen.orientation.unlock();
+      }
+    } catch (e) {}
   }
 
   private autoSelectTrip() {

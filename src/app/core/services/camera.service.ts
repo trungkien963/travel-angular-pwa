@@ -130,29 +130,19 @@ export class CameraService {
       const videoRatio = videoElement.videoWidth / videoElement.videoHeight;
       const displayRatio = displayWidth / displayHeight;
 
-      const isLandscape = videoRatio > 1.05; // Treat as landscape if width > height
-
       let targetWidth, targetHeight;
       let sx = 0, sy = 0, sw = videoElement.videoWidth, sh = videoElement.videoHeight;
 
-      if (isLandscape) {
-        // If the frame is landscape, we will rotate it 90 degrees to make it portrait.
-        // We use the full frame without cropping.
-        targetWidth = videoElement.videoHeight;
-        targetHeight = videoElement.videoWidth;
+      if (videoRatio > displayRatio) {
+        targetHeight = videoElement.videoHeight;
+        targetWidth = videoElement.videoHeight * displayRatio;
+        sw = targetWidth;
+        sx = (videoElement.videoWidth - sw) / 2;
       } else {
-        // Portrait or square, apply crop logic
-        if (videoRatio > displayRatio) {
-          targetHeight = videoElement.videoHeight;
-          targetWidth = videoElement.videoHeight * displayRatio;
-          sw = targetWidth;
-          sx = (videoElement.videoWidth - sw) / 2;
-        } else {
-          targetWidth = videoElement.videoWidth;
-          targetHeight = videoElement.videoWidth / displayRatio;
-          sh = targetHeight;
-          sy = (videoElement.videoHeight - sh) / 2;
-        }
+        targetWidth = videoElement.videoWidth;
+        targetHeight = videoElement.videoWidth / displayRatio;
+        sh = targetHeight;
+        sy = (videoElement.videoHeight - sh) / 2;
       }
 
       canvasElement.width = targetWidth || 1080;
@@ -171,17 +161,8 @@ export class CameraService {
           ctx.filter = 'contrast(1.05) saturate(0.85) brightness(0.95) sepia(0.05) hue-rotate(5deg)';
       }
 
-      if (isLandscape) {
-        ctx.save();
-        ctx.translate(canvasElement.width, 0);
-        ctx.rotate(Math.PI / 2);
-        // Swapped width/height in drawImage because we are drawing in rotated coordinates
-        ctx.drawImage(videoElement, 0, 0, videoElement.videoWidth, videoElement.videoHeight);
-        ctx.restore();
-      } else {
-        // Draw base video frame with crop
-        ctx.drawImage(videoElement, sx, sy, sw, sh, 0, 0, canvasElement.width, canvasElement.height);
-      }
+      // Draw base video frame with crop
+      ctx.drawImage(videoElement, sx, sy, sw, sh, 0, 0, canvasElement.width, canvasElement.height);
       
       // Reset filter
       ctx.filter = 'none';
