@@ -46,7 +46,7 @@ import { TripDetailService } from './services/trip-detail.service';
 import { TripExportService } from './services/trip-export.service';
 import { calculateDebts, calculateChartData, calculateYourShare } from '../../core/utils/settlement.util';
 import { getAvatarBg, getAvatarColor } from '../../core/utils/avatar.util';
-import { formatNumber, formatCurrency, formatDate, formatDateShort, formatRelative } from '../../core/utils/format.util';
+import { formatNumber, formatDate, formatRelative } from '../../core/utils/format.util';
 
 @Component({
   selector: 'app-trip-detail',
@@ -73,7 +73,7 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
 
   readonly tabs = ['MOMENTS', 'SOCIAL', 'EXPENSES', 'BALANCES', 'MEMBERS', 'ACTIVITY'];
   activeTab = 'SOCIAL';
-  quickPostMode = false;
+
 
   editTripModal = false;
   isCoverLoading = signal(false);
@@ -185,26 +185,7 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
     this.travelStore.posts().filter(p => p.tripId === this.tripId())
   );
 
-  readonly tripPostsGroups = computed(() => {
-    const posts = this.tripPosts();
-    const groups: { dateLabel: string; posts: Post[] }[] = [];
-    const map = new Map<string, Post[]>();
-    
-    posts.forEach(p => {
-      // Use device local string without year for cleaner look
-      const dateStr = new Date(p.timestamp).toLocaleDateString('en-US', {
-        weekday: 'short', month: 'short', day: 'numeric'
-      });
-      if (!map.has(dateStr)) map.set(dateStr, []);
-      map.get(dateStr)!.push(p);
-    });
 
-    map.forEach((pts, dateLabel) => {
-      groups.push({ dateLabel, posts: pts });
-    });
-
-    return groups;
-  });
 
   readonly totalTripCost = computed(() =>
     this.tripExpenses().reduce((sum, e) => sum + (e.category === 'SETTLEMENT' ? 0 : e.amount), 0)
@@ -410,15 +391,8 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
     this.tripExportService.exportExcel(this.trip(), this.tripExpenses(), this.debts(), this.totalTripCost());
   }
 
-  // ─── Helpers ──────────────────────────────────────────────────────────────
-  getCategoryEmoji(cat: string): string { return CATEGORY_META[cat]?.emoji || '💸'; }
-  getCategoryLabel(cat: string): string { return CATEGORY_META[cat]?.label || 'Other'; }
-  getCategoryBg(cat: string): string    { return CATEGORY_META[cat]?.bg    || '#F3F4F6'; }
-
   formatDate = formatDate;
-  formatDateShort = formatDateShort;
   formatRelative = formatRelative;
-  formatCurrency = formatCurrency;
   formatNumber = formatNumber;
 
   getAvatarBg = getAvatarBg;
