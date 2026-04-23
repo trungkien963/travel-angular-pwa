@@ -76,7 +76,7 @@
 
               <!-- IG Images Carousel -->
               @if (post.images && post.images.length > 0) {
-                <div class="ig-carousel-container" (touchstart)="onImageTap($event, post)" (click)="onImageTap($event, post)">
+                <div class="ig-carousel-container" (click)="onImageTap($event, post)">
                   <div class="ig-images" [class.dual]="post.isDual" (scroll)="onPostImageScroll(post.id, $event)">
                     @for (img of post.images; track img) {
                       <img [src]="img" class="ig-img" loading="lazy" />
@@ -126,9 +126,8 @@
                 }
               </div>
 
-              <!-- IG Caption -->
               @if (post.content) {
-                <div class="ig-caption" [style.margin-bottom]="(!post.commentCount) ? '0' : ''" (click)="openPostComments(post)" style="cursor: pointer;">
+                <div class="ig-caption" [style.margin-bottom]="(!post.commentCount) ? '0' : ''">
                   <span class="ig-caption-author">{{ post.authorName }}</span>
                   <span class="ig-caption-text">{{ post.content }}</span>
                 </div>

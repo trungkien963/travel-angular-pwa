@@ -90,3 +90,4 @@ export class PostCommentsComponent {
     return colors[index];
   }
 }
+// Force rebuild to apply SCSS updates

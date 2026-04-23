@@ -481,13 +481,6 @@ export class DiscoverComponent implements OnInit, OnDestroy {
 
   onImageTap(event: Event, post: Post) {
     const target = event.currentTarget as HTMLElement | null;
-    if (target) {
-      if (event.type === 'touchstart') {
-        (target as any)._hasTouch = true;
-      } else if (event.type === 'click' && (target as any)._hasTouch) {
-        return; // Skip click if handled by touch
-      }
-    }
 
     const now = Date.now();
     const lastTap = this.tapTimers.get(post.id) || 0;
@@ -499,10 +492,9 @@ export class DiscoverComponent implements OnInit, OnDestroy {
       this.tapTimers.set(post.id, 0); // reset
     } else {
       this.tapTimers.set(post.id, now);
-      // Single tap timeout
+      // Reset timer after 300ms, no single tap action
       const timeout = setTimeout(() => {
-        // Navigate to post
-        this.openPostComments(post);
+        this.tapTimers.set(post.id, 0);
       }, 300);
       this.tapTimeouts.set(post.id, timeout);
     }
