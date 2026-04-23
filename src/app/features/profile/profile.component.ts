@@ -4,6 +4,7 @@ import { TravelStore } from '../../core/store/travel.store';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { TranslationService } from '../../core/i18n/translation.service';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { ConfirmService } from '../../core/services/confirm.service';
 
 @Component({
   selector: 'app-profile',
@@ -16,6 +17,7 @@ export class ProfileComponent implements OnInit {
   private router = inject(Router);
   private supabaseService = inject(SupabaseService);
   private travelStore = inject(TravelStore);
+  private confirmService = inject(ConfirmService);
   translationService = inject(TranslationService);
 
   // ─── User info signals ────────────────────────────────────────────────────
@@ -146,6 +148,14 @@ export class ProfileComponent implements OnInit {
   }
 
   async signOut() {
+    const title = this.translationService.translate('modal.confirmLogoutTitle');
+    const message = this.translationService.translate('modal.confirmLogoutMessage');
+    const confirmBtn = this.translationService.translate('action.continue');
+    const cancelBtn = this.translationService.translate('btn.cancel');
+
+    const confirmed = await this.confirmService.confirm(message, title, confirmBtn, cancelBtn);
+    if (!confirmed) return;
+
     try {
       // Clear push token (best-effort)
       const uid = this.travelStore.currentUserId();

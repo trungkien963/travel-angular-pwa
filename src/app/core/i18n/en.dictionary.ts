@@ -207,5 +207,7 @@ export const enDictionary = {
   'modal.unsavedExpense': 'You are entering an expense. Are you sure you want to exit?',
   'modal.unsavedChanges': 'You have unsaved changes. Are you sure you want to discard them?',
   'modal.unsavedInfo': 'You are entering information. Are you sure you want to exit?',
+  'modal.confirmLogoutTitle': 'Confirm Logout',
+  'modal.confirmLogoutMessage': 'Are you sure you want to log out?',
   'action.continue': 'Continue',
 };

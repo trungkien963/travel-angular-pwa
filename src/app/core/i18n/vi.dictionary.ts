@@ -207,5 +207,7 @@ export const viDictionary = {
   'modal.unsavedExpense': 'Bạn đang nhập dở chi phí. Bạn có chắc muốn thoát?',
   'modal.unsavedChanges': 'Bạn có thay đổi chưa lưu. Bạn có chắc muốn hủy bỏ?',
   'modal.unsavedInfo': 'Bạn đang nhập dở thông tin. Bạn có chắc muốn hủy bỏ?',
+  'modal.confirmLogoutTitle': 'Xác nhận đăng xuất',
+  'modal.confirmLogoutMessage': 'Bạn có chắc chắn muốn đăng xuất?',
   'action.continue': 'Tiếp tục',
 };
