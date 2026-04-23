@@ -365,7 +365,7 @@ export class DiscoverComponent implements OnInit, OnDestroy {
     if (navigator.share) {
       navigator.share({
         title: item.title,
-        text: `Check out this amazing trip to ${item.locationType} on WanderPool!`,
+        text: `Check out this amazing trip to ${item.locationType} on WanderPool!\n\n`,
         url: url
       }).catch(console.error);
     } else {
@@ -561,7 +561,7 @@ export class DiscoverComponent implements OnInit, OnDestroy {
     if (navigator.share) {
       navigator.share({
         title: 'Check this moment!',
-        text: `See this amazing moment by ${post.authorName} on WanderPool!`,
+        text: `See this amazing moment by ${post.authorName} on WanderPool!\n\n`,
         url: url
       }).catch(console.error);
     } else {

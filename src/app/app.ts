@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { PwaBannerComponent } from './shared/components/pwa-banner/pwa-banner.component';
 import { LoadingSpinnerComponent } from './shared/components/loading-spinner/loading-spinner.component';
@@ -26,5 +26,18 @@ import { ConfirmComponent } from './shared/components/confirm/confirm.component'
     }
   `]
 })
-export class App {}
+export class App implements OnInit {
+  ngOnInit() {
+    // Attempt to lock screen orientation to portrait
+    if (screen.orientation && 'lock' in screen.orientation) {
+      try {
+        (screen.orientation as any).lock('portrait').catch((err: any) => {
+          console.log('Screen orientation lock failed or not supported:', err);
+        });
+      } catch (e) {
+        console.log('Screen orientation lock error:', e);
+      }
+    }
+  }
+}
 

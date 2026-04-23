@@ -213,7 +213,7 @@ export class TripDetailService {
       try {
         await navigator.share({
           title: `WanderPool Moment: ${post.authorName}`,
-          text: post.content || 'Check out this moment on WanderPool!',
+          text: `${post.content || 'Check out this moment on WanderPool!'}\n\n`,
           url: window.location.href,
         });
       } catch (err) {
