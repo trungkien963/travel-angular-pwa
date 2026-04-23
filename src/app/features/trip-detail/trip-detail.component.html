@@ -281,119 +281,15 @@
 
   <!-- ═══ EXPENSE DETAIL MODAL ═══ -->
   @if (selectedExpense) {
-    <div class="modal-overlay" (click)="selectedExpense = null">
-      <div class="modal review-expense-modal" (click)="$event.stopPropagation()" appSwipeToClose (swipeClose)="selectedExpense = null">
-        <!-- Receipt Style Card -->
-        <div class="receipt-card">
-          <div class="receipt-header">
-            <div class="receipt-icon-wrapper" [style.background]="getCategoryBg(selectedExpense.category || 'OTHER')">
-              <span class="receipt-emoji">{{ getCategoryEmoji(selectedExpense.category || 'OTHER') }}</span>
-            </div>
-            <div class="receipt-amount-display">{{ formatNumber(selectedExpense.amount) }}₫</div>
-            <h2 class="receipt-title">{{ selectedExpense.desc || getCategoryLabel(selectedExpense.category || 'OTHER') }}</h2>
-            <div class="receipt-date">
-              <span class="receipt-category-pill" [style.background]="getCategoryBg(selectedExpense.category || 'OTHER')">{{ getCategoryLabel(selectedExpense.category || 'OTHER') }}</span>
-              <span>{{ formatDate(selectedExpense.date) }}</span>
-              @if (selectedExpense.isEdited) {
-                <span class="edited-badge">· Edited</span>
-              }
-            </div>
-          </div>
-          
-          <div class="receipt-divider"></div>
-          
-          @if (getExpenseSummaryContext(selectedExpense); as summary) {
-            <div class="receipt-summary-box" [class]="'summary-' + summary.type">
-              {{ summary.message }}
-            </div>
-          }
-          
-          <div class="receipt-pay-info">
-            <span class="receipt-label">{{ 'expense.paidBy' | translate | lowercase }}</span>
-            <span class="receipt-value">{{ getPayerName(selectedExpense.payerId) }}</span>
-          </div>
-          
-          @if (selectedExpense.splits && selectedExpense.splits['__note']) {
-            <div class="receipt-pay-info" style="margin-top: 12px; border-top: 1px dashed #E5E5E5; padding-top: 12px;">
-              <span class="receipt-label" style="text-transform: lowercase;">note</span>
-              <span class="receipt-value" style="text-align: right; word-break: break-word; font-weight: 500;">{{ selectedExpense.splits['__note'] }}</span>
-            </div>
-          }
-
-          <div class="receipt-split-section">
-            <h4 class="receipt-split-title">{{ 'expense.splitDetails' | translate }}</h4>
-            <div class="receipt-split-list">
-              @for (member of trip()!.members; track member.id) {
-                <!-- Calculate local share safely if splits is empty -->
-                @if ((selectedExpense.splits && selectedExpense.splits[member.id] > 0) || (!selectedExpense.splits && selectedExpense.amount > 0)) {
-                  <div class="receipt-split-item">
-                    <span class="split-person">{{ member.name }}</span>
-                    <span class="split-share">{{ formatNumber(selectedExpense.splits ? selectedExpense.splits[member.id] : getFallbackSplit(selectedExpense)) }}₫</span>
-                  </div>
-                }
-              }
-            </div>
-          </div>
-
-          @if (selectedExpense.receipts && selectedExpense.receipts.length > 0) {
-            <div class="receipt-divider"></div>
-            <div class="receipt-attachments">
-              <h4 class="receipt-split-title">{{ 'detail.attachedReceipts' | translate }}</h4>
-              <div style="display:flex; gap:12px; overflow-x:auto; padding-top:8px;">
-                @for (imgUrl of selectedExpense.receipts; track imgUrl; let i = $index) {
-                  <div (click)="openLightbox(selectedExpense.receipts, i)" style="width: 60px; height: 60px; flex-shrink: 0; border-radius: 8px; overflow: hidden; border: 1px solid #e5e5e5; cursor: pointer;">
-                    <img [src]="imgUrl" style="width: 100%; height: 100%; object-fit: cover;" />
-                  </div>
-                }
-              </div>
-            </div>
-          }
-
-          @if (isMember()) {
-            <div class="receipt-divider"></div>
-            <div class="receipt-footer-actions">
-              @if (selectedExpense.category !== 'SETTLEMENT') {
-                <button class="receipt-action-btn edit" (click)="editExpense(selectedExpense)">
-                  <div class="icon-circle">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
-                  </div>
-                  <span>{{ 'action.edit' | translate }}</span>
-                </button>
-              }
-              <button class="receipt-action-btn delete" (click)="deleteExpenseConfirm(selectedExpense.id)">
-                <div class="icon-circle">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="m19 6-.867 12.142A2 2 0 0 1 16.138 20H7.862a2 2 0 0 1-1.995-1.858L5 6m5 0V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/></svg>
-                </div>
-                <span>{{ 'action.delete' | translate }}</span>
-              </button>
-            </div>
-          }
-        </div>
-        
-        <button class="btn-receipt-close" (click)="selectedExpense = null">{{ 'action.close' | translate }}</button>
-      </div>
-    </div>
-  }
-
-  <!-- Fullscreen Lightbox Overlay -->
-  @if (lightboxIndex() !== null && lightboxImages().length > 0) {
-    <div class="modal-overlay receipt-viewer" style="z-index: 1000; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
-      <button style="position: absolute; top: 24px; right: 24px; background: rgba(255,255,255,0.2); border: none; width: 40px; height: 40px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 1001;" (click)="lightboxIndex.set(null)">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-      </button>
-
-      <div class="receipt-carousel-badge" style="position:absolute; top:32px; left:24px; background:rgba(255,255,255,0.2); color:white; padding:4px 10px; border-radius:12px; font-size:14px; font-weight:600; z-index:1001;">
-        {{ lightboxIndex()! + 1 }} / {{ lightboxImages().length }}
-      </div>
-
-      <div class="receipt-fullscreen-scroll lightbox-scroll" style="display:flex; width:100vw; height:100vh; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scroll-behavior:smooth;" (scroll)="onLightboxScroll($event)">
-        @for (img of lightboxImages(); track img) {
-          <div style="width:100vw; height:100vh; flex-shrink:0; scroll-snap-align:center; display:flex; align-items:center; justify-content:center; padding: 20px;">
-            <img [src]="img" style="max-width: 100%; max-height: 85vh; object-fit: contain; border-radius: 8px;" (click)="$event.stopPropagation()" />
-          </div>
-        }
-      </div>
-    </div>
+    <app-expense-detail-modal
+      [expense]="selectedExpense"
+      [members]="trip()!.members"
+      [currentUserId]="currentUserId()"
+      [isMember]="isMember()"
+      (onClose)="selectedExpense = null"
+      (onEdit)="editExpense($event)"
+      (onDelete)="deleteExpenseConfirm($event)"
+    ></app-expense-detail-modal>
   }
 
   <!-- ═══ COMMENTS MODAL ═══ -->

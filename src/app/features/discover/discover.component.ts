@@ -25,11 +25,12 @@ import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { LowerCasePipe } from '@angular/common';
 import { getAvatarBg, getAvatarColor } from '../../core/utils/avatar.util';
 import { formatRelative } from '../../core/utils/format.util';
+import { PostCommentsModalComponent } from '../trip-detail/components/modals/post-comments-modal/post-comments-modal';
 
 @Component({
   selector: 'app-discover',
   standalone: true,
-  imports: [RouterLink, FormsModule, TranslatePipe, LowerCasePipe],
+  imports: [RouterLink, FormsModule, TranslatePipe, LowerCasePipe, PostCommentsModalComponent],
   templateUrl: './discover.component.html',
   styleUrl: './discover.component.scss'
 })
@@ -551,65 +552,9 @@ export class DiscoverComponent implements OnInit, OnDestroy {
 
   closePostComments() {
     this.commentPostId.set(null);
-    this.commentText = '';
   }
 
-  async sendPostComment() {
-    const text = this.commentText.trim();
-    const activePost = this.activeCommentPost();
-    if (!text || !activePost) return;
-    
-    this.isSendingComment.set(true);
-    
-    try {
-      const uid = this.travelStore.currentUserId();
-      const profile = this.travelStore.currentUserProfile();
-      const authorName = profile?.name || 'Traveler';
-      
-      const newComment: Comment = {
-        id: crypto.randomUUID(),
-        authorId: uid,
-        authorName,
-        authorAvatar: profile?.avatar || undefined,
-        text,
-        timestamp: new Date().toISOString()
-      };
-      
-      const existingComments = Array.isArray(activePost.comments) ? activePost.comments : [];
-      const updatedComments = [...existingComments, newComment];
-      
-      // Optimistic upate (local)
-      this.travelStore.updatePost(activePost.id, { comments: updatedComments });
-      this.commentText = '';
-      
-      // Update Supabase using RPC to avoid race conditions on JSONB arrays
-      const db = this.supabaseService.client;
-      const { error } = await db.rpc('add_post_comment', {
-        p_post_id: activePost.id,
-        p_comment: newComment
-      });
-      
-      if (error) {
-        console.warn('RPC failed, falling back to full array replace:', error);
-        const { data: freshPost } = await db.from('posts').select('comments').eq('id', activePost.id).single();
-        let freshComments: any[] = [];
-        if (freshPost && freshPost.comments) {
-            const raw = freshPost.comments;
-            if (Array.isArray(raw)) freshComments = raw;
-            else if (typeof raw === 'string') {
-              try { freshComments = JSON.parse(raw); } catch(e){}
-            }
-        }
-        const safelyMerged = [...freshComments, newComment];
-        await db.from('posts').update({ comments: safelyMerged }).eq('id', activePost.id);
-      }
-      
-    } catch(err: any) {
-      this.toastService.show(err.message || 'Failed to send comment', 'error');
-    } finally {
-      this.isSendingComment.set(false);
-    }
-  }
+
 
   sharePost(post: Post) {
     const url = window.location.origin + '/trip/' + post.tripId;

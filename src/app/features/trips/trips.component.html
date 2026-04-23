@@ -166,7 +166,7 @@
             <span>{{ 'action.searchingLocations' | translate }}</span>
           </li>
           } @else {
-          @for (loc of locationSuggestions(); track loc.place_id) {
+          @for (loc of locationSuggestions(); track loc.placeId) {
           <li (click)="selectLocation(loc)">
             <div class="loc-icon">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
@@ -176,8 +176,8 @@
               </svg>
             </div>
             <div class="loc-text">
-              <span class="loc-name">{{ loc.display_name.split(',')[0] }}</span>
-              <span class="loc-sub">{{ loc.display_name.split(',').slice(1).join(', ') }}</span>
+              <span class="loc-name">{{ loc.name }}</span>
+              <span class="loc-sub">{{ loc.city }}</span>
             </div>
           </li>
           }

@@ -6,6 +6,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { Trip } from '../../core/models/trip.model';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { formatDate } from '../../core/utils/format.util';
+import { LocationService, LocationResult } from '../../core/services/location.service';
 
 @Component({
   selector: 'app-trips',
@@ -20,6 +21,7 @@ export class TripsComponent implements OnInit {
   private toastService = inject(ToastService);
   private ngZone = inject(NgZone);
   private cdr = inject(ChangeDetectorRef);
+  private locationService = inject(LocationService);
 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
@@ -42,7 +44,7 @@ export class TripsComponent implements OnInit {
   readonly members = signal<string[]>([]);
   readonly coverImagePreview = signal<string | null>(null);
   private coverImageFile: File | null = null;
-  readonly locationSuggestions = signal<any[]>([]);
+  readonly locationSuggestions = signal<LocationResult[]>([]);
   readonly isLocationLoading = signal(false);
   private locationTimeout: any;
 
@@ -131,21 +133,14 @@ export class TripsComponent implements OnInit {
     
     this.isLocationLoading.set(true);
     this.locationTimeout = setTimeout(async () => {
-      try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`);
-        const data = await res.json();
-        this.locationSuggestions.set(data);
-      } catch (err) {
-        console.error('Failed to fetch locations', err);
-        this.locationSuggestions.set([]);
-      } finally {
-        this.isLocationLoading.set(false);
-      }
+      const results = await this.locationService.searchLocations(query);
+      this.locationSuggestions.set(results);
+      this.isLocationLoading.set(false);
     }, 400); // 400ms debounce
   }
 
-  selectLocation(loc: any) {
-    this.tripLocation = loc.display_name;
+  selectLocation(loc: LocationResult) {
+    this.tripLocation = loc.name; // or loc.address depending on preference
     this.locationSuggestions.set([]);
   }
 

@@ -9,7 +9,6 @@ import { Post, Comment } from '../../core/models/social.model';
 import { ToastService } from '../../core/services/toast.service';
 import { ConfirmService } from '../../core/services/confirm.service';
 import { MomentsComponent } from '../moments/moments.component';
-import { SwipeToCloseDirective } from '../../shared/directives/swipe-to-close.directive';
 
 
 
@@ -32,7 +31,6 @@ export const CATEGORY_META: Record<string, { emoji: string; label: string; color
 
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { TranslationService } from '../../core/i18n/translation.service';
-import { LowerCasePipe } from '@angular/common';
 import { TripBalances } from './components/trip-balances/trip-balances';
 import { TripExpensesComponent } from './components/trip-expenses/trip-expenses';
 import { TripSocialComponent } from './components/trip-social/trip-social';
@@ -43,6 +41,7 @@ import { EditPostModalComponent } from './components/modals/edit-post-modal/edit
 import { AddMemberModalComponent } from './components/modals/add-member-modal/add-member-modal';
 import { EditMemberModalComponent } from './components/modals/edit-member-modal/edit-member-modal';
 import { EditTripModalComponent } from './components/modals/edit-trip-modal/edit-trip-modal';
+import { ExpenseDetailModalComponent } from './components/modals/expense-detail-modal/expense-detail-modal';
 import { TripDetailService } from './services/trip-detail.service';
 import { TripExportService } from './services/trip-export.service';
 import { calculateDebts, calculateChartData, calculateYourShare } from '../../core/utils/settlement.util';
@@ -52,7 +51,7 @@ import { formatNumber, formatCurrency, formatDate, formatDateShort, formatRelati
 @Component({
   selector: 'app-trip-detail',
   standalone: true,
-  imports: [FormsModule, MomentsComponent, SwipeToCloseDirective, TranslatePipe, LowerCasePipe, TripBalances, TripExpensesComponent, TripSocialComponent, ExpenseModalComponent, SettleModalComponent, PostCommentsModalComponent, EditPostModalComponent, AddMemberModalComponent, EditMemberModalComponent, EditTripModalComponent],
+  imports: [FormsModule, MomentsComponent, TranslatePipe, TripBalances, TripExpensesComponent, TripSocialComponent, ExpenseModalComponent, SettleModalComponent, PostCommentsModalComponent, EditPostModalComponent, AddMemberModalComponent, EditMemberModalComponent, EditTripModalComponent, ExpenseDetailModalComponent],
   templateUrl: './trip-detail.component.html',
   styleUrl: './trip-detail.component.scss',
   encapsulation: ViewEncapsulation.None
@@ -131,28 +130,10 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
 
   // ─── Add Member modal state ───────────────────────────────────────────
   readonly addMemberOpen = signal(false);
-  newMemberName = '';
-  newMemberEmail = '';
-  readonly isInviting = signal(false);
-  readonly inviteStatus = signal('');
-  readonly inviteSuccess = signal(false);
-
-  async closeAddMember() {
-    if (this.newMemberName.trim() || this.newMemberEmail.trim()) {
-      if (await this.confirmService.confirm(this.translationService.translate('modal.unsavedInfo'), this.translationService.translate('modal.warning'), this.translationService.translate('action.close'), this.translationService.translate('action.continue'))) {
-        this.addMemberOpen.set(false);
-      }
-    } else {
-      this.addMemberOpen.set(false);
-    }
-  }
 
   // ─── Edit Member modal state ──────────────────────────────────────────
   readonly editMemberOpen = signal(false);
   editingMember: Member | null = null;
-  editMemberName = '';
-  editMemberEmail = '';
-  readonly isSavingMember = signal(false);
 
   // ─── Derived State ────────────────────────────────────────────────────────
   readonly tripId = signal('');
@@ -199,7 +180,6 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   });
 
-  readonly activeBalanceFilter = signal<'ALL' | 'MINE'>('ALL');
 
   readonly tripPosts = computed<Post[]>(() =>
     this.travelStore.posts().filter(p => p.tripId === this.tripId())
@@ -254,17 +234,6 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
     return this.debts()
       .filter(d => d.toId === uid)
       .reduce((sum, d) => sum + d.amount, 0);
-  });
-
-  readonly displayDebts = computed(() => {
-    const allDebts = this.debts();
-    const filter = this.activeBalanceFilter();
-    const uid = this.currentUserId();
-
-    if (filter === 'MINE') {
-      return allDebts.filter(d => d.fromId === uid || d.toId === uid);
-    }
-    return allDebts;
   });
 
   // ─── Lifecycle ────────────────────────────────────────────────────────────
@@ -390,30 +359,7 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
   openExpenseDetail(exp: Expense) { this.selectedExpense = exp; }
 
   // ─── Lightbox for viewing receipts ───────────────────────────────────────
-  readonly lightboxImages = signal<string[]>([]);
-  readonly lightboxIndex = signal<number | null>(null);
-
-  openLightbox(images: string[], index: number) {
-    this.lightboxImages.set(images);
-    this.lightboxIndex.set(index);
-    setTimeout(() => {
-      const container = document.querySelector('.lightbox-scroll') as HTMLElement;
-      if (container) {
-        container.scrollTo({ left: window.innerWidth * index, behavior: 'instant' });
-      }
-    }, 10);
-  }
-  
-  onLightboxScroll(event: Event) {
-    const el = event.target as HTMLElement;
-    const idx = Math.round(el.scrollLeft / window.innerWidth);
-    const imgs = this.lightboxImages();
-    if (imgs && idx >= 0 && idx < imgs.length) {
-      if (this.lightboxIndex() !== idx) {
-        this.lightboxIndex.set(idx);
-      }
-    }
-  }
+  // (Moved to ExpenseDetailModalComponent)
 
   editExpense(exp: Expense) {
     this.editingExpense = exp;
@@ -430,9 +376,6 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
 
   // ─── Members ──────────────────────────────────────────────────────────────
   openAddMemberModal() {
-    this.newMemberName = '';
-    this.newMemberEmail = '';
-    this.inviteStatus.set('');
     this.addMemberOpen.set(true);
   }
 
@@ -441,8 +384,6 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
   // ─── Edit Member ──────────────────────────────────────────────────────────
   openEditMember(member: Member) {
     this.editingMember = member;
-    this.editMemberName = member.name || '';
-    this.editMemberEmail = member.email || '';
     this.editMemberOpen.set(true);
   }
 
@@ -470,60 +411,9 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
-  getPayerName(payerId: string): string {
-    return this.trip()?.members.find(m => m.id === payerId)?.name || 'Someone';
-  }
-
-  getExpenseSummaryContext(expense: Expense): { type: 'lent' | 'owe' | 'neutral', message: string } | null {
-    if (!expense || expense.category === 'SETTLEMENT') return null;
-
-    const uid = this.currentUserId();
-    const isPayer = expense.payerId === uid;
-    
-    let myShare = 0;
-    if (expense.splits && Object.keys(expense.splits).filter(k => !k.startsWith('__')).length > 0) {
-      if (expense.splits[uid] !== undefined) {
-         myShare = expense.splits[uid];
-      }
-    } else {
-       const tripObj = this.trip();
-       if (tripObj && tripObj.members) {
-         const membersCount = tripObj.members.length || 1;
-         const isMember = tripObj.members.some(m => m.id === uid);
-         if (isMember) {
-            myShare = Math.round(expense.amount / membersCount);
-         }
-       }
-    }
-
-    if (isPayer) {
-       if (myShare === 0) {
-          return { type: 'lent', message: `${this.translationService.translate('expense.summary.lentAll')} ${this.formatNumber(expense.amount)}đ` };
-       } else if (myShare > 0 && myShare < expense.amount) {
-          return { type: 'lent', message: `${this.translationService.translate('expense.summary.lentPart1')} ${this.formatNumber(expense.amount)}đ ${this.translationService.translate('expense.summary.lentPart2')} ${this.formatNumber(expense.amount - myShare)}đ` };
-       } else if (myShare >= expense.amount) {
-          return { type: 'neutral', message: this.translationService.translate('expense.summary.lentFull') };
-       }
-    } else {
-       if (myShare > 0) {
-          const payerName = this.getPayerName(expense.payerId);
-          return { type: 'owe', message: `${this.translationService.translate('expense.summary.owe')} ${payerName} ${this.formatNumber(myShare)}đ` };
-       } else {
-          return { type: 'neutral', message: this.translationService.translate('expense.summary.notInvolved') };
-       }
-    }
-    return null;
-  }
-
-
   getCategoryEmoji(cat: string): string { return CATEGORY_META[cat]?.emoji || '💸'; }
   getCategoryLabel(cat: string): string { return CATEGORY_META[cat]?.label || 'Other'; }
   getCategoryBg(cat: string): string    { return CATEGORY_META[cat]?.bg    || '#F3F4F6'; }
-
-  getFallbackSplit(exp: Expense): number {
-    const membersCount = this.trip()?.members.length || 1;
-    return Math.round(exp.amount / membersCount);
-  }
 
   formatDate = formatDate;
   formatDateShort = formatDateShort;

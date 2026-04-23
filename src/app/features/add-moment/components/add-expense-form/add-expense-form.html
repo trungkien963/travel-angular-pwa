@@ -1,0 +1,161 @@
+<div class="input-card" style="margin-top:20px;">
+
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+    <p class="field-label" style="margin: 0;">{{ 'expense.addReceiptOpt' | translate }}</p>
+    @if (pendingReceipts().length > 0) {
+    <span style="font-size: 12px; color: #a1a1aa; font-weight: 500;">{{ pendingReceipts().length }}
+      {{ 'expense.selected' | translate }}</span>
+    }
+  </div>
+
+  <div class="receipt-picker"
+    style="border-radius: 12px; background: #fafafa; border: 2px dashed #e5e5e5; display: flex; flex-direction:column; padding: 16px; margin-bottom: 20px; gap: 16px;">
+    <!-- Image Previews -->
+    @if (pendingReceipts().length > 0) {
+    <div
+      style="display:flex; gap:12px; overflow-x:auto; padding-bottom:4px; max-width: 100%; -webkit-overflow-scrolling: touch;">
+      @for (rec of pendingReceipts(); track rec.url; let i = $index) {
+      <div
+        style="position:relative; width: 80px; height: 80px; flex-shrink:0; border-radius:8px; overflow:hidden; border:1px solid #e5e5e5; cursor:pointer;"
+        (click)="openPendingReceiptViewer(i)">
+        <img [src]="rec.url" style="width:100%; height:100%; object-fit:cover;" />
+        <button (click)="removeReceipt(i, $event)"
+          style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.6); color:white; border:none; border-radius:50%; width:22px; height:22px; font-size:12px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:10;">✕</button>
+      </div>
+      }
+    </div>
+    }
+
+    <div style="display:flex; width: 100%; gap:12px;">
+      <label
+        style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 16px; background: white; border: 1px solid #e5e5e5; border-radius: 12px; gap:8px; color: #666; cursor:pointer; position: relative;">
+        <input type="file" accept="image/*" multiple
+          style="position:absolute; width:1px; height:1px; opacity:0; overflow:hidden;"
+          (change)="onReceiptSelected($event)" />
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+          <polyline points="14 2 14 8 20 8" />
+          <path d="M12 18v-6" />
+          <path d="M9 15h6" />
+        </svg>
+        <span style="font-size:12px; font-weight:600;">{{ 'expense.upload' | translate }}</span>
+      </label>
+      <label
+        style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 16px; background: white; border: 1px solid #e5e5e5; border-radius: 12px; gap:8px; color: #666; cursor:pointer; position: relative;">
+        <input type="file" accept="image/*" capture="environment"
+          style="position:absolute; width:1px; height:1px; opacity:0; overflow:hidden;"
+          (change)="onReceiptSelected($event)" />
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+          <circle cx="12" cy="13" r="3" />
+        </svg>
+        <span style="font-size:12px; font-weight:600;">{{ 'expense.takePhoto' | translate }}</span>
+      </label>
+    </div>
+  </div>
+
+  <p class="field-label">{{ 'expense.category' | translate }}</p>
+  <div class="category-scroll">
+    @for (cat of expenseCategories; track cat.id) {
+    <button class="category-pill" [class.active]="selectedCategory() === cat.id"
+      (click)="selectedCategory.set(cat.id); emitFormChange()">
+      <span>{{ cat.icon }}</span> {{ cat.label }}
+    </button>
+    }
+  </div>
+
+  <p class="field-label" style="margin-top: 20px;">{{ 'expense.totalPrice' | translate }} <span class="req">*</span></p>
+  <div class="amount-row">
+    <span class="currency-symbol">₫</span>
+    <app-calculator-input [amount]="expenseAmount" (amountChange)="onTotalAmountChange($event)" placeholder="0" class="amount-input"></app-calculator-input>
+  </div>
+  <p class="field-label" style="margin-top: 20px; margin-bottom: 8px;">{{ 'expense.paidBy' | translate }}</p>
+  <div class="paidby-row" style="display: flex; flex-wrap: wrap; gap: 8px;">
+    @if (!showPayerList) {
+      <button class="member-pill active" (click)="showPayerList = true" style="display: flex; align-items: center; gap: 6px; padding-right: 12px;">
+        {{ getPayerNameLocal(paidById()) || 'Select' }}
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+    } @else {
+      @for (member of members; track member.id) {
+      <button class="member-pill" [class.active]="paidById() === member.id" (click)="paidById.set(member.id); showPayerList = false; emitFormChange()">{{ member.name }}</button>
+      }
+    }
+  </div>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; margin-bottom: 12px;">
+    <p class="field-label" style="margin: 0;">{{ 'expense.splitEqually' | translate }}</p>
+    <div style="display: flex; gap: 8px;">
+      <button (click)="selectAllForSplit()" style="background: #EFF6FF; color: #3B82F6; padding: 6px 12px; border-radius: 100px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s;">{{ 'action.selectAll' | translate }}</button>
+      <button (click)="clearAllForSplit()" style="background: #F3F4F6; color: #4B5563; padding: 6px 12px; border-radius: 100px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s;">{{ 'action.clearAll' | translate }}</button>
+    </div>
+  </div>
+  <div class="split-list">
+    @for (member of members; track member.id) {
+    <div class="split-row" [class.excluded]="!includedMembers()[member.id]">
+
+      <!-- Left side: Click to toggle include/exclude -->
+      <div class="split-left" (click)="toggleMember(member.id)">
+        <button class="split-check">
+          @if (includedMembers()[member.id]) {
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="#FFC800" stroke-width="2.5">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
+          </svg>
+          } @else {
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="#D4D4D4" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+          </svg>
+          }
+        </button>
+        <span class="split-name" [class.strikethrough]="!includedMembers()[member.id]">{{ member.name }}</span>
+      </div>
+
+      <!-- Right side: Click to input exact/percent amount -->
+      <div class="split-right" (click)="$event.stopPropagation()">
+        <div class="amount-val-container" [class.is-locked]="lockedShares()[member.id] != null && activeMemberCount() > 1" style="display: flex; align-items: center; justify-content: flex-end; width: 100%;">
+          @if (lockedShares()[member.id] != null && activeMemberCount() > 1) {
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lock-icon" style="margin-right: 4px;">
+              <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+          }
+          <span class="currency-symbol-small" style="margin-right: 2px;">₫</span>
+          <app-calculator-input 
+            [amount]="calcShare(member.id)"
+            (amountChange)="setLockedAmountNum(member.id, $event)"
+            (commitBtn)="onMemberShareCommit(member.id, $event)"
+            placeholder="0"
+            customClass="inline-edit"
+          ></app-calculator-input>
+        </div>
+      </div>
+
+    </div>
+    }
+  </div>
+
+  <!-- Quick add member -->
+  <div class="quick-add-member">
+    <input type="email" [(ngModel)]="newMemberEmail" [placeholder]="'expense.missingSomeone' | translate"
+      class="quick-add-input" (keyup.enter)="quickInviteMember()" />
+    <button class="btn-quick-add" [disabled]="!newMemberEmail.trim()"
+      (click)="quickInviteMember()">
+      <svg xmlns="http://www.w3.org/2000/svg"
+        width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFC800" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12h14" />
+        <path d="M12 5v14" />
+      </svg>
+    </button>
+  </div>
+
+  @if (isSplitExceedingTotal()) {
+    <div style="color: #DC2626; font-size: 13px; font-weight: 700; text-align: center; margin-top: 16px;">
+      {{ 'expense.exceedTotalWarning' | translate }}
+    </div>
+  }
+</div>

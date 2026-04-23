@@ -139,86 +139,13 @@
   </div> <!-- /capture-layer -->
 
   <!-- LAYER 1.5: CROPPER MODE OVERLAY -->
-  @if (currentCrop()) {
-  <div class="cropper-layer">
-    <div class="top-bar">
-      <button class="icon-circle" (click)="abortCropSession()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2.5">
-          <path d="M18 6 6 18M6 6l12 12" />
-        </svg>
-      </button>
-      <div><span class="crop-title">{{ 'moment.align' | translate }} ({{ currentCropIndex() }}/{{ cropTotal() }})</span></div>
-      <div style="width: 44px"></div> <!-- Placeholder for symmetry -->
-    </div>
-
-    <div class="camera-lens-wrapper">
-      <div class="camera-area-container" style="position: relative; width: 100%; max-width: 500px; aspect-ratio: 1/1;">
-        <div class="camera-area cropper-scroll-area" style="max-width: none; width: 100%; height: 100%;"
-          #cropperScrollArea>
-          <img [src]="currentCrop()!.url" #cropperImgElement (load)="onCropImgLoad($event)" class="cropper-target-img"
-            [class.is-landscape]="isCropLandscape()" />
-        </div>
-        <!-- Grid Overlay stays fixed on top -->
-        <div class="crop-grid-overlay"
-          style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; border-radius: 40px; border: 2px solid rgba(255,255,255,0.4); z-index: 50;">
-          <div class="grid-hline"
-            style="position: absolute; top: 33.33%; left: 0; right: 0; height: 1px; background: rgba(255,255,255,0.5)">
-          </div>
-          <div class="grid-hline"
-            style="position: absolute; top: 66.66%; left: 0; right: 0; height: 1px; background: rgba(255,255,255,0.5)">
-          </div>
-          <div class="grid-vline"
-            style="position: absolute; left: 33.33%; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,0.5)">
-          </div>
-          <div class="grid-vline"
-            style="position: absolute; left: 66.66%; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,0.5)">
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="camera-bottom-section">
-      <div class="crop-hint" style="margin-bottom: 24px;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
-          stroke-width="2" viewBox="0 0 24 24">
-          <path d="M5 9l-3 3 3 3M19 9l3 3-3 3M9 5l3-3 3 3M9 19l3 3 3 3" />
-        </svg>
-        {{ 'moment.cropHint' | translate }}
-      </div>
-      <div class="camera-primary-actions" style="padding-bottom: 32px">
-        <!-- Discard/Skip (Left) -->
-        <button class="icon-circle action-left" (click)="skipCrop()"
-          style="background: rgba(255,0,0,0.15); border-color: rgba(255,60,60,0.4)">
-          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
-            stroke="#FF5555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 6h18" />
-            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-            <line x1="10" y1="11" x2="10" y2="17" />
-            <line x1="14" y1="11" x2="14" y2="17" />
-          </svg>
-        </button>
-
-        <div class="shutter-wrapper"></div>
-
-        <!-- Next / Confirm (Right) -->
-        <button class="icon-circle action-right active" (click)="confirmCrop()">
-          @if (currentCropIndex() === cropTotal()) {
-          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="3">
-            <path d="M5 12l5 5L20 7" />
-          </svg>
-          } @else {
-          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M5 12h14" />
-            <path d="m12 5 7 7-7 7" />
-          </svg>
-          }
-        </button>
-      </div>
-    </div>
-  </div>
+  @if (cropQueue().length > 0) {
+    <app-photo-cropper
+      [tasks]="cropQueue()"
+      (onCropped)="onPhotoCropped($event)"
+      (onAbort)="onCropAbort()"
+      (onComplete)="onCropComplete()">
+    </app-photo-cropper>
   }
 
   <!-- LAYER 2: DETAILS BOTTOM SHEET -->
@@ -311,227 +238,29 @@
       </div>
 
       <!-- Location Search -->
-      <div class="input-card">
-        <p class="field-label">{{ 'moment.locationTag' | translate }}</p>
-        @if (selectedLocation) {
-        <div class="location-selected">
-          <div>
-            <p class="location-name">📍 {{ selectedLocation.name }}</p>
-            <p class="location-city">{{ selectedLocation.city }}</p>
-          </div>
-          <button class="btn-clear-location" (click)="clearLocation()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-              stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M18 6 6 18" />
-              <path d="m6 6 12 12" />
-            </svg>
-          </button>
-        </div>
-        } @else {
-        <div class="location-search-row">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-            stroke="#A8A29E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.3-4.3" />
-          </svg>
-          <input type="text" class="location-input" placeholder="Search on OpenStreetMap..." [(ngModel)]="locationQuery"
-            (input)="onLocationSearch()" id="input-location" />
-        </div>
-        @if (isSearching()) {
-        <p class="searching-text">{{ 'action.searching' | translate }}</p>
-        }
-        @if (locationResults().length > 0) {
-        <div class="location-results">
-          @for (result of locationResults(); track result.placeId) {
-          <button class="location-result-item" (click)="selectLocation(result)">
-            <p class="loc-result-name">{{ result.name }}</p>
-            <p class="loc-result-addr">{{ result.address }}</p>
-          </button>
-          }
-        </div>
-        }
-        }
-      </div>
+      <app-location-search [selectedLocation]="selectedLocation" (onLocationChange)="selectedLocation = $event"></app-location-search>
 
       <!-- Expense Fields -->
       @if (isExpenseMode()) {
-      <div class="input-card" style="margin-top:20px;">
-
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-          <p class="field-label" style="margin: 0;">{{ 'expense.addReceiptOpt' | translate }}</p>
-          @if (pendingReceipts().length > 0) {
-          <span style="font-size: 12px; color: #a1a1aa; font-weight: 500;">{{ pendingReceipts().length }}
-            {{ 'expense.selected' | translate }}</span>
-          }
-        </div>
-
-        <div class="receipt-picker"
-          style="border-radius: 12px; background: #fafafa; border: 2px dashed #e5e5e5; display: flex; flex-direction:column; padding: 16px; margin-bottom: 20px; gap: 16px;">
-          <!-- Image Previews -->
-          @if (pendingReceipts().length > 0) {
-          <div
-            style="display:flex; gap:12px; overflow-x:auto; padding-bottom:4px; max-width: 100%; -webkit-overflow-scrolling: touch;">
-            @for (rec of pendingReceipts(); track rec.url; let i = $index) {
-            <div
-              style="position:relative; width: 80px; height: 80px; flex-shrink:0; border-radius:8px; overflow:hidden; border:1px solid #e5e5e5; cursor:pointer;"
-              (click)="openPendingReceiptViewer(i)">
-              <img [src]="rec.url" style="width:100%; height:100%; object-fit:cover;" />
-              <button (click)="removeReceipt(i, $event)"
-                style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.6); color:white; border:none; border-radius:50%; width:22px; height:22px; font-size:12px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:10;">✕</button>
-            </div>
-            }
-          </div>
-          }
-
-          <div style="display:flex; width: 100%; gap:12px;">
-            <label
-              style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 16px; background: white; border: 1px solid #e5e5e5; border-radius: 12px; gap:8px; color: #666; cursor:pointer; position: relative;">
-              <input type="file" accept="image/*" multiple
-                style="position:absolute; width:1px; height:1px; opacity:0; overflow:hidden;"
-                (change)="onReceiptSelected($event)" />
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-                <polyline points="14 2 14 8 20 8" />
-                <path d="M12 18v-6" />
-                <path d="M9 15h6" />
-              </svg>
-              <span style="font-size:12px; font-weight:600;">{{ 'expense.upload' | translate }}</span>
-            </label>
-            <label
-              style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 16px; background: white; border: 1px solid #e5e5e5; border-radius: 12px; gap:8px; color: #666; cursor:pointer; position: relative;">
-              <input type="file" accept="image/*" capture="environment"
-                style="position:absolute; width:1px; height:1px; opacity:0; overflow:hidden;"
-                (change)="onReceiptSelected($event)" />
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
-                <circle cx="12" cy="13" r="3" />
-              </svg>
-              <span style="font-size:12px; font-weight:600;">{{ 'expense.takePhoto' | translate }}</span>
-            </label>
-          </div>
-        </div>
-
-        <p class="field-label">{{ 'expense.category' | translate }}</p>
-        <div class="category-scroll">
-          @for (cat of expenseCategories; track cat.id) {
-          <button class="category-pill" [class.active]="selectedCategory() === cat.id"
-            (click)="selectedCategory.set(cat.id)">
-            <span>{{ cat.icon }}</span> {{ cat.label }}
-          </button>
-          }
-        </div>
-
-        <p class="field-label" style="margin-top: 20px;">{{ 'expense.totalPrice' | translate }} <span class="req">*</span></p>
-        <div class="amount-row">
-          <span class="currency-symbol">₫</span>
-          <app-calculator-input [amount]="expenseAmount" (amountChange)="onTotalAmountChange($event)" placeholder="0" class="amount-input"></app-calculator-input>
-        </div>
-        <p class="field-label" style="margin-top: 20px; margin-bottom: 8px;">{{ 'expense.paidBy' | translate }}</p>
-        <div class="paidby-row" style="display: flex; flex-wrap: wrap; gap: 8px;">
-          @if (!showPayerList) {
-            <button class="member-pill active" (click)="showPayerList = true" style="display: flex; align-items: center; gap: 6px; padding-right: 12px;">
-              {{ getPayerNameLocal(paidById()) || 'Select' }}
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-            </button>
-          } @else {
-            @for (member of currentTripMembers(); track member.id) {
-            <button class="member-pill" [class.active]="paidById() === member.id" (click)="paidById.set(member.id); showPayerList = false">{{ member.name }}</button>
-            }
-          }
-        </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; margin-bottom: 12px;">
-          <p class="field-label" style="margin: 0;">{{ 'expense.splitEqually' | translate }}</p>
-          <div style="display: flex; gap: 8px;">
-            <button (click)="selectAllForSplit()" style="background: #EFF6FF; color: #3B82F6; padding: 6px 12px; border-radius: 100px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s;">{{ 'action.selectAll' | translate }}</button>
-            <button (click)="clearAllForSplit()" style="background: #F3F4F6; color: #4B5563; padding: 6px 12px; border-radius: 100px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s;">{{ 'action.clearAll' | translate }}</button>
-          </div>
-        </div>
-        <div class="split-list">
-          @for (member of currentTripMembers(); track member.id) {
-          <div class="split-row" [class.excluded]="!includedMembers()[member.id]">
-
-            <!-- Left side: Click to toggle include/exclude -->
-            <div class="split-left" (click)="toggleMember(member.id)">
-              <button class="split-check">
-                @if (includedMembers()[member.id]) {
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                  stroke="#FFC800" stroke-width="2.5">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                  <polyline points="22 4 12 14.01 9 11.01" />
-                </svg>
-                } @else {
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                  stroke="#D4D4D4" stroke-width="2">
-                  <circle cx="12" cy="12" r="10" />
-                </svg>
-                }
-              </button>
-              <span class="split-name" [class.strikethrough]="!includedMembers()[member.id]">{{ member.name }}</span>
-            </div>
-
-            <!-- Right side: Click to input exact/percent amount -->
-            <div class="split-right" (click)="$event.stopPropagation()">
-              <div class="amount-val-container" [class.is-locked]="lockedShares()[member.id] != null && activeMemberCount() > 1" style="display: flex; align-items: center; justify-content: flex-end; width: 100%;">
-                @if (lockedShares()[member.id] != null && activeMemberCount() > 1) {
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lock-icon" style="margin-right: 4px;">
-                    <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                  </svg>
-                }
-                <span class="currency-symbol-small" style="margin-right: 2px;">₫</span>
-                <app-calculator-input 
-                  [amount]="calcShare(member.id)"
-                  (amountChange)="setLockedAmountNum(member.id, $event)"
-                  (commitBtn)="onMemberShareCommit(member.id, $event)"
-                  placeholder="0"
-                  customClass="inline-edit"
-                ></app-calculator-input>
-              </div>
-            </div>
-
-          </div>
-          }
-        </div>
-
-        <!-- Quick add member -->
-        <div class="quick-add-member">
-          <input type="email" [(ngModel)]="newMemberEmail" [placeholder]="'expense.missingSomeone' | translate"
-            class="quick-add-input" (keyup.enter)="quickInviteMember()" />
-          <button class="btn-quick-add" [disabled]="isInviting() || !newMemberEmail.trim()"
-            (click)="quickInviteMember()">
-            @if (isInviting()) {<div class="spinner-sm"></div>} @else {<svg xmlns="http://www.w3.org/2000/svg"
-              width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFC800" stroke-width="2.5"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 12h14" />
-              <path d="M12 5v14" />
-            </svg>}
-          </button>
-        </div>
-
-        @if (isSplitExceedingTotal()) {
-          <div style="color: #DC2626; font-size: 13px; font-weight: 700; text-align: center; margin-top: 16px;">
-            {{ 'expense.exceedTotalWarning' | translate }}
-          </div>
-        }
-      </div>
+      <app-add-expense-form
+        [members]="currentTripMembers()"
+        [currentUserId]="travelStore.currentUserId()"
+        (onFormChange)="onExpenseFormChange($event)"
+        (onOpenReceiptViewer)="onExpenseReceiptViewer($event)"
+        (onQuickInvite)="quickInviteMember($event)">
+      </app-add-expense-form>
       }
 
-      <!-- Submit Button (inline at the bottom) -->
       <div class="submit-action-area">
         <button class="btn-primary-large" (click)="submit()"
-          [disabled]="!canSubmit() || isSubmitting() || newMemberEmail.trim().length > 0 || isSplitExceedingTotal()"
-          [class.btn-warning]="newMemberEmail.trim().length > 0">
+          [disabled]="!canSubmit() || isSubmitting()">
           @if (isSubmitting()) {
           <svg class="spinning" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
             fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 12a9 9 0 1 1-6.219-8.56" />
           </svg>
           <span>{{ 'action.saving' | translate }}</span>
-          } @else if (newMemberEmail.trim().length > 0) {
-          <span>{{ 'expense.tapToAddPerson' | translate }}</span>
-          } @else if (isSplitExceedingTotal()) {
+          } @else if (isExpenseMode() && expenseData && !expenseData.isValid) {
           <span>{{ 'expense.fixSplitAmounts' | translate }}</span>
           } @else {
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
