@@ -193,31 +193,30 @@ $border: #F0F0F0;
 .tab-content { 
   display: flex;
   overflow-x: auto;
+  overflow-y: hidden;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  align-items: flex-start;
+  transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   &::-webkit-scrollbar { display: none; }
 }
 
 .tab-pane {
   flex: 0 0 100%;
   width: 100%;
-  padding: 0 24px;
+  padding: 24px;
   scroll-snap-align: start;
   box-sizing: border-box;
   touch-action: pan-y;
   
-  /* Collapse inactive tabs to prevent container from taking max height */
-  height: 0;
+  height: auto;
   overflow: hidden;
-  opacity: 0;
-  transition: opacity 0.2s ease;
+  pointer-events: none;
   
   &.active-pane {
-    padding: 24px;
-    height: auto;
     overflow: visible;
-    opacity: 1;
+    pointer-events: auto;
   }
 }
 

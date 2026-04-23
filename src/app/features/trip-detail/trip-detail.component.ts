@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit, AfterViewInit, ViewChild, ElementRef, ChangeDetectorRef, NgZone, ViewEncapsulation } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef, NgZone, ViewEncapsulation } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TravelStore } from '../../core/store/travel.store';
@@ -56,10 +56,12 @@ import { formatNumber, formatDate, formatRelative } from '../../core/utils/forma
   styleUrl: './trip-detail.component.scss',
   encapsulation: ViewEncapsulation.None
 })
-export class TripDetailComponent implements OnInit, AfterViewInit {
+export class TripDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private travelStore = inject(TravelStore);
+
+  private resizeObserver?: ResizeObserver;
 
   private toastService = inject(ToastService);
   private confirmService = inject(ConfirmService);
@@ -266,7 +268,31 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    // Scroll logic moved to tabCarousel setter to handle async rendering
+    this.resizeObserver = new ResizeObserver(() => {
+      this.updateCarouselHeight();
+    });
+
+    if (this.tabCarousel?.nativeElement) {
+      const panes = this.tabCarousel.nativeElement.querySelectorAll('.tab-pane');
+      panes.forEach(pane => this.resizeObserver?.observe(pane));
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+    }
+  }
+
+  updateCarouselHeight() {
+    if (!this.tabCarousel?.nativeElement) return;
+    const activeIndex = this.tabs.indexOf(this.activeTab);
+    const panes = this.tabCarousel.nativeElement.querySelectorAll('.tab-pane');
+    const activePane = panes[activeIndex] as HTMLElement;
+    
+    if (activePane) {
+      this.tabCarousel.nativeElement.style.height = `${activePane.offsetHeight}px`;
+    }
   }
 
   setTab(tab: string) { 
@@ -284,6 +310,8 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
       const el = this.tabCarousel.nativeElement;
       el.scrollTo({ left: nextIndex * el.clientWidth, behavior: 'smooth' });
     }
+    
+    setTimeout(() => this.updateCarouselHeight(), 50);
   }
 
   onTabScroll(event: Event) {
@@ -291,6 +319,7 @@ export class TripDetailComponent implements OnInit, AfterViewInit {
     const index = Math.round(el.scrollLeft / el.clientWidth);
     if (this.tabs[index] && this.activeTab !== this.tabs[index]) {
       this.activeTab = this.tabs[index];
+      this.updateCarouselHeight();
       
       // Smoothly scroll the tab header button into view
       const tabEl = document.getElementById('tab-' + this.activeTab.toLowerCase());
