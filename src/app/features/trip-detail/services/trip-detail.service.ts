@@ -135,7 +135,6 @@ export class TripDetailService {
     const newLikes = newLiked ? post.likes + 1 : Math.max(0, post.likes - 1);
     this.travelStore.updatePost(postId, { hasLiked: newLiked, likes: newLikes });
 
-    this.travelStore.setGlobalLoading(true);
     try {
       const { data, error } = await db.from('posts').select('likes').eq('id', postId).single();
       if (error) throw error;
@@ -169,8 +168,6 @@ export class TripDetailService {
     } catch (err: any) {
       this.travelStore.updatePost(postId, { hasLiked: post.hasLiked, likes: post.likes });
       console.error('toggleLike failed:', err);
-    } finally {
-      this.travelStore.setGlobalLoading(false);
     }
   }
 

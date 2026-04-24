@@ -77,11 +77,19 @@
               <!-- IG Images Carousel -->
               @if (post.images && post.images.length > 0) {
                 <div class="ig-carousel-container" (click)="onImageTap($event, post)">
-                  <div class="ig-images" [class.dual]="post.isDual" (scroll)="onPostImageScroll(post.id, $event)">
-                    @for (img of post.images; track img) {
-                      <img [src]="img" class="ig-img" loading="lazy" />
-                    }
+                <div class="ig-images" [class.dual]="post.isDual" (scroll)="onPostImageScroll(post.id, $event)">
+                  @for (img of post.images; track img) {
+                    <img [src]="img" class="ig-img" loading="lazy" />
+                  }
+                </div>
+                
+                @if (doubleTapStates()[post.id]) {
+                  <div class="pop-heart-overlay">
+                    <svg fill="#FFC800" viewBox="0 0 24 24" style="filter: drop-shadow(0px 8px 16px rgba(0,0,0,0.4)); width: 120px; height: 120px;">
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    </svg>
                   </div>
+                }
                   
                   @if (post.images.length > 1 && !post.isDual) {
                     <div class="ig-carousel-badge">

@@ -31,7 +31,7 @@ export class PostDetailService {
         .eq('id', postId)
         .single();
 
-      if (error || !data) return null;
+      if (error || !data) throw new Error('Không tìm thấy dữ liệu bài viết.');
 
       // Map data tương tự như trong store
       let authorName = 'Traveler';
@@ -64,9 +64,9 @@ export class PostDetailService {
         hasLiked: (data.likes || []).includes(this.store.currentUserId()),
         commentCount: data.comment_count || 0
       };
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching post', err);
-      return null;
+      throw new Error(err?.message || 'Lỗi mạng: Không thể tải chi tiết bài viết.');
     }
   }
 
@@ -105,9 +105,9 @@ export class PostDetailService {
           timestamp: c.created_at
         } as Comment;
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching comments', err);
-      return [];
+      throw new Error(err?.message || 'Lỗi mạng: Không thể tải danh sách bình luận.');
     }
   }
 
@@ -129,7 +129,7 @@ export class PostDetailService {
         `)
         .single();
 
-      if (error || !data) return null;
+      if (error || !data) throw new Error('Cơ sở dữ liệu từ chối lưu bình luận.');
       
       const u = Array.isArray(data.users) ? (data.users[0] || {}) : (data.users || {});
       return {
@@ -140,9 +140,9 @@ export class PostDetailService {
         text: data.content,
         timestamp: data.created_at
       };
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error adding comment', err);
-      return null;
+      throw new Error(err?.message || 'Lỗi mạng: Không thể gửi bình luận vào lúc này.');
     }
   }
 }

@@ -313,6 +313,16 @@ $border: rgba(0, 0, 0, 0.05);
     font-size: 16px;
     font-weight: 700;
   }
+  
+  &.liked {
+    animation: heartBeat 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+}
+
+@keyframes heartBeat {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
 }
 
 // ─── Filter Pills ─────────────────────────────────────────────────────────────
@@ -369,13 +379,14 @@ $border: rgba(0, 0, 0, 0.05);
   background: white;
   box-shadow: 0 2px 24px rgba(0, 0, 0, 0.04);
   overflow: hidden;
-  animation: pulse 1.5s infinite ease-in-out;
 }
 
 .skeleton-img {
   width: 100%;
   aspect-ratio: 4 / 3.2;
   background: #E5E5E5;
+  position: relative;
+  overflow: hidden;
 }
 
 .skeleton-meta {
@@ -387,15 +398,24 @@ $border: rgba(0, 0, 0, 0.05);
   background: #E5E5E5;
   border-radius: 12px;
   margin-bottom: 12px;
+  position: relative;
+  overflow: hidden;
   
   &.title { width: 70%; }
   &.sub { width: 40%; height: 16px; }
 }
 
-@keyframes pulse {
-  0% { opacity: 0.6; }
-  50% { opacity: 1; }
-  100% { opacity: 0.6; }
+.skeleton-img::after, .skeleton-line::after {
+  content: "";
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(90deg, rgba(255,255,255,0) 0, rgba(255,255,255,0.4) 20%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0) 100%);
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
 }
 
 .empty-state-glass {
@@ -991,6 +1011,10 @@ $border: rgba(0, 0, 0, 0.05);
   transition: opacity 0.15s ease;
   
   &:hover { opacity: 0.7; }
+  
+  &.liked {
+    animation: heartBeat 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
 }
 
 .ig-likes-count {
@@ -1029,13 +1053,20 @@ $border: rgba(0, 0, 0, 0.05);
   color: $text-dark;
 }
 
-@keyframes popHeartAnim {
-  0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
-  25% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.9; }
-  50% { transform: translate(-50%, -50%) scale(0.95); opacity: 0.9; }
-  100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+.pop-heart-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  pointer-events: none;
+  z-index: 50;
+  animation: popHeartAnim 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
-.pop-heart-anim {
-  pointer-events: none;
+@keyframes popHeartAnim {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+  15% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.9; }
+  30% { transform: translate(-50%, -50%) scale(0.95); opacity: 0.9; }
+  70% { transform: translate(-50%, -50%) scale(1); opacity: 0.9; }
+  100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
 }

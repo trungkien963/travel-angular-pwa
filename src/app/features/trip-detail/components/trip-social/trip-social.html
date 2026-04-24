@@ -63,12 +63,20 @@
 
       <!-- IG Images Carousel -->
       @if (post.images.length > 0) {
-        <div class="ig-carousel-container">
+        <div class="ig-carousel-container" (click)="onImageTap($event, post)">
           <div class="ig-images" [class.dual]="post.isDual" (scroll)="onImageScroll(post.id, $event)" (touchstart)="$event.stopPropagation()" (touchend)="$event.stopPropagation()">
             @for (img of post.images; track img) {
               <img [src]="img" [alt]="post.content" class="ig-img" loading="lazy" #imgRefPost (error)="imgRefPost.style.display='none'" />
             }
           </div>
+          
+          @if (doubleTapStates()[post.id]) {
+            <div class="pop-heart-overlay">
+              <svg fill="#FFC800" viewBox="0 0 24 24" style="filter: drop-shadow(0px 8px 16px rgba(0,0,0,0.4)); width: 120px; height: 120px;">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+            </div>
+          }
           
           @if (post.images.length > 1 && !post.isDual) {
             <div class="ig-carousel-badge">
@@ -86,7 +94,7 @@
       <!-- IG Actions Row -->
       <div class="ig-actions">
         <div class="ig-actions-left">
-          <button class="ig-action-btn" [class.liked]="post.hasLiked" (click)="onToggleLike.emit(post.id)">
+          <button class="ig-action-btn" [class.liked]="post.hasLiked" (click)="triggerLike(post.id, post.hasLiked)">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" [attr.fill]="post.hasLiked ? '#EF4444' : 'none'" [attr.stroke]="post.hasLiked ? '#EF4444' : '#1C1917'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
             </svg>

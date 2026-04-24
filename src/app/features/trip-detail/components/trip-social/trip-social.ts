@@ -28,6 +28,50 @@ export class TripSocialComponent {
   readonly activeMenuId = signal<string | null>(null);
   readonly activeImageIndex = signal<Record<string, number>>({});
 
+  private tapTimers = new Map<string, number>();
+  private tapTimeouts = new Map<string, any>();
+
+  triggerLike(postId: string, hasLiked: boolean) {
+    this.onToggleLike.emit(postId);
+    if (navigator.vibrate) {
+      navigator.vibrate(!hasLiked ? 15 : 10);
+    }
+  }
+
+  onImageTap(event: Event, post: Post) {
+    const now = Date.now();
+    const lastTap = this.tapTimers.get(post.id) || 0;
+    
+    if (now - lastTap > 0 && now - lastTap < 300) { 
+      // Double tap!
+      clearTimeout(this.tapTimeouts.get(post.id));
+      this.handleDoubleTapAnimation(event, post);
+      this.tapTimers.set(post.id, 0); // reset
+    } else {
+      this.tapTimers.set(post.id, now);
+      const timeout = setTimeout(() => {
+        this.tapTimers.set(post.id, 0);
+      }, 300);
+      this.tapTimeouts.set(post.id, timeout);
+    }
+  }
+
+  doubleTapStates = signal<Record<string, boolean>>({});
+
+  handleDoubleTapAnimation(event: Event, post: Post) {
+    event.preventDefault();
+    
+    if (!post.hasLiked) {
+      this.triggerLike(post.id, post.hasLiked);
+    }
+    
+    this.doubleTapStates.update(s => ({ ...s, [post.id]: true }));
+    
+    setTimeout(() => {
+      this.doubleTapStates.update(s => ({ ...s, [post.id]: false }));
+    }, 850);
+  }
+
   toggleMenu(postId: string) {
     this.activeMenuId.update(id => id === postId ? null : postId);
   }

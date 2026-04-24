@@ -54,15 +54,24 @@ export class PostDetailComponent implements OnInit {
   async loadData(id: string) {
     this.isLoading.set(true);
     
-    // Load post & comments in parallel
-    const [fetchedPost, fetchedComments] = await Promise.all([
-      this.postService.getPostById(id),
-      this.postService.getComments(id)
-    ]);
+    try {
+      // Load post & comments in parallel
+      const [fetchedPost, fetchedComments] = await Promise.all([
+        this.postService.getPostById(id),
+        this.postService.getComments(id)
+      ]);
 
-    this.post.set(fetchedPost);
-    this.comments.set(fetchedComments);
-    this.isLoading.set(false);
+      if (!fetchedPost) throw new Error('Bài viết không tồn tại hoặc đã bị xóa.');
+
+      this.post.set(fetchedPost);
+      this.comments.set(fetchedComments);
+    } catch (error: any) {
+      console.error('[PostDetailComponent] Lỗi khi tải dữ liệu:', error);
+      alert(error.message || 'Có lỗi xảy ra khi tải bài viết.');
+      this.goBack();
+    } finally {
+      this.isLoading.set(false);
+    }
   }
 
   goBack() {
@@ -86,19 +95,24 @@ export class PostDetailComponent implements OnInit {
     
     this.comments.update(list => [...list, tempComment]);
 
-    // API Call
-    const newComment = await this.postService.addComment(this.postId(), text);
-    
-    if (newComment) {
-      // Replace temp with real
-      this.comments.update(list => list.map(c => c.id === tempComment.id ? newComment : c));
-    } else {
+    try {
+      // API Call
+      const newComment = await this.postService.addComment(this.postId(), text);
+      
+      if (newComment) {
+        // Replace temp with real
+        this.comments.update(list => list.map(c => c.id === tempComment.id ? newComment : c));
+      } else {
+        throw new Error('Dữ liệu trả về rỗng.');
+      }
+    } catch (error: any) {
+      console.error('[PostDetailComponent] Lỗi khi đăng bình luận:', error);
       // Revert if failed
       this.comments.update(list => list.filter(c => c.id !== tempComment.id));
-      alert('Failed to post comment. Please try again.');
+      alert(error.message || 'Không thể đăng bình luận. Vui lòng thử lại.');
+    } finally {
+      this.isSubmitting.set(false);
     }
-    
-    this.isSubmitting.set(false);
   }
 
   formatTime(dateString: string): string {

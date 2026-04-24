@@ -226,6 +226,11 @@ export class DiscoverComponent implements OnInit, OnDestroy {
     const isCurrentlyLiked = currentLikes.includes(uid);
     const newLiked = !isCurrentlyLiked;
     
+    // Haptic Feedback (Vibrate slightly more on 'Like' than 'Unlike')
+    if (navigator.vibrate) {
+      navigator.vibrate(newLiked ? 15 : 10);
+    }
+    
     // Optimistic array formulation
     let updatedLikes: string[];
     if (newLiked) {
@@ -444,6 +449,12 @@ export class DiscoverComponent implements OnInit, OnDestroy {
     if (!post) return;
 
     const newLiked = !post.hasLiked;
+    
+    // Haptic Feedback
+    if (navigator.vibrate) {
+      navigator.vibrate(newLiked ? 15 : 10);
+    }
+
     const newLikes = newLiked ? post.likes + 1 : Math.max(0, post.likes - 1);
     this.travelStore.updatePost(postId, { hasLiked: newLiked, likes: newLikes });
 
@@ -500,6 +511,8 @@ export class DiscoverComponent implements OnInit, OnDestroy {
     }
   }
 
+  doubleTapStates = signal<Record<string, boolean>>({});
+
   handleDoubleTapAnimation(event: Event, post: Post) {
     event.preventDefault();
     
@@ -508,32 +521,11 @@ export class DiscoverComponent implements OnInit, OnDestroy {
       this.togglePostLike(post.id);
     }
     
-    // Create animated heart
-    const target = event.currentTarget as HTMLElement;
-    const heart = document.createElement('div');
-    heart.innerHTML = '<svg fill="#EF4444" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>';
-    heart.className = 'pop-heart-anim';
-    
-    // Styles for popping animation
-    heart.style.position = 'absolute';
-    heart.style.top = '50%';
-    heart.style.left = '50%';
-    heart.style.transform = 'translate(-50%, -50%) scale(0)';
-    heart.style.width = '100px';
-    heart.style.height = '100px';
-    heart.style.pointerEvents = 'none';
-    heart.style.zIndex = '10';
-    heart.style.animation = 'popHeartAnim 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
-    heart.style.opacity = '0.9';
-    heart.style.filter = 'drop-shadow(0 4px 12px rgba(0,0,0,0.15))';
-    
-    target.style.position = 'relative'; 
-    target.appendChild(heart);
+    // Show heart overlay
+    this.doubleTapStates.update(s => ({ ...s, [post.id]: true }));
     
     setTimeout(() => {
-      if (heart.parentNode === target) {
-        target.removeChild(heart);
-      }
+      this.doubleTapStates.update(s => ({ ...s, [post.id]: false }));
     }, 850);
   }
 
