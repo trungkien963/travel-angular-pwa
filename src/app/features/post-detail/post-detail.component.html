@@ -31,7 +31,10 @@
       <app-post-comments
         [comments]="comments()"
         [isSubmitting]="isSubmitting()"
-        (onSubmitComment)="submitComment($event)">
+        [mentionCandidates]="mentionCandidates"
+        [currentUserId]="currentUserId()"
+        (onSubmitComment)="submitComment($event)"
+        (onDeleteComment)="deleteComment($event)">
       </app-post-comments>
     </div>
 

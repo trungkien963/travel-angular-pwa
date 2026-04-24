@@ -1,0 +1,80 @@
+$primary: #FFC800;
+$text-dark: #1C1917;
+$text-inactive: #A8A29E;
+
+.mention-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.mention-popover {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  width: calc(100% - 54px); // align with input width, leaving space for send button
+  max-width: 250px;
+  max-height: 200px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  overflow-y: auto;
+  z-index: 1000;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mention-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  
+  &:hover {
+    background: rgba(0,0,0,0.04);
+  }
+
+  .avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: #E8F5E9;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; overflow: hidden;
+    img { width: 100%; height: 100%; object-fit: cover; }
+    span { font-size: 11px; font-weight: 900; }
+  }
+
+  .name {
+    font-size: 14px;
+    font-weight: 600;
+    color: $text-dark;
+  }
+}
+
+.input-container {
+  display: flex; align-items: flex-end; gap: 10px;
+}
+
+.comment-input {
+  flex: 1; background: #FFFFFF; border: 1.5px solid rgba(0,0,0,0.05);
+  border-radius: 20px; padding: 12px 18px; font-size: 14px; font-weight: 500;
+  color: $text-dark; font-family: inherit; outline: none; resize: none;
+  max-height: 100px; overflow-y: auto; transition: border-color 0.2s ease; line-height: 1.4;
+  &::placeholder { color: $text-inactive; }
+  &:focus { border-color: $primary; }
+}
+
+.btn-post {
+  width: 44px; height: 44px; border-radius: 50%; background: #FFFFFF;
+  border: 1.5px solid rgba(0,0,0,0.05); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: background 0.15s ease, border-color 0.15s ease;
+  margin-bottom: 2px;
+  &:hover:not(:disabled) { background: rgba(255, 200, 0, 0.1); border-color: $primary; }
+  &:disabled { cursor: not-allowed; opacity: 0.6; }
+}

@@ -599,8 +599,32 @@ $border: rgba(0, 0, 0, 0.05);
 
 .comment-text { font-size: 14px; color: $text-dark; line-height: 1.5; margin: 0; word-break: break-word; }
 
+.comment-actions {
+  margin-top: 6px;
+  display: flex;
+  gap: 16px;
+
+  .btn-reply, .btn-delete {
+    font-size: 12px;
+    font-weight: 700;
+    color: $text-inactive;
+    cursor: pointer;
+    transition: color 0.15s ease;
+    &:hover { color: $text-dark; }
+  }
+
+  .btn-delete {
+    &:hover { color: #DC2626; }
+  }
+}
+
+::ng-deep .mention-text {
+  color: #2563EB;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .comment-input-area {
-  display: flex; align-items: center; gap: 10px;
   border-top: 1px solid rgba(0,0,0,0.05); padding-top: 16px; margin-top: 4px;
 }
 

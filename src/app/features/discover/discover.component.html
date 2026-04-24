@@ -302,7 +302,13 @@
                   <span class="comment-author">{{ c.authorName }}</span>
                   <span class="comment-time">{{ formatRelative(c.timestamp) }}</span>
                 </div>
-                <p class="comment-text">{{ c.text }}</p>
+                <p class="comment-text" [innerHTML]="formatMention(c.text)"></p>
+                <div class="comment-actions">
+                  <span class="btn-reply" (click)="replyToComment(c)">Reply</span>
+                  @if (c.authorId === currentUserId()) {
+                    <span class="btn-delete" (click)="deleteComment(c.id, activeCommentTrip()!.id)">Delete</span>
+                  }
+                </div>
               </div>
             </div>
           }
@@ -310,26 +316,13 @@
 
         <!-- Input area -->
         <div class="comment-input-area">
-          <textarea
-            class="comment-input"
-            [placeholder]="'comment.write' | translate"
-            [(ngModel)]="commentText"
-            rows="1"
-            id="input-comment"
-            (keydown.enter)="$event.preventDefault(); sendComment()"
-          ></textarea>
-          <button
-            class="btn-send"
-            (click)="sendComment()"
-            [disabled]="!commentText.trim() || isSendingComment()"
-            id="btn-send-comment"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-              [attr.stroke]="commentText.trim() ? '#FFC800' : '#E5E5E5'"
-              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>
-            </svg>
-          </button>
+          <app-mention-input
+            [value]="commentText"
+            (valueChange)="commentText = $event"
+            [disabled]="isSendingComment()"
+            [candidates]="mentionCandidates"
+            (send)="sendComment()"
+          ></app-mention-input>
         </div>
 
       </div>

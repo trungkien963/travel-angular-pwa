@@ -2,11 +2,13 @@ import { Component, inject, computed, OnInit, signal, OnDestroy, HostListener, A
 import { RouterLink } from '@angular/router';
 import { TravelStore } from '../../core/store/travel.store';
 import { ToastService } from '../../core/services/toast.service';
+import { ConfirmService } from '../../core/services/confirm.service';
 import { Router } from '@angular/router';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { Post, Comment } from '../../core/models/social.model';
 import { PostDetailService } from '../post-detail/services/post-detail.service';
 import { LikesModalComponent } from '../post-detail/components/likes-modal/likes-modal.component';
+import { MentionInputComponent } from '../../shared/components/mention-input/mention-input.component';
 import { FormsModule } from '@angular/forms';
 
 interface FeedItem {
@@ -31,7 +33,7 @@ import { formatRelative } from '../../core/utils/format.util';
 @Component({
   selector: 'app-discover',
   standalone: true,
-  imports: [RouterLink, FormsModule, TranslatePipe, LowerCasePipe, LikesModalComponent],
+  imports: [RouterLink, FormsModule, TranslatePipe, LowerCasePipe, LikesModalComponent, MentionInputComponent],
   templateUrl: './discover.component.html',
   styleUrl: './discover.component.scss'
 })
@@ -41,6 +43,7 @@ export class DiscoverComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private supabaseService = inject(SupabaseService);
   private postDetailService = inject(PostDetailService);
+  private confirmService = inject(ConfirmService);
 
   readonly currentUserId = computed(() => this.travelStore.currentUserId());
   
@@ -59,6 +62,18 @@ export class DiscoverComponent implements OnInit, OnDestroy {
   readonly commentTripId = signal<string | null>(null);
   commentText = '';
   readonly isSendingComment = signal(false);
+
+  get mentionCandidates() {
+    const tripId = this.commentTripId();
+    if (!tripId) return [];
+    const trip = this.travelStore.trips().find(t => t.id === tripId);
+    if (!trip || !trip.members) return [];
+    return trip.members.map(m => ({
+      id: m.id,
+      name: m.name,
+      avatar: m.avatar
+    }));
+  }
 
   readonly activeCommentTrip = computed(() => {
     const id = this.commentTripId();
@@ -166,8 +181,8 @@ export class DiscoverComponent implements OnInit, OnDestroy {
           image: t.coverImage || 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=800&auto=format&fit=crop',
           dateRange: durationStr,
           locationType: t.locationName || t.locationCity || 'GLOBAL',
-          likes: tripLikesCount,
-          comments: tripCommentsCount,
+          likes: tripLikesCount + totalLikes,
+          comments: tripCommentsCount + totalComments,
           hasLiked: hasLiked,
           tripId: t.id,
           totalCost: totalCost,
@@ -311,6 +326,20 @@ export class DiscoverComponent implements OnInit, OnDestroy {
     }
   }
 
+  replyToComment(c: any) {
+    const current = this.commentText;
+    const formattedName = c.authorName?.replace(/\s+/g, '') || 'User';
+    this.commentText = `${current ? current + ' ' : ''}@${formattedName} `;
+  }
+
+  formatMention(text: string): string {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.innerText = text;
+    let safeText = div.innerHTML;
+    return safeText.replace(/@([^\s]+)/g, '<strong class="mention-text">@$1</strong>');
+  }
+
   closeComments() {
     this.commentTripId.set(null);
     this.commentText = '';
@@ -373,6 +402,30 @@ export class DiscoverComponent implements OnInit, OnDestroy {
       this.toastService.show(err.message || 'Failed to send comment', 'error');
     } finally {
       this.isSendingComment.set(false);
+    }
+  }
+
+  async deleteComment(commentId: string, tripId: string) {
+    const confirmed = await this.confirmService.confirm('Bạn có chắc chắn muốn xóa bình luận này?', 'Xóa bình luận', 'Xóa', 'Hủy');
+    if (!confirmed) return;
+    
+    try {
+      const activeTrip = this.travelStore.trips().find(t => t.id === tripId);
+      if (!activeTrip) return;
+      
+      const existingComments = activeTrip.comments || [];
+      const updatedComments = existingComments.filter((c: any) => c.id !== commentId);
+      
+      // Optimistic update
+      this.travelStore.updateTrip(activeTrip.id, { comments: updatedComments });
+      
+      const db = this.supabaseService.client;
+      const { error } = await db.from('trips').update({ comments: updatedComments }).eq('id', activeTrip.id);
+      if (error) throw error;
+    } catch(err: any) {
+      console.error('Lỗi xóa comment', err);
+      this.toastService.show(err.message || 'Không thể xóa bình luận.', 'error');
+      // Revert could be done here by re-fetching
     }
   }
 

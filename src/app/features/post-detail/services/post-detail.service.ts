@@ -195,6 +195,12 @@ export class PostDetailService {
 
       if (error || !data) throw new Error('Cơ sở dữ liệu từ chối lưu bình luận.');
       
+      // Update comment_count in DB
+      const { data: currentPostDb } = await this.supabase.client.from('posts').select('comment_count').eq('id', postId).single();
+      if (currentPostDb) {
+        await this.supabase.client.from('posts').update({ comment_count: (currentPostDb.comment_count || 0) + 1 }).eq('id', postId);
+      }
+
       const u = Array.isArray(data.users) ? (data.users[0] || {}) : (data.users || {});
       
       const post = this.store.posts().find(p => p.id === postId);
@@ -213,6 +219,36 @@ export class PostDetailService {
     } catch (err: any) {
       console.error('Error adding comment', err);
       throw new Error(err?.message || 'Lỗi mạng: Không thể gửi bình luận vào lúc này.');
+    }
+  }
+
+  async deleteComment(commentId: string) {
+    const uid = this.store.currentUserId();
+    if (!uid) throw new Error('Not authenticated');
+
+    try {
+      // First get post_id
+      const { data: commentData } = await this.supabase.client.from('comments').select('post_id').eq('id', commentId).single();
+      const postId = commentData?.post_id;
+
+      const { error } = await this.supabase.client
+        .from('comments')
+        .delete()
+        .eq('id', commentId)
+        .eq('user_id', uid); // Ensure only author can delete
+
+      if (error) throw error;
+
+      // Update comment_count in DB
+      if (postId) {
+        const { data: currentPostDb } = await this.supabase.client.from('posts').select('comment_count').eq('id', postId).single();
+        if (currentPostDb) {
+          await this.supabase.client.from('posts').update({ comment_count: Math.max(0, (currentPostDb.comment_count || 0) - 1) }).eq('id', postId);
+        }
+      }
+    } catch (err: any) {
+      console.error('Error deleting comment', err);
+      throw new Error(err?.message || 'Lỗi mạng: Không thể xóa bình luận vào lúc này.');
     }
   }
 

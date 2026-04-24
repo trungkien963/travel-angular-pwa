@@ -343,7 +343,32 @@
         line-height: 1.4;
         color: #44403c;
       }
+
+      .comment-actions {
+        margin-top: 6px;
+        display: flex;
+        gap: 16px;
+
+        .btn-reply, .btn-delete {
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: #a8a29e;
+          cursor: pointer;
+          transition: color 0.15s ease;
+          &:hover { color: #1c1917; }
+        }
+
+        .btn-delete {
+          &:hover { color: #DC2626; }
+        }
+      }
     }
+  }
+
+  ::ng-deep .mention-text {
+    color: #059669; // Or #FFC800. Let's use #059669 for a distinct green/blue or #2563EB for classic mention. Let's use #2563EB
+    font-weight: 600;
+    cursor: pointer;
   }
 
   .empty-comments {
@@ -363,15 +388,12 @@
   bottom: 0;
   left: 0;
   right: 0;
-  display: flex;
-  align-items: center;
   padding: 12px 16px;
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-top: 1px solid rgba(0,0,0,0.05);
   padding-bottom: calc(12px + env(safe-area-inset-bottom));
-  gap: 12px;
   box-shadow: 0 -4px 12px rgba(0,0,0,0.03);
 
   input {

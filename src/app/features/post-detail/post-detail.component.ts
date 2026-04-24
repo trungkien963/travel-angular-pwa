@@ -7,6 +7,7 @@ import { PostDetailService } from './services/post-detail.service';
 import { TravelStore } from '../../core/store/travel.store';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { formatRelative } from '../../core/utils/format.util';
+import { ConfirmService } from '../../core/services/confirm.service';
 import { PostHeaderComponent } from './components/post-header/post-header.component';
 import { PostMediaComponent } from './components/post-media/post-media.component';
 import { PostActionsComponent } from './components/post-actions/post-actions.component';
@@ -34,6 +35,7 @@ export class PostDetailComponent implements OnInit {
   private location = inject(Location);
   private postService = inject(PostDetailService);
   private store = inject(TravelStore);
+  private confirmService = inject(ConfirmService);
 
   postId = signal<string>('');
   
@@ -52,12 +54,22 @@ export class PostDetailComponent implements OnInit {
     const lp = this.localPost();
     if (lp) {
       // Dynamically check hasLiked in case currentUserId was loaded late
-      const uid = this.currentUserId();
-      return { ...lp, hasLiked: lp.likes > 0 ? lp.hasLiked || lp.likes >= 1 /* heuristic */ : false }; // Wait, better to just let store sync handle it, but let's re-evaluate hasLiked if needed.
-      // Actually, we can't easily re-evaluate hasLiked on localPost without the raw likes array.
+      return { ...lp, hasLiked: lp.likes > 0 ? lp.hasLiked || lp.likes >= 1 : false };
     }
     return lp;
   });
+
+  get mentionCandidates() {
+    const p = this.post();
+    if (!p || !p.tripId) return [];
+    const trip = this.store.trips().find(t => t.id === p.tripId);
+    if (!trip || !trip.members) return [];
+    return trip.members.map(m => ({
+      id: m.id,
+      name: m.name,
+      avatar: m.avatar
+    }));
+  }
 
   comments = computed(() => {
     const id = this.postId();
@@ -76,8 +88,11 @@ export class PostDetailComponent implements OnInit {
 
   currentUserId = this.store.currentUserId;
 
-  ngOnInit() {
+  async ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
+    if (!this.store.currentUserId()) {
+      await this.store.initSupabase();
+    }
     if (id) {
       this.postId.set(id);
       this.loadData(id);
@@ -140,6 +155,12 @@ export class PostDetailComponent implements OnInit {
       if (newComment) {
         // Replace temp with real
         this.localComments.update(list => list.map(c => c.id === tempComment.id ? newComment : c));
+        
+        // Update store commentCount for this post
+        const currentPost = this.store.posts().find(p => p.id === this.postId());
+        if (currentPost) {
+          this.store.updatePost(this.postId(), { commentCount: (currentPost.commentCount || 0) + 1 });
+        }
       } else {
         throw new Error('Dữ liệu trả về rỗng.');
       }
@@ -150,6 +171,25 @@ export class PostDetailComponent implements OnInit {
       alert(error.message || 'Không thể đăng bình luận. Vui lòng thử lại.');
     } finally {
       this.isSubmitting.set(false);
+    }
+  }
+
+  async deleteComment(commentId: string) {
+    const confirmed = await this.confirmService.confirm('Bạn có chắc chắn muốn xóa bình luận này?', 'Xóa bình luận', 'Xóa', 'Hủy');
+    if (!confirmed) return;
+
+    try {
+      this.localComments.update(list => list.filter(c => c.id !== commentId));
+      await this.postService.deleteComment(commentId);
+      
+      const currentPost = this.store.posts().find(p => p.id === this.postId());
+      if (currentPost && currentPost.commentCount) {
+        this.store.updatePost(this.postId(), { commentCount: Math.max(0, currentPost.commentCount - 1) });
+      }
+    } catch (error: any) {
+      console.error('[PostDetailComponent] Lỗi khi xóa bình luận:', error);
+      alert(error.message || 'Có lỗi xảy ra khi xóa bình luận.');
+      this.loadData(this.postId());
     }
   }
 
