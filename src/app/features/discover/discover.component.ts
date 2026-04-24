@@ -5,6 +5,8 @@ import { ToastService } from '../../core/services/toast.service';
 import { Router } from '@angular/router';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { Post, Comment } from '../../core/models/social.model';
+import { PostDetailService } from '../post-detail/services/post-detail.service';
+import { LikesModalComponent } from '../post-detail/components/likes-modal/likes-modal.component';
 import { FormsModule } from '@angular/forms';
 
 interface FeedItem {
@@ -29,7 +31,7 @@ import { formatRelative } from '../../core/utils/format.util';
 @Component({
   selector: 'app-discover',
   standalone: true,
-  imports: [RouterLink, FormsModule, TranslatePipe, LowerCasePipe],
+  imports: [RouterLink, FormsModule, TranslatePipe, LowerCasePipe, LikesModalComponent],
   templateUrl: './discover.component.html',
   styleUrl: './discover.component.scss'
 })
@@ -38,8 +40,20 @@ export class DiscoverComponent implements OnInit, OnDestroy {
   private toastService = inject(ToastService);
   private router = inject(Router);
   private supabaseService = inject(SupabaseService);
+  private postDetailService = inject(PostDetailService);
 
   readonly currentUserId = computed(() => this.travelStore.currentUserId());
+  
+  // ─── Likes Modal State ───
+  readonly likesPostId = signal<string | null>(null);
+
+  openLikesList(postId: string) {
+    this.likesPostId.set(postId);
+  }
+
+  closeLikesModal() {
+    this.likesPostId.set(null);
+  }
   
   // ─── Comments state ───
   readonly commentTripId = signal<string | null>(null);
@@ -253,7 +267,7 @@ export class DiscoverComponent implements OnInit, OnDestroy {
         if (Array.isArray(data.likes)) {
           freshLikes = data.likes;
         } else if (typeof data.likes === 'string') {
-          try { freshLikes = JSON.parse(data.likes); } catch(e) {}
+          try { freshLikes = JSON.parse(data.likes); } catch(e: any) {}
         }
       }
       
@@ -280,7 +294,7 @@ export class DiscoverComponent implements OnInit, OnDestroy {
           p_trip_id: trip.id
         }).then(); // Fire and forget
       }
-    } catch(err) {
+    } catch(err: any) {
       // Revert on error
       this.travelStore.updateTrip(trip.id, { likes: currentLikes });
       console.error('Like failed:', err);
@@ -338,7 +352,7 @@ export class DiscoverComponent implements OnInit, OnDestroy {
           const raw = freshTrip.comments;
           if (Array.isArray(raw)) freshComments = raw;
           else if (typeof raw === 'string') {
-            try { freshComments = JSON.parse(raw); } catch(e){}
+            try { freshComments = JSON.parse(raw); } catch(e: any){}
           }
       }
       const safelyMerged = [...freshComments, newComment];
@@ -467,7 +481,7 @@ export class DiscoverComponent implements OnInit, OnDestroy {
         const raw = data['likes'];
         if (Array.isArray(raw)) currentLikes = raw;
         else if (typeof raw === 'string') {
-          try { currentLikes = JSON.parse(raw); } catch(e){}
+          try { currentLikes = JSON.parse(raw); } catch(e: any){}
         }
       }
       

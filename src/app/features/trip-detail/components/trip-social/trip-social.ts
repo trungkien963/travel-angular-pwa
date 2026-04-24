@@ -4,15 +4,23 @@ import { LowerCasePipe } from '@angular/common';
 import { Post } from '../../../../core/models/social.model';
 import { getAvatarBg, getAvatarColor } from '../../../../core/utils/avatar.util';
 import { formatRelative } from '../../../../core/utils/format.util';
+import { PostDetailService } from '../../../post-detail/services/post-detail.service';
+import { inject } from '@angular/core';
+import { ToastService } from '../../../../core/services/toast.service';
+
+import { LikesModalComponent } from '../../../post-detail/components/likes-modal/likes-modal.component';
 
 @Component({
   selector: 'app-trip-social',
   standalone: true,
-  imports: [TranslatePipe, LowerCasePipe],
+  imports: [TranslatePipe, LowerCasePipe, LikesModalComponent],
   templateUrl: './trip-social.html',
   styleUrl: './trip-social.scss',
 })
 export class TripSocialComponent {
+  private postDetailService = inject(PostDetailService);
+  private toastService = inject(ToastService);
+
   @Input({ required: true }) tripPosts: Post[] = [];
   @Input({ required: true }) currentUserId: string = '';
   @Input({ required: true }) isMember: boolean = false;
@@ -27,6 +35,17 @@ export class TripSocialComponent {
 
   readonly activeMenuId = signal<string | null>(null);
   readonly activeImageIndex = signal<Record<string, number>>({});
+
+  // ─── Likes Modal State ───
+  readonly likesPostId = signal<string | null>(null);
+
+  openLikesList(postId: string) {
+    this.likesPostId.set(postId);
+  }
+
+  closeLikesModal() {
+    this.likesPostId.set(null);
+  }
 
   private tapTimers = new Map<string, number>();
   private tapTimeouts = new Map<string, any>();

@@ -34,7 +34,7 @@ import { CommonModule } from '@angular/common';
     </div>
 
     <div class="likes-count" *ngIf="likes > 0">
-      <strong>{{ likes }} likes</strong>
+      <strong (click)="onLikesClick.emit()" class="clickable-likes">{{ likes }} likes</strong>
     </div>
 
     <div class="caption-container" *ngIf="content">
@@ -51,4 +51,5 @@ export class PostActionsComponent {
   @Input() content?: string;
 
   @Output() onLike = new EventEmitter<void>();
+  @Output() onLikesClick = new EventEmitter<void>();
 }

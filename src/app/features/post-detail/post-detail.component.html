@@ -23,7 +23,8 @@
         [likes]="p.likes"
         [authorName]="p.authorName"
         [content]="p.content"
-        (onLike)="toggleLike()">
+        (onLike)="toggleLike()"
+        (onLikesClick)="openLikesList()">
       </app-post-actions>
 
       <!-- Comments Section & Input -->
@@ -49,3 +50,8 @@
     <button class="btn-back" (click)="goBack()">{{ 'action.back' | translate }}</button>
   </div>
 </ng-template>
+
+<!-- Likes List Bottom Sheet Modal -->
+@if (showLikesModal()) {
+  <app-likes-modal [postId]="postId()" (closeModal)="closeLikesModal()"></app-likes-modal>
+}

@@ -26,6 +26,11 @@ export class PostDetailService {
           *,
           trips (
             members
+          ),
+          users:user_id (
+            full_name,
+            avatar_url,
+            email
           )
         `)
         .eq('id', postId)
@@ -43,12 +48,20 @@ export class PostDetailService {
           try { members = JSON.parse(members); } catch (e) { members = []; }
         }
         const author = Array.isArray(members) ? members.find((m: any) => m.id === data.user_id) : undefined;
+        
+        const u = Array.isArray(data.users) ? (data.users[0] || {}) : (data.users || {});
+        
         if (author) {
-          authorName = author.name || 'Traveler';
-          authorAvatar = author.avatar;
+          authorName = author.nickname || u.full_name || author.name || 'Traveler';
+          authorAvatar = u.avatar_url || author.avatar;
+        } else {
+          authorName = u.full_name || u.email?.split('@')[0] || 'Traveler';
+          authorAvatar = u.avatar_url;
         }
       }
 
+        const parsedLikes = Array.isArray(data.likes) ? data.likes : (typeof data.likes === 'string' ? JSON.parse(data.likes) : []);
+        
       return {
         id: data.id,
         tripId: data.trip_id,
@@ -60,13 +73,57 @@ export class PostDetailService {
         isDual: data.is_dual_camera || false,
         timestamp: data.created_at,
         date: data.created_at?.substring(0, 10),
-        likes: Array.isArray(data.likes) ? data.likes.length : (typeof data.likes === 'string' ? JSON.parse(data.likes).length : 0),
-        hasLiked: (data.likes || []).includes(this.store.currentUserId()),
+        likes: parsedLikes.length,
+        hasLiked: parsedLikes.includes(this.store.currentUserId()),
         commentCount: data.comment_count || 0
       };
     } catch (err: any) {
       console.error('Error fetching post', err);
       throw new Error(err?.message || 'Lỗi mạng: Không thể tải chi tiết bài viết.');
+    }
+  }
+
+  // Lấy danh sách người đã like bài viết
+  async getLikesList(postId: string): Promise<{id: string, name: string, avatar?: string}[]> {
+    try {
+      const { data: postData, error: postError } = await this.supabase.client
+        .from('posts')
+        .select('likes, trip_id')
+        .eq('id', postId)
+        .single();
+        
+      if (postError) throw postError;
+      
+      let likeIds: string[] = [];
+      if (postData && postData.likes) {
+         likeIds = Array.isArray(postData.likes) ? postData.likes : (typeof postData.likes === 'string' ? JSON.parse(postData.likes) : []);
+      }
+      
+      if (likeIds.length === 0) return [];
+
+      const { data: usersData, error: usersError } = await this.supabase.client
+        .from('users')
+        .select('id, full_name, avatar_url, email')
+        .in('id', likeIds);
+        
+      if (usersError) throw usersError;
+      
+      const tripId = postData?.trip_id;
+      const trip = this.store.trips().find(t => t.id === tripId);
+      const members = trip?.members || [];
+
+      return (usersData || []).map((u: any) => {
+        const member = members.find(m => m.id === u.id);
+        const nameToUse = member?.name || u.full_name || u.email?.split('@')[0] || 'Traveler';
+        return {
+          id: u.id,
+          name: nameToUse,
+          avatar: member?.avatar || u.avatar_url
+        };
+      });
+    } catch (err: any) {
+      console.error('Error fetching likes list', err);
+      throw new Error(err?.message || 'Lỗi mạng: Không thể tải danh sách người thích.');
     }
   }
 
@@ -94,13 +151,20 @@ export class PostDetailService {
       if (error) throw error;
       if (!data) return [];
 
+      const post = this.store.posts().find(p => p.id === postId);
+      const trip = this.store.trips().find(t => t.id === post?.tripId);
+      const members = trip?.members || [];
+
       return data.map((c: any) => {
         const u = Array.isArray(c.users) ? (c.users[0] || {}) : (c.users || {});
+        const member = members.find(m => m.id === c.user_id);
+        const nameToUse = member?.name || u.full_name || u.email?.split('@')[0] || 'Traveler';
+
         return {
           id: c.id,
           authorId: c.user_id,
-          authorName: u.full_name || u.email?.split('@')[0] || 'Traveler',
-          authorAvatar: u.avatar_url,
+          authorName: nameToUse,
+          authorAvatar: member?.avatar || u.avatar_url,
           text: c.content,
           timestamp: c.created_at
         } as Comment;
@@ -132,17 +196,61 @@ export class PostDetailService {
       if (error || !data) throw new Error('Cơ sở dữ liệu từ chối lưu bình luận.');
       
       const u = Array.isArray(data.users) ? (data.users[0] || {}) : (data.users || {});
+      
+      const post = this.store.posts().find(p => p.id === postId);
+      const trip = this.store.trips().find(t => t.id === post?.tripId);
+      const member = trip?.members?.find(m => m.id === data.user_id);
+      const nameToUse = member?.name || u.full_name || u.email?.split('@')[0] || 'Traveler';
+
       return {
         id: data.id,
         authorId: data.user_id,
-        authorName: u.full_name || u.email?.split('@')[0] || 'Traveler',
-        authorAvatar: u.avatar_url,
+        authorName: nameToUse,
+        authorAvatar: member?.avatar || u.avatar_url,
         text: data.content,
         timestamp: data.created_at
       };
     } catch (err: any) {
       console.error('Error adding comment', err);
       throw new Error(err?.message || 'Lỗi mạng: Không thể gửi bình luận vào lúc này.');
+    }
+  }
+
+  async toggleLike(postId: string, newLiked: boolean) {
+    const uid = this.store.currentUserId();
+    if (!uid) return;
+    
+    try {
+      const { data, error } = await this.supabase.client.from('posts').select('likes').eq('id', postId).single();
+      if (error) throw error;
+
+      let currentLikes: string[] = [];
+      if (data && data.likes) {
+        const raw = data.likes;
+        if (Array.isArray(raw)) currentLikes = raw;
+        else if (typeof raw === 'string') {
+          try { currentLikes = JSON.parse(raw); } catch(e){}
+        }
+      }
+      
+      let updatedLikes: string[];
+      if (newLiked) {
+        updatedLikes = !currentLikes.includes(uid) ? [...currentLikes, uid] : currentLikes;
+      } else {
+        updatedLikes = currentLikes.filter(id => id !== uid);
+      }
+
+      const { error: updateError } = await this.supabase.client.from('posts').update({ likes: updatedLikes }).eq('id', postId);
+      if (updateError) throw updateError;
+      
+      // Update store
+      const post = this.store.posts().find(p => p.id === postId);
+      if (post) {
+         this.store.updatePost(postId, { hasLiked: updatedLikes.includes(uid), likes: updatedLikes.length });
+      }
+    } catch (err: any) {
+       console.error('Lỗi khi toggle like', err);
+       throw err;
     }
   }
 }

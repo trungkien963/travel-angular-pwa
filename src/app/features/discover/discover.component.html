@@ -126,9 +126,10 @@
               </div>
 
               <!-- IG Likes Info -->
-              <div class="ig-likes-count">
+              <div class="ig-likes-count" (click)="openLikesList(post.id)" style="cursor: pointer;">
                 @if (post.hasLiked) {
-                  {{ 'discover.likedBy' | translate }} <strong>You</strong> {{ post.likes > 1 ? ('discover.andOthers' | translate) : '' }}
+                  {{ 'discover.likedBy' | translate }} <strong>You</strong> 
+                  @if (post.likes > 1) { <span> &amp; <strong>{{ post.likes - 1 }}</strong> {{ 'discover.others' | translate }}</span> }
                 } @else {
                   <strong>{{ post.likes || 0 }} {{ 'discover.likes' | translate }}</strong>
                 }
@@ -388,6 +389,11 @@
         </div>
       }
     </div>
+  }
+
+  <!-- ═══ LIKES MODAL ═══ -->
+  @if (likesPostId()) {
+    <app-likes-modal [postId]="likesPostId()!" (closeModal)="closeLikesModal()"></app-likes-modal>
   }
 
 </div>

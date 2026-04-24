@@ -1,0 +1,87 @@
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  height: 100dvh;
+  background: rgba(0,0,0,0.4);
+  display: flex; align-items: flex-end; justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease;
+  @media (min-width: 600px) { align-items: center; }
+}
+
+.modal {
+  background: #FFFFFF;
+  border-radius: 32px 32px 0 0;
+  padding: 28px 24px 40px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.25s ease;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+  @media (min-width: 600px) { border-radius: 32px; padding: 28px 24px; }
+}
+
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px;
+  h3 { font-size: 20px; font-weight: 800; color: #1C1917; margin: 0; }
+}
+
+.btn-close {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: #F5F5F5; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s ease;
+  &:hover { background: rgba(0,0,0,0.05); }
+}
+
+.likes-list-container {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 0 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+.likes-loading {
+  display: flex; justify-content: center; padding: 40px 0;
+  .spinner {
+    width: 32px; height: 32px; border: 3px solid rgba(0,0,0,0.1);
+    border-top-color: #FFC800; border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.likes-empty {
+  text-align: center; color: #A8A29E; font-size: 15px; font-weight: 500; padding: 40px 0;
+}
+
+.like-item {
+  display: flex; align-items: center; gap: 12px;
+  animation: fadeIn 0.2s ease;
+}
+
+.like-avatar {
+  width: 44px; height: 44px; border-radius: 50%; background: #F5F5F5;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  font-weight: 700; font-size: 16px; flex-shrink: 0;
+  color: #1C1917;
+  img { width: 100%; height: 100%; object-fit: cover; }
+}
+
+.like-name {
+  font-size: 15px; font-weight: 700; color: #1C1917;
+}

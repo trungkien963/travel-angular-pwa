@@ -146,6 +146,7 @@ export const viDictionary = {
   'discover.inTrip': 'tại',
   'discover.likedBy': 'Được thích bởi',
   'discover.andOthers': 'và những người khác',
+  'discover.others': 'người khác',
   'discover.likes': 'lượt thích',
 
   // DETAIL updates

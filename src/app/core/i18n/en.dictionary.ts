@@ -146,6 +146,7 @@ export const enDictionary = {
   'discover.inTrip': 'in',
   'discover.likedBy': 'Liked by',
   'discover.andOthers': 'and others',
+  'discover.others': 'other(s)',
   'discover.likes': 'likes',
 
   // DETAIL updates
