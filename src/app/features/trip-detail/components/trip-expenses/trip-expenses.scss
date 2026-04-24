@@ -5,6 +5,11 @@ $text-inactive: #A8A29E;
 $bg: #FFFFFF;
 $border: #F0F0F0;
 
+:host {
+  display: block;
+  width: 100%;
+}
+
 // ─── Expense / Balance Items ───────────────────────────────────────────────────
 .summary-row {
   display: flex;

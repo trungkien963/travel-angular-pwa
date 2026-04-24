@@ -192,23 +192,17 @@ $border: #F0F0F0;
 // ─── Content ──────────────────────────────────────────────────────────────────
 .tab-content { 
   display: flex;
-  overflow-x: auto;
+  overflow-x: hidden;
   overflow-y: hidden;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
   align-items: flex-start;
   transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  &::-webkit-scrollbar { display: none; }
 }
 
 .tab-pane {
   flex: 0 0 100%;
   width: 100%;
   padding: 24px;
-  scroll-snap-align: start;
   box-sizing: border-box;
-  touch-action: pan-y;
   
   height: auto;
   overflow: hidden;

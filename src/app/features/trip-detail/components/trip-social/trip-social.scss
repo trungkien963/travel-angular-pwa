@@ -5,6 +5,12 @@ $text-inactive: #A8A29E;
 $bg: #FFFFFF;
 $border: #F0F0F0;
 
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 // ─── Moments ──────────────────────────────────────────────────────────────────
