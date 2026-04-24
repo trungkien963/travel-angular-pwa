@@ -26,6 +26,16 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./features/add-moment/add-moment.component').then(m => m.AddMomentComponent)
   },
+  {
+    path: 'trip/:id',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/trip-detail/trip-detail.component').then(m => m.TripDetailComponent)
+  },
+  {
+    path: 'post/:id',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/post-detail/post-detail.component').then(m => m.PostDetailComponent)
+  },
 
   // Protected routes - wrapped in Shell layout (bottom nav)
   {
@@ -41,15 +51,7 @@ export const routes: Routes = [
         path: 'trips',
         loadComponent: () => import('./features/trips/trips.component').then(m => m.TripsComponent)
       },
-      {
-        path: 'trip/:id',
-        loadComponent: () => import('./features/trip-detail/trip-detail.component').then(m => m.TripDetailComponent)
-      },
-      {
-        // Post Detail Page
-        path: 'post/:id',
-        loadComponent: () => import('./features/post-detail/post-detail.component').then(m => m.PostDetailComponent)
-      },
+
       {
         path: 'profile',
         loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent)

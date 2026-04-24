@@ -30,7 +30,7 @@ export class ShellComponent {
   readonly activeIndex = computed(() => {
     const url = this.currentUrl() || '';
     if (url.includes('/discover')) return 0;
-    if (url.includes('/trip')) return 1;
+    if (url.includes('/trips')) return 1;
     if (url.includes('/add-moment')) return 2;
     if (url.includes('/profile')) return 3;
     if (url.includes('/notifications')) return 4;
