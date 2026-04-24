@@ -39,7 +39,7 @@
       <div style="background: #F9FAFB; padding: 16px; border-radius: 12px; margin-bottom: 24px;">
         <div class="amount-row" style="justify-content: center;">
           <span class="currency-symbol">₫</span>
-          <app-calculator-input [amount]="settleAmount" (amountChange)="onSettleAmountChange($event)" placeholder="0" class="amount-input" style="text-align: center; font-size: 32px !important;"></app-calculator-input>
+          <app-calculator-input [amount]="settleAmount" (amountChange)="onSettleAmountChange($event)" placeholder="0" [customClass]="'amount-input'" class="amount-input" style="text-align: center; font-size: 32px !important;"></app-calculator-input>
         </div>
       </div>
 

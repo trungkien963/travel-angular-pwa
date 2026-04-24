@@ -600,9 +600,29 @@ export class DiscoverComponent implements OnInit, OnDestroy {
     this.router.navigate(['/post', post.id]);
   }
 
+  activePostMenu = signal<string | null>(null);
 
+  async deletePost(post: Post) {
+    this.activePostMenu.set(null);
+    const confirmed = await this.confirmService.confirm('Bạn có chắc chắn muốn xóa bài viết này?', 'Xóa bài viết', 'Xóa', 'Hủy');
+    if (!confirmed) return;
+    
+    try {
+      this.travelStore.deletePost(post.id); // optimistic
+      const db = this.supabaseService.client;
+      const { error } = await db.from('posts').delete().eq('id', post.id);
+      if (error) throw error;
+      this.toastService.show('Đã xóa bài viết', 'success');
+    } catch(err: any) {
+      console.error('Delete post error:', err);
+      this.toastService.show('Không thể xóa bài viết', 'error');
+    }
+  }
 
-
+  reportPost(post: Post) {
+    this.activePostMenu.set(null);
+    this.toastService.show('Đã báo cáo bài viết', 'success');
+  }
 
   sharePost(post: Post) {
     const url = window.location.origin + '/trip/' + post.tripId;

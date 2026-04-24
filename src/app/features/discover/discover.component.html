@@ -72,6 +72,29 @@
                     </span>
                   </div>
                 </div>
+
+                <div class="ig-options">
+                  <button class="ig-more" (click)="activePostMenu.set(post.id)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>
+                    </svg>
+                  </button>
+                  
+                  @if (activePostMenu() === post.id) {
+                    <div class="menu-backdrop" (click)="activePostMenu.set(null)"></div>
+                    <div class="ig-dropdown-menu" (click)="$event.stopPropagation()">
+                      @if (post.authorId === currentUserId()) {
+                        <button class="ig-dropdown-item delete-item" (click)="deletePost(post)">
+                          Xóa bài viết
+                        </button>
+                      } @else {
+                        <button class="ig-dropdown-item" (click)="reportPost(post)">
+                          Báo cáo
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
               </div>
 
               <!-- IG Images Carousel -->

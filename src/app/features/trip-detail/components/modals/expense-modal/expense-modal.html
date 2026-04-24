@@ -62,7 +62,7 @@
       <p class="field-label" style="margin-top: 24px;">{{ 'expense.totalPrice' | translate }} <span class="req">*</span></p>
       <div class="amount-row">
         <span class="currency-symbol">₫</span>
-        <app-calculator-input [amount]="expForm.amount" (amountChange)="onTotalAmountChange($event)" placeholder="0" class="amount-input" id="exp-amount"></app-calculator-input>
+        <app-calculator-input [amount]="expForm.amount" (amountChange)="onTotalAmountChange($event)" placeholder="0" [customClass]="'amount-input'" class="amount-input" id="exp-amount"></app-calculator-input>
       </div>
 
       <!-- Paid By -->

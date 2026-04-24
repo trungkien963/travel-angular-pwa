@@ -124,3 +124,172 @@ $border: #F0F0F0;
   outline: none; font-family: inherit; padding: 2px 0;
   &::placeholder { color: #D4D4D4; }
 }
+
+// ─── Field Label & Caption Input ──────────────────────────────────────────────
+.field-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: $text-inactive;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin: 0 0 10px;
+}
+
+.caption-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  resize: none;
+  font-size: 17px;
+  font-weight: 600;
+  color: $text-dark;
+  font-family: inherit;
+  background: transparent;
+  box-sizing: border-box;
+
+  &::placeholder { color: #D0D0D0; }
+}
+
+.date-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.amount-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  border-bottom: 2px solid $border;
+  padding-bottom: 8px;
+  transition: border-color 0.2s ease;
+
+  &:focus-within { border-color: $primary; }
+}
+
+.currency-symbol {
+  font-size: 24px;
+  font-weight: 900;
+  color: $text-inactive;
+}
+
+.amount-input {
+  flex: 1;
+  font-size: 40px;
+  font-weight: 900;
+  color: $text-dark;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  padding: 0;
+
+  &::placeholder { color: #D4D4D4; }
+}
+
+.req {
+  color: #EF4444;
+}
+
+// ─── Missing Component Classes ───────────────────────────────────────────────
+.paidby-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.member-pill {
+  padding: 9px 18px;
+  border-radius: 100px;
+  border: none;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+  background: #F5F5F5;
+  color: #8C8C8C;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &.active {
+    background: #1C1917;
+    color: #FFFFFF !important;
+  }
+}
+
+.category-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  border-bottom: 1px solid $border;
+  padding-bottom: 20px;
+  margin-bottom: 12px;
+  &::-webkit-scrollbar { display: none; }
+}
+
+.category-pill {
+  padding: 8px 16px;
+  border-radius: 100px;
+  border: 1px solid $border;
+  background: $bg;
+  font-size: 13px;
+  font-weight: 700;
+  color: $text-muted;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+  transition: all 0.15s ease;
+  
+  span { margin-right: 4px; }
+
+  &.active {
+    background: rgba(255, 200, 0, 0.15);
+    border-color: #FFC800;
+    color: #A16207;
+  }
+}
+
+.quick-add-member {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #F9F9F9;
+  border-radius: 12px;
+  padding: 8px 12px;
+  border: 1px dashed rgba(168, 162, 158, 0.4);
+  margin-top: 16px;
+  transition: border-color 0.2s ease;
+
+  &:focus-within { border-color: rgba(255, 200, 0, 0.5); background: #FFFFFF; }
+}
+
+.quick-add-input {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1C1917;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+
+  &::placeholder { color: #A8A29E; }
+}
+
+.btn-quick-add {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(255, 200, 0, 0.15);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+
+  &:hover:not(:disabled) { background: rgba(255, 200, 0, 0.3); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}

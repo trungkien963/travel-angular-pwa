@@ -1,0 +1,57 @@
+$primary: #FFC800;
+$text-dark: #1C1917;
+$text-muted: #78716C;
+$text-inactive: #A8A29E;
+$bg: #FAFAFA;
+$border: #E5E5E5;
+
+.field-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: $text-inactive;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin: 0 0 10px;
+}
+
+.caption-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  resize: none;
+  font-size: 17px;
+  font-weight: 600;
+  color: $text-dark;
+  font-family: inherit;
+  background: transparent;
+  box-sizing: border-box;
+
+  &::placeholder { color: #D0D0D0; }
+}
+
+.amount-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.currency-symbol {
+  font-size: 24px;
+  font-weight: 900;
+  color: $text-inactive;
+}
+
+.amount-input {
+  flex: 1;
+  font-size: 40px;
+  font-weight: 900;
+  color: $text-dark;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  padding: 0;
+
+  &::placeholder { color: #D4D4D4; }
+}
