@@ -271,13 +271,13 @@ export class DiscoverComponent implements OnInit, OnDestroy {
       // Notify host if it's a new like and we are not the host
       if (newLiked && uid !== trip.ownerId) {
         const profile = this.travelStore.currentUserProfile();
-        db.from('notifications').insert({
-          type: 'TRIP_LIKE',
-          user_id: trip.ownerId,
-          actor_name: profile?.name || 'Traveler',
-          actor_avatar: profile?.avatar || null,
-          message: 'liked your trip',
-          trip_id: trip.id
+        db.rpc('handle_batched_notification', {
+          p_type: 'TRIP_LIKE',
+          p_user_id: trip.ownerId,
+          p_actor_name: profile?.name || 'Traveler',
+          p_actor_avatar: profile?.avatar || null,
+          p_message: 'liked your trip',
+          p_trip_id: trip.id
         }).then(); // Fire and forget
       }
     } catch(err) {
@@ -346,13 +346,13 @@ export class DiscoverComponent implements OnInit, OnDestroy {
       
       // Notify host
       if (uid !== activeTrip.ownerId) {
-        db.from('notifications').insert({
-          type: 'TRIP_COMMENT',
-          user_id: activeTrip.ownerId,
-          actor_name: authorName,
-          actor_avatar: profile?.avatar || null,
-          message: 'commented on your trip',
-          trip_id: activeTrip.id
+        db.rpc('handle_batched_notification', {
+          p_type: 'TRIP_COMMENT',
+          p_user_id: activeTrip.ownerId,
+          p_actor_name: authorName,
+          p_actor_avatar: profile?.avatar || null,
+          p_message: 'commented on your trip',
+          p_trip_id: activeTrip.id
         }).then(); // Fire and forget
       }
     } catch(err: any) {
