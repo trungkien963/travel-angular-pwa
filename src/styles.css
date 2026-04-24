@@ -18,3 +18,75 @@ html, body {
 }
 
 .req { color: #EF4444; font-weight: 700; margin-left: 2px; }
+
+/* Detect mobile landscape */
+@media screen and (orientation: landscape) and (max-height: 600px) {
+  #landscape-overlay {
+    display: flex !important;
+  }
+  app-root {
+    display: none !important;
+  }
+}
+
+/* Landscape Overlay */
+#landscape-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: rgba(15, 23, 42, 0.95); /* Slate 900 with high opacity */
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-family: 'Inter', sans-serif;
+}
+
+.landscape-glass {
+  text-align: center;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 400px;
+}
+
+.rotate-icon {
+  width: 80px;
+  height: 80px;
+  color: #FFC800;
+  margin-bottom: 24px;
+  animation: phone-rotate 2.5s infinite ease-in-out;
+}
+
+.rotate-icon svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 12px rgba(255, 200, 0, 0.4));
+}
+
+.landscape-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  background: linear-gradient(to right, #FFFFFF, #E2E8F0);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.landscape-desc {
+  font-size: 15px;
+  color: #94A3B8; /* Slate 400 */
+  margin: 0;
+  line-height: 1.6;
+}
+
+@keyframes phone-rotate {
+  0% { transform: rotate(-90deg); }
+  40% { transform: rotate(0deg); }
+  60% { transform: rotate(0deg); }
+  100% { transform: rotate(-90deg); }
+}
