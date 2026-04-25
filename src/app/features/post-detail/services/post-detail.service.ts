@@ -228,8 +228,9 @@ export class PostDetailService {
           p_user_id: mentionedUser.id,
           p_actor_name: nameToUse,
           p_actor_avatar: member?.avatar || u.avatar_url || null,
-          p_message: 'mentioned you in a comment',
-          p_trip_id: trip?.id || null
+          p_message: 'vừa nhắc đến bạn trong một bình luận.',
+          p_trip_id: trip?.id || null,
+          p_post_id: postId
         }).then();
       }
 
@@ -241,8 +242,9 @@ export class PostDetailService {
           p_user_id: post.authorId,
           p_actor_name: nameToUse,
           p_actor_avatar: member?.avatar || u.avatar_url || null,
-          p_message: 'commented on your post',
-          p_trip_id: trip?.id || null
+          p_message: 'vừa bình luận về khoảnh khắc của bạn.',
+          p_trip_id: trip?.id || null,
+          p_post_id: postId
         }).then();
       }
       // --------------------------
@@ -322,6 +324,20 @@ export class PostDetailService {
       const post = this.store.posts().find(p => p.id === postId);
       if (post) {
          this.store.updatePost(postId, { hasLiked: updatedLikes.includes(uid), likes: updatedLikes.length });
+         
+         // Notify post author
+         if (newLiked && post.authorId && post.authorId !== uid) {
+           const profile = this.store.currentUserProfile();
+           this.supabase.client.rpc('handle_batched_notification', {
+             p_type: 'POST_LIKE',
+             p_user_id: post.authorId,
+             p_actor_name: profile?.name || 'Traveler',
+             p_actor_avatar: profile?.avatar || null,
+             p_message: 'đã thích khoảnh khắc của bạn.',
+             p_trip_id: post.tripId || null,
+             p_post_id: postId
+           }).then();
+         }
       }
     } catch (err: any) {
        console.error('Lỗi khi toggle like', err);

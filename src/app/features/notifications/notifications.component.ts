@@ -56,8 +56,34 @@ export class NotificationsComponent implements OnInit {
     // Force a fresh HTTP pull to guarantee the newly added post/expense is visible
     // immediately regardless of WebSocket delta status.
     await this.travelStore.refreshData();
-    if (item.tripId) {
-      this.router.navigate(['/trip', item.tripId]);
+    
+    switch (item.type) {
+      case 'POST_NEW':
+      case 'POST_LIKE':
+      case 'POST_COMMENT':
+        if (item.postId) {
+          this.router.navigate(['/post', item.postId]);
+        } else if (item.tripId) {
+          this.router.navigate(['/trip', item.tripId]);
+        }
+        break;
+      case 'EXPENSE_ADDED':
+        if (item.tripId) {
+          this.router.navigate(['/trip', item.tripId], { queryParams: { tab: 'EXPENSES' } });
+        }
+        break;
+      case 'TRIP_LIKE':
+      case 'TRIP_COMMENT':
+        if (item.tripId) {
+          this.router.navigate(['/trip', item.tripId], { queryParams: { tab: 'MOMENTS' } });
+        }
+        break;
+      case 'TRIP_INVITE':
+      default:
+        if (item.tripId) {
+          this.router.navigate(['/trip', item.tripId]);
+        }
+        break;
     }
   }
 
