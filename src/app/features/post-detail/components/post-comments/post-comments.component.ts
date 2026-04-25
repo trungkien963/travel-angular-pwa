@@ -16,7 +16,7 @@ import { MentionInputComponent, MentionUser } from '../../../../shared/component
       <h3 class="comments-title">{{ 'comment.comments' | translate }} ({{ comments.length }})</h3>
       
       <div class="comment-list">
-        <div class="comment-item" *ngFor="let c of comments">
+        <div class="comment-item" *ngFor="let c of comments" [id]="'comment-' + c.id" [class.highlighted]="c.id === highlightedCommentId">
           <div class="avatar" [style.background]="!c.authorAvatar ? getAvatarBg(c.authorName || '?') : ''">
             <img *ngIf="c.authorAvatar" [src]="c.authorAvatar" />
             <span *ngIf="!c.authorAvatar" [style.color]="getAvatarColor(c.authorName || '?')">
@@ -62,6 +62,7 @@ export class PostCommentsComponent {
   @Input() isSubmitting: boolean = false;
   @Input() mentionCandidates: MentionUser[] = [];
   @Input() currentUserId: string | null = null;
+  @Input() highlightedCommentId: string | null = null;
   
   @Output() onSubmitComment = new EventEmitter<string>();
   @Output() onDeleteComment = new EventEmitter<string>();

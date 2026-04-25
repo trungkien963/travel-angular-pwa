@@ -41,6 +41,7 @@ export class PostDetailComponent implements OnInit {
   private toastService = inject(ToastService);
 
   postId = signal<string>('');
+  highlightedCommentId = signal<string | null>(null);
   
   // Local state for when post isn't in store yet
   private localPost = signal<Post | null>(null);
@@ -122,6 +123,52 @@ export class PostDetailComponent implements OnInit {
       this.goBack();
     } finally {
       this.isLoading.set(false);
+      setTimeout(() => {
+        const scrollTo = this.route.snapshot.queryParamMap.get('scrollTo');
+        if (scrollTo === 'comments') {
+          const comments = this.localComments();
+          let targetId = null;
+
+          if (comments.length > 0) {
+            const myName = this.store.currentUserProfile()?.name;
+            const myMention = myName ? `@${myName.replace(/\\s+/g, '')}` : null;
+            
+            // Loop backwards to find the latest mention
+            if (myMention) {
+              for (let i = comments.length - 1; i >= 0; i--) {
+                if (comments[i].text.includes(myMention) || comments[i].text.includes(`@${myName}`)) {
+                  targetId = comments[i].id;
+                  break;
+                }
+              }
+            }
+            
+            // If no mention found (e.g. general "commented on your post"), just highlight the last one
+            if (!targetId) {
+              targetId = comments[comments.length - 1].id;
+            }
+          }
+
+          if (targetId) {
+            this.highlightedCommentId.set(targetId);
+            setTimeout(() => {
+              const el = document.getElementById('comment-' + targetId);
+              if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Remove highlight after a few seconds
+                setTimeout(() => this.highlightedCommentId.set(null), 3000);
+              } else {
+                document.getElementById('comments-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            }, 100);
+          } else {
+            const el = document.getElementById('comments-section');
+            if (el) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }
+        }
+      }, 300);
     }
   }
 

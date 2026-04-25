@@ -60,9 +60,15 @@ export class NotificationsComponent implements OnInit {
     switch (item.type) {
       case 'POST_NEW':
       case 'POST_LIKE':
-      case 'POST_COMMENT':
         if (item.postId) {
           this.router.navigate(['/post', item.postId]);
+        } else if (item.tripId) {
+          this.router.navigate(['/trip', item.tripId]);
+        }
+        break;
+      case 'POST_COMMENT':
+        if (item.postId) {
+          this.router.navigate(['/post', item.postId], { queryParams: { scrollTo: 'comments' } });
         } else if (item.tripId) {
           this.router.navigate(['/trip', item.tripId]);
         }

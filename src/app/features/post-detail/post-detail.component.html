@@ -31,10 +31,12 @@
 
       <!-- Comments Section & Input -->
       <app-post-comments
+        id="comments-section"
         [comments]="comments()"
         [isSubmitting]="isSubmitting()"
         [mentionCandidates]="mentionCandidates"
         [currentUserId]="currentUserId()"
+        [highlightedCommentId]="highlightedCommentId()"
         (onSubmitComment)="submitComment($event)"
         (onDeleteComment)="deleteComment($event)">
       </app-post-comments>

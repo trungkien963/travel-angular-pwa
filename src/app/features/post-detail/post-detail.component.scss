@@ -309,6 +309,15 @@
   .comment-item {
     display: flex;
     gap: 12px;
+    transition: background-color 1s ease-out;
+
+    &.highlighted {
+      background-color: rgba(254, 243, 199, 0.6);
+      border-radius: 8px;
+      padding: 8px;
+      margin-left: -8px;
+      margin-right: -8px;
+    }
 
     .avatar {
       width: 32px;
