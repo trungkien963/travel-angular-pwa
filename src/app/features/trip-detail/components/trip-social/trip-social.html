@@ -66,7 +66,7 @@
         <div class="ig-carousel-container" (click)="onImageTap($event, post)">
           <div class="ig-images" [class.dual]="post.isDual" (scroll)="onImageScroll(post.id, $event)" (touchstart)="$event.stopPropagation()" (touchend)="$event.stopPropagation()">
             @for (img of post.images; track img) {
-              <img [src]="img" [alt]="post.content" class="ig-img" loading="lazy" #imgRefPost (error)="imgRefPost.style.display='none'" />
+              <img [src]="img" [alt]="post.content" class="ig-img" loading="lazy" appLongPress (longPress)="onExportImage(img)" crossorigin="anonymous" #imgRefPost (error)="imgRefPost.style.display='none'" />
             }
           </div>
           

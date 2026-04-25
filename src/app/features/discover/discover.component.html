@@ -102,7 +102,7 @@
                 <div class="ig-carousel-container" (click)="onImageTap($event, post)">
                 <div class="ig-images" [class.dual]="post.isDual" (scroll)="onPostImageScroll(post.id, $event)">
                   @for (img of post.images; track img) {
-                    <img [src]="img" class="ig-img" loading="lazy" />
+                    <img [src]="img" class="ig-img" loading="lazy" appLongPress (longPress)="onExportImage(img)" crossorigin="anonymous" />
                   }
                 </div>
                 
@@ -378,7 +378,7 @@
         <div class="viewer-carousel" #viewerCarousel (scroll)="onViewerScroll($event)">
           @for (img of viewerImages(); track img.url) {
             <div class="carousel-slide">
-              <img [src]="img.url" alt="Full Image" class="viewer-img" />
+              <img [src]="img.url" alt="Full Image" class="viewer-img" appLongPress (longPress)="onExportImage(img.url)" crossorigin="anonymous" />
             </div>
           }
         </div>

@@ -9,17 +9,22 @@ import { inject } from '@angular/core';
 import { ToastService } from '../../../../core/services/toast.service';
 
 import { LikesModalComponent } from '../../../post-detail/components/likes-modal/likes-modal.component';
+import { LongPressDirective } from '../../../../shared/directives/long-press.directive';
+import { ImageExportService } from '../../../../shared/services/image-export.service';
 
 @Component({
   selector: 'app-trip-social',
   standalone: true,
-  imports: [TranslatePipe, LowerCasePipe, LikesModalComponent],
+  imports: [TranslatePipe, LowerCasePipe, LikesModalComponent, LongPressDirective],
   templateUrl: './trip-social.html',
   styleUrl: './trip-social.scss',
 })
 export class TripSocialComponent {
   private postDetailService = inject(PostDetailService);
   private toastService = inject(ToastService);
+  private imageExportService = inject(ImageExportService);
+
+  isExporting = false;
 
   @Input({ required: true }) tripPosts: Post[] = [];
   @Input({ required: true }) currentUserId: string = '';
@@ -114,4 +119,16 @@ export class TripSocialComponent {
   getAvatarBg = getAvatarBg;
   getAvatarColor = getAvatarColor;
   formatRelative = formatRelative;
+
+  async onExportImage(imageUrl: string) {
+    if (this.isExporting) return;
+    this.isExporting = true;
+    try {
+      await this.imageExportService.exportPolaroid(imageUrl, 'Wanderpool');
+    } catch (e) {
+      console.error('Lỗi tải ảnh', e);
+    } finally {
+      this.isExporting = false;
+    }
+  }
 }

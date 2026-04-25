@@ -1,14 +1,16 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { LongPressDirective } from '../../../../shared/directives/long-press.directive';
+import { ImageExportService } from '../../../../shared/services/image-export.service';
 
 @Component({
   selector: 'app-post-media',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LongPressDirective],
   template: `
     <div class="media-container" *ngIf="images && images.length" (click)="onImageTap($event)">
       <div class="carousel" [class.dual]="isDual" (scroll)="onScroll($event)">
-        <img *ngFor="let img of images" [src]="img" loading="lazy" />
+        <img *ngFor="let img of images" [src]="img" loading="lazy" appLongPress (longPress)="onLongPress(img)" crossorigin="anonymous" />
       </div>
 
       <div class="pop-heart-overlay" *ngIf="showHeartOverlay">
@@ -34,6 +36,10 @@ export class PostMediaComponent {
   @Input() images: string[] = [];
   @Input() isDual: boolean = false;
   @Output() onDoubleTap = new EventEmitter<void>();
+
+  isExporting = false;
+
+  constructor(private imageExportService: ImageExportService) {}
 
   activeIndex = 0;
   showHeartOverlay = false;
@@ -70,5 +76,17 @@ export class PostMediaComponent {
     setTimeout(() => {
       this.showHeartOverlay = false;
     }, 850);
+  }
+
+  async onLongPress(imgUrl: string) {
+    if (this.isExporting) return;
+    this.isExporting = true;
+    try {
+      await this.imageExportService.exportPolaroid(imgUrl);
+    } catch (e) {
+      console.error('Export image failed', e);
+    } finally {
+      this.isExporting = false;
+    }
   }
 }
