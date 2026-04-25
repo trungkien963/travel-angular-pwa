@@ -170,6 +170,7 @@ export const enDictionary = {
   
   // SHARED ACTIONS
   'action.back': 'Back',
+  'action.addLocation': 'Add Location',
   'action.searching': 'Searching...',
   'action.searchingLocations': 'Searching locations...',
   'action.saving': 'SAVING...',

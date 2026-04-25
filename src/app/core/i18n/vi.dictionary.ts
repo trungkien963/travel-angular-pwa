@@ -170,6 +170,7 @@ export const viDictionary = {
 
   // SHARED ACTIONS
   'action.back': 'Back',
+  'action.addLocation': 'Thêm địa điểm',
   'action.searching': 'Đang tìm...',
   'action.searchingLocations': 'Đang tìm kiếm...',
   'action.saving': 'ĐANG LƯU...',

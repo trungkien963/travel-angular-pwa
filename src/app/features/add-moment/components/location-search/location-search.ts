@@ -30,7 +30,7 @@ import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
             <circle cx="11" cy="11" r="8" />
             <path d="m21 21-4.3-4.3" />
           </svg>
-          <input type="text" class="location-input" style="flex: 1; border: none; background: transparent; padding: 14px 0; font-size: 15px; color: #333; outline: none;" placeholder="Search on OpenStreetMap..." [(ngModel)]="locationQuery" (input)="onLocationSearch()" id="input-location" />
+          <input type="text" class="location-input" style="flex: 1; border: none; background: transparent; padding: 14px 0; font-size: 15px; color: #333; outline: none;" [placeholder]="'moment.searchLocation' | translate" [(ngModel)]="locationQuery" (input)="onLocationSearch()" id="input-location" />
         </div>
         
         @if (isSearching()) {

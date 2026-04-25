@@ -14,7 +14,8 @@
       <!-- Media Carousel -->
       <app-post-media 
         [images]="p.images" 
-        [isDual]="p.isDual || false">
+        [isDual]="p.isDual || false"
+        (onDoubleTap)="handleDoubleTap()">
       </app-post-media>
 
       <!-- Actions, Likes, Caption -->

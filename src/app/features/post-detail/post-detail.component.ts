@@ -197,6 +197,13 @@ export class PostDetailComponent implements OnInit {
     return formatRelative(dateString);
   }
 
+  handleDoubleTap() {
+    const p = this.post();
+    if (p && !p.hasLiked) {
+      this.toggleLike();
+    }
+  }
+
   async toggleLike() {
     const p = this.post();
     if (!p) return;
