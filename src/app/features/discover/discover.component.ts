@@ -585,9 +585,7 @@ export class DiscoverComponent implements OnInit, OnDestroy {
       // Reset timer after 300ms, single tap action: Open Image Viewer
       const timeout = setTimeout(() => {
         this.tapTimers.set(post.id, 0);
-        const scrollLeft = target?.scrollLeft || 0;
-        const clientWidth = target?.clientWidth || 1;
-        const startIndex = Math.round(scrollLeft / (clientWidth - 32)) || 0;
+        const startIndex = this.getPostActiveImageIndex(post.id);
         
         if (post.images && post.images.length > 0) {
           this.photoViewerService.open(post.images, startIndex);

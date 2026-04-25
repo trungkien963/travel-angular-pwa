@@ -73,10 +73,7 @@ export class TripSocialComponent {
       const timeout = setTimeout(() => {
         this.tapTimers.set(post.id, 0);
         // Single tap action: Open Image Viewer
-        const target = event.target as HTMLElement;
-        const scrollLeft = target.scrollLeft || 0;
-        const clientWidth = target.clientWidth || 1;
-        const startIndex = Math.round(scrollLeft / (clientWidth - 32)) || 0;
+        const startIndex = this.getActiveImageIndex(post.id);
         
         if (post.images && post.images.length > 0) {
           this.photoViewerService.open(post.images, startIndex);
