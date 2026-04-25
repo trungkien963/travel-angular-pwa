@@ -10,8 +10,6 @@ import { PostDetailService } from '../post-detail/services/post-detail.service';
 import { LikesModalComponent } from '../post-detail/components/likes-modal/likes-modal.component';
 import { MentionInputComponent } from '../../shared/components/mention-input/mention-input.component';
 import { FormsModule } from '@angular/forms';
-import { LongPressDirective } from '../../shared/directives/long-press.directive';
-import { ImageExportService } from '../../shared/services/image-export.service';
 
 interface FeedItem {
   id: string;
@@ -35,7 +33,7 @@ import { formatRelative } from '../../core/utils/format.util';
 @Component({
   selector: 'app-discover',
   standalone: true,
-  imports: [RouterLink, FormsModule, TranslatePipe, LowerCasePipe, LikesModalComponent, MentionInputComponent, LongPressDirective],
+  imports: [RouterLink, FormsModule, TranslatePipe, LowerCasePipe, LikesModalComponent, MentionInputComponent],
   templateUrl: './discover.component.html',
   styleUrl: './discover.component.scss'
 })
@@ -46,10 +44,8 @@ export class DiscoverComponent implements OnInit, OnDestroy {
   private supabaseService = inject(SupabaseService);
   private postDetailService = inject(PostDetailService);
   private confirmService = inject(ConfirmService);
-  private imageExportService = inject(ImageExportService);
 
   readonly currentUserId = computed(() => this.travelStore.currentUserId());
-  isExporting = false;
   
   // ─── Likes Modal State ───
   readonly likesPostId = signal<string | null>(null);
@@ -669,17 +665,5 @@ export class DiscoverComponent implements OnInit, OnDestroy {
 
   getPostActiveImageIndex(postId: string): number {
     return this.activePostImageIndex()[postId] || 0;
-  }
-
-  async onExportImage(imageUrl: string) {
-    if (this.isExporting) return;
-    this.isExporting = true;
-    try {
-      await this.imageExportService.exportPolaroid(imageUrl, 'Wanderpool');
-    } catch (e) {
-      console.error('Lỗi tải ảnh', e);
-    } finally {
-      this.isExporting = false;
-    }
   }
 }
