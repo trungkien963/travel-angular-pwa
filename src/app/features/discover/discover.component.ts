@@ -337,6 +337,14 @@ export class DiscoverComponent implements OnInit, OnDestroy {
     const div = document.createElement('div');
     div.innerText = text;
     let safeText = div.innerHTML;
+    const candidates = this.mentionCandidates;
+    if (candidates && candidates.length > 0) {
+      const sortedNames = [...candidates].sort((a, b) => b.name.length - a.name.length);
+      const escapedNames = sortedNames.map(c => c.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+      const regex = new RegExp(`@(${escapedNames.join('|')})(?![\\w\\p{L}])`, 'gu');
+      safeText = safeText.replace(regex, '<strong class="mention-text">@$1</strong>');
+    }
+    
     return safeText.replace(/@([^\s]+)/g, '<strong class="mention-text">@$1</strong>');
   }
 

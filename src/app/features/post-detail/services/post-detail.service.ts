@@ -208,6 +208,45 @@ export class PostDetailService {
       const member = trip?.members?.find(m => m.id === data.user_id);
       const nameToUse = member?.name || u.full_name || u.email?.split('@')[0] || 'Traveler';
 
+      // --- SEND NOTIFICATIONS ---
+      const uniqueMentions: any[] = [];
+      if (trip?.members) {
+        for (const m of trip.members) {
+          if (m.id === userId) continue;
+          const escapedName = m.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const regex = new RegExp(`@${escapedName}(?![\\w\\p{L}])`, 'gu');
+          if (regex.test(text)) {
+            uniqueMentions.push(m);
+          }
+        }
+      }
+      
+      // 1. Notify mentioned users
+      for (const mentionedUser of uniqueMentions) {
+        this.supabase.client.rpc('handle_batched_notification', {
+          p_type: 'POST_COMMENT',
+          p_user_id: mentionedUser.id,
+          p_actor_name: nameToUse,
+          p_actor_avatar: member?.avatar || u.avatar_url || null,
+          p_message: 'mentioned you in a comment',
+          p_trip_id: trip?.id || null
+        }).then();
+      }
+
+      // 2. Notify post author (if not the commenter and not already notified via mention)
+      const mentionedIds = uniqueMentions.map(m => m.id);
+      if (post && post.authorId && post.authorId !== userId && !mentionedIds.includes(post.authorId)) {
+        this.supabase.client.rpc('handle_batched_notification', {
+          p_type: 'POST_COMMENT',
+          p_user_id: post.authorId,
+          p_actor_name: nameToUse,
+          p_actor_avatar: member?.avatar || u.avatar_url || null,
+          p_message: 'commented on your post',
+          p_trip_id: trip?.id || null
+        }).then();
+      }
+      // --------------------------
+
       return {
         id: data.id,
         authorId: data.user_id,

@@ -134,9 +134,8 @@ export class MentionInputComponent {
     const before = this.value.substring(0, this.mentionStartIndex);
     const after = this.value.substring(this.cursorPosition);
     
-    // Replace mention with @UserName
-    const formattedName = user.name.replace(/\s+/g, '');
-    const mentionText = `@${formattedName} `;
+    // Replace mention with @Name
+    const mentionText = `@${user.name} `;
     const newVal = before + mentionText + after;
     
     this.onValueChange(newVal);

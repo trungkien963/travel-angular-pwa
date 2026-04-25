@@ -78,8 +78,8 @@ export class PostCommentsComponent {
 
   replyTo(c: Comment) {
     const current = this.newCommentText();
-    const formattedName = c.authorName?.replace(/\s+/g, '') || 'User';
-    this.newCommentText.set(`${current ? current + ' ' : ''}@${formattedName} `);
+    const name = c.authorName || 'User';
+    this.newCommentText.set(`${current ? current + ' ' : ''}@${name} `);
   }
 
   deleteComment(commentId: string) {
@@ -92,7 +92,14 @@ export class PostCommentsComponent {
     const div = document.createElement('div');
     div.innerText = text;
     let safeText = div.innerHTML;
-    // Highlight mentions
+    
+    if (this.mentionCandidates && this.mentionCandidates.length > 0) {
+      const sortedNames = [...this.mentionCandidates].sort((a, b) => b.name.length - a.name.length);
+      const escapedNames = sortedNames.map(c => c.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+      const regex = new RegExp(`@(${escapedNames.join('|')})(?![\\w\\p{L}])`, 'gu');
+      safeText = safeText.replace(regex, '<strong class="mention-text">@$1</strong>');
+    }
+    
     return safeText.replace(/@([^\s]+)/g, '<strong class="mention-text">@$1</strong>');
   }
 
