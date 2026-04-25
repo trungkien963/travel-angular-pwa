@@ -148,8 +148,8 @@ export class AddMomentComponent implements OnInit, OnDestroy {
     if (!this.selectedTripId()) return false;
     
     if (this.isExpenseMode()) {
-      if (!this.caption || !this.caption.trim()) return false;
       if (!this.expenseData) return false;
+      if (this.expenseData.hasPendingEmailInput) return false;
       if (!this.expenseData.isValid) return false;
     }
     return true;
@@ -388,46 +388,55 @@ export class AddMomentComponent implements OnInit, OnDestroy {
   }
 
   // ─── Direct Member Invite ──────────────────────────────────────────────────
-  async quickInviteMember(email: string) {
-    if (!email) return;
+  async quickInviteMember(inputStr: string) {
+    if (!inputStr) return;
     
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      this.toastService.show('Invalid email format.', 'error');
-      return;
-    }
-
     const trip = this.selectedTrip();
     if (!trip) return;
 
-    if (trip.members.some(m => m.email === email) || this.pendingNewMembers().some(m => m.email === email)) {
-      this.toastService.show('Member already in trip or pending.', 'error');
-      return;
+    if (inputStr.includes('@')) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(inputStr)) {
+        this.toastService.show('Invalid email format.', 'error');
+        return;
+      }
+
+      if (trip.members.some(m => m.email === inputStr) || this.pendingNewMembers().some(m => m.email === inputStr)) {
+        this.toastService.show('Member already in trip or pending.', 'error');
+        return;
+      }
+
+      const tempId = `pending-${Date.now()}-${Math.random().toString(36).substring(2,7)}`;
+      const newMember = { id: tempId, name: inputStr.split('@')[0], email: inputStr, isMe: false, avatar: undefined };
+      this.pendingNewMembers.update(list => [...list, newMember]);
+    } else {
+      const ghostId = `ghost-${Date.now()}-${Math.random().toString(36).substring(2,7)}`;
+      const ghostMember = { id: ghostId, name: inputStr, email: undefined, isMe: false, avatar: undefined };
+      this.pendingNewMembers.update(list => [...list, ghostMember]);
     }
-
-    const tempId = `pending-${Date.now()}-${Math.random().toString(36).substring(2,7)}`;
-    const newMember = { id: tempId, name: email.split('@')[0], email, isMe: false, avatar: undefined };
-    
-    this.pendingNewMembers.update(list => [...list, newMember]);
   }
+  
 
-
+  handleMemberRemove(id: string) {
+    this.pendingNewMembers.update(list => list.filter(m => m.id !== id));
+  }
 
   // ─── Submit ──────────────────────────────────────────────────────────
   async submit() {
     let tripId = this.selectedTripId();
     if (!tripId) { this.toastService.show('Please select a trip first.', 'error'); return; }
     
-    if (this.photos().length === 0 && !this.caption) {
+    if (this.photos().length === 0 && !this.caption && !this.isExpenseMode()) {
       this.toastService.show('Chưa có nội dung hoặc hình ảnh.', 'error'); return;
     }
 
     // Prepare pending members (only those included in splits)
     const activeMemberIds = this.expenseData ? Object.keys(this.expenseData.splits).filter(id => this.expenseData!.splits[id] > 0) : [];
     const pending = this.pendingNewMembers().filter(p => !this.isExpenseMode() || activeMemberIds.includes(p.id));
-    if (pending.length > 0) {
-      const emailListHtml = pending.map(p => `• <strong>${p.email}</strong>`).join('<br>');
-      const msgHtml = `Có <b>${pending.length}</b> người mới vừa được thêm vào chưa nhận được thư mời:<br><br>${emailListHtml}<br><br>Bạn có muốn gửi lời mời cho họ tham gia trip này?`;
+    const pendingWithEmail = pending.filter(p => p.email);
+    if (pendingWithEmail.length > 0) {
+      const emailListHtml = pendingWithEmail.map(p => `• <strong>${p.email}</strong>`).join('<br>');
+      const msgHtml = `Có <b>${pendingWithEmail.length}</b> người mới vừa được thêm vào chưa nhận được thư mời:<br><br>${emailListHtml}<br><br>Bạn có muốn gửi lời mời cho họ tham gia trip này?`;
       
       const confirmed = await this.confirmService.confirm(
         msgHtml,

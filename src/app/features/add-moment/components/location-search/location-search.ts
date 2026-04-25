@@ -8,29 +8,52 @@ import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
   selector: 'app-location-search',
   standalone: true,
   imports: [CommonModule, FormsModule, TranslatePipe],
+  styles: [`
+    .input-card {
+      background: #FFFFFF;
+      border-radius: 24px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .field-label {
+      font-size: 10px;
+      font-weight: 800;
+      color: #A8A29E;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin: 0 0 10px;
+    }
+  `],
   template: `
     <div class="input-card">
       <p class="field-label" style="margin-bottom: 12px;">{{ 'action.addLocation' | translate }}</p>
       @if (selectedLocation) {
-        <div class="location-selected" style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
-          <div>
-            <p class="location-name" style="margin: 0; font-weight: 600; font-size: 15px; color: #1e3a8a;">{{ selectedLocation.name }}</p>
-            <p class="location-city" style="margin: 4px 0 0; font-size: 13px; color: #60a5fa;">{{ selectedLocation.address }}</p>
+        <div class="location-selected" style="background: #FFFFFF; border: 1px solid #F0F0F0; border-radius: 24px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="loc-icon" style="width: 40px; height: 40px; border-radius: 50%; background: rgba(255, 200, 0, 0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFC800" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+            </div>
+            <div>
+              <p class="location-name" style="margin: 0; font-weight: 800; font-size: 15px; color: #1C1917;">{{ selectedLocation.name }}</p>
+              <p class="location-city" style="margin: 2px 0 0; font-size: 12px; font-weight: 600; color: #A8A29E;">{{ selectedLocation.address }}</p>
+            </div>
           </div>
-          <button class="btn-clear-location" (click)="clearLocation()" style="background: white; border: none; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #ef4444; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <button class="btn-clear-location" (click)="clearLocation()" style="background: transparent; border: none; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #A8A29E; transition: color 0.2s;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M18 6 6 18" />
               <path d="m6 6 12 12" />
             </svg>
           </button>
         </div>
       } @else {
-        <div class="location-search-row" style="display: flex; align-items: center; gap: 12px; background: #fafafa; border: 1px solid #e5e5e5; border-radius: 12px; padding: 0 16px;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a8a29e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <div class="location-search-row" style="display: flex; align-items: center; gap: 12px; background: #FFFFFF; border: 1px solid #F0F0F0; border-radius: 24px; padding: 2px 18px; transition: border-color 0.2s ease;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A8A29E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="11" cy="11" r="8" />
             <path d="m21 21-4.3-4.3" />
           </svg>
-          <input type="text" class="location-input" style="flex: 1; border: none; background: transparent; padding: 14px 0; font-size: 15px; color: #333; outline: none;" [placeholder]="'moment.searchLocation' | translate" [(ngModel)]="locationQuery" (input)="onLocationSearch()" id="input-location" />
+          <input type="text" class="location-input" style="flex: 1; border: none; background: transparent; padding: 14px 0; font-size: 15px; font-weight: 600; color: #1C1917; outline: none; font-family: inherit;" [placeholder]="'moment.searchLocation' | translate" [(ngModel)]="locationQuery" (input)="onLocationSearch()" id="input-location" />
         </div>
         
         @if (isSearching()) {
@@ -40,9 +63,16 @@ import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
         @if (locationResults().length > 0) {
           <div class="location-results" style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
             @for (result of locationResults(); track result.placeId) {
-              <button class="location-result-item" (click)="selectLocation(result)" style="background: white; border: 1px solid #f0f0f0; border-radius: 10px; padding: 12px; text-align: left; cursor: pointer; transition: all 0.2s;">
-                <p class="loc-result-name" style="margin: 0 0 4px; font-weight: 600; font-size: 14px; color: #333;">{{ result.name }}</p>
-                <p class="loc-result-addr" style="margin: 0; font-size: 12px; color: #888;">{{ result.address }}</p>
+              <button class="location-result-item" (click)="selectLocation(result)" style="background: #FFFFFF; border: 1px solid #F0F0F0; border-radius: 20px; padding: 14px 18px; display: flex; align-items: center; gap: 12px; text-align: left; cursor: pointer; transition: all 0.2s;">
+                <div class="loc-icon" style="width: 36px; height: 36px; border-radius: 50%; background: #F9FAFB; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8A29E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+                  </svg>
+                </div>
+                <div>
+                  <p class="loc-result-name" style="margin: 0; font-weight: 800; font-size: 15px; color: #1C1917;">{{ result.name }}</p>
+                  <p class="loc-result-addr" style="margin: 2px 0 0; font-size: 12px; font-weight: 600; color: #A8A29E;">{{ result.address }}</p>
+                </div>
               </button>
             }
           </div>

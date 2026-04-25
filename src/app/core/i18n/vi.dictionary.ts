@@ -128,7 +128,7 @@ export const viDictionary = {
   'moment.whatFor': 'MÔ TẢ CHI TIẾT',
   'moment.descPlaceholder': 'VD: Bữa tối ấm cúng bên biển...',
   'moment.locationTag': 'ĐỊA ĐIỂM (GẮN THẺ)',
-  'moment.searchLocation': 'Tìm kiếm trên hệ thống...',
+  'moment.searchLocation': 'Tìm kiếm trên OpenStreetMap...',
   
   // TRIP CREATION (TRIPS MODAL) + MORE
   'trip.autoCreateNew': 'Tự động tạo chuyến đi mới',
@@ -174,6 +174,16 @@ export const viDictionary = {
   'action.searching': 'Đang tìm...',
   'action.searchingLocations': 'Đang tìm kiếm...',
   'action.saving': 'ĐANG LƯU...',
+  'action.saveCapture': 'LƯU LẠI',
+  'action.select': 'Chọn',
+  
+  // CATEGORIES
+  'category.food': 'Ăn uống',
+  'category.transport': 'Đi lại',
+  'category.hotel': 'Khách sạn',
+  'category.activities': 'Hoạt động',
+  'category.shopping': 'Mua sắm',
+  'category.other': 'Khác',
   
   // EXPENSE updates
   'expense.addReceiptOpt': 'THÊM HÓA ĐƠN (TÙY CHỌN)',

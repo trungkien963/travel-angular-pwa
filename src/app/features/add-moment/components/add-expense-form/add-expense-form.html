@@ -61,7 +61,7 @@
     @for (cat of expenseCategories; track cat.id) {
     <button class="category-pill" [class.active]="selectedCategory() === cat.id"
       (click)="selectedCategory.set(cat.id); emitFormChange()">
-      <span>{{ cat.icon }}</span> {{ cat.label }}
+      <span>{{ cat.icon }}</span> {{ 'category.' + cat.id.toLowerCase() | translate }}
     </button>
     }
   </div>
@@ -75,7 +75,7 @@
   <div class="paidby-row" style="display: flex; flex-wrap: wrap; gap: 8px;">
     @if (!showPayerList) {
       <button class="member-pill active" (click)="showPayerList = true" style="display: flex; align-items: center; gap: 6px; padding-right: 12px;">
-        {{ getPayerNameLocal(paidById()) || 'Select' }}
+        {{ getPayerNameLocal(paidById()) || ('action.select' | translate) }}
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
       </button>
     } @else {
@@ -140,7 +140,7 @@
 
   <!-- Quick add member -->
   <div class="quick-add-member">
-    <input type="email" [(ngModel)]="newMemberEmail" [placeholder]="'expense.missingSomeone' | translate"
+    <input type="text" [(ngModel)]="newMemberEmail" (ngModelChange)="emitFormChange()" [placeholder]="'expense.missingSomeone' | translate"
       class="quick-add-input" (keyup.enter)="quickInviteMember()" />
     <button class="btn-quick-add" [disabled]="!newMemberEmail.trim()"
       (click)="quickInviteMember()">

@@ -49,13 +49,13 @@
       <div class="category-scroll">
         @for (cat of categories; track cat.id) {
           <button class="category-pill" [class.active]="expForm.category === cat.id" (click)="expForm.category = cat.id" [id]="'cat-' + cat.id">
-            <span>{{ cat.emoji }}</span> {{ cat.label }}
+            <span>{{ cat.emoji }}</span> {{ 'category.' + cat.id.toLowerCase() | translate }}
           </button>
         }
       </div>
 
       <!-- Description -->
-      <p class="field-label" style="margin-top: 24px;">{{ 'expense.whatFor' | translate }} <span class="req">*</span></p>
+      <p class="field-label" style="margin-top: 24px;">{{ 'expense.whatFor' | translate }}</p>
       <input type="text" [(ngModel)]="expForm.desc" placeholder="e.g. Lunch at beachside..." class="caption-input" id="exp-desc" />
       
       <!-- Amount -->
@@ -70,7 +70,7 @@
       <div class="paidby-row" style="display: flex; flex-wrap: wrap; gap: 8px;">
         @if (!showPayerList) {
           <button class="member-pill active" (click)="showPayerList = true" style="display: flex; align-items: center; gap: 6px; padding-right: 12px;">
-            {{ getPayerNameLocal(expForm.payerId) || 'Select' }}
+            {{ getPayerNameLocal(expForm.payerId) || ('action.select' | translate) }}
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
           </button>
         } @else {
@@ -148,7 +148,7 @@
       
     </div> <!-- Close input-card -->
     
-    <button class="btn-receipt-close" (click)="saveExpense()" [disabled]="isSavingExpense() || isSplitExceedingTotal() || !expForm.desc || expForm.amount <= 0 || newMemberEmail.trim().length > 0" [class.btn-warning]="newMemberEmail.trim().length > 0" style="margin-top: 16px; width: 100%; border:none; padding:18px; border-radius:100px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); font-size:16px; font-weight:800; cursor:pointer;" [style.background]="(isSavingExpense() || isSplitExceedingTotal() || !expForm.desc || expForm.amount <= 0 || newMemberEmail.trim().length > 0) ? '#F5F5F5' : '#FFC800'" [style.color]="(isSavingExpense() || isSplitExceedingTotal() || !expForm.desc || expForm.amount <= 0 || newMemberEmail.trim().length > 0) ? '#A8A29E' : '#1C1917'">
+    <button class="btn-receipt-close" (click)="saveExpense()" [disabled]="isSavingExpense() || isSplitExceedingTotal() || expForm.amount <= 0 || newMemberEmail.trim().length > 0" [class.btn-warning]="newMemberEmail.trim().length > 0" style="margin-top: 16px; width: 100%; border:none; padding:18px; border-radius:100px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); font-size:16px; font-weight:800; cursor:pointer;" [style.background]="(isSavingExpense() || isSplitExceedingTotal() || expForm.amount <= 0 || newMemberEmail.trim().length > 0) ? '#F5F5F5' : '#FFC800'" [style.color]="(isSavingExpense() || isSplitExceedingTotal() || expForm.amount <= 0 || newMemberEmail.trim().length > 0) ? '#A8A29E' : '#1C1917'">
       @if (isSavingExpense()) {
         {{ 'expense.saving' | translate }}
       } @else if (newMemberEmail.trim().length > 0) {

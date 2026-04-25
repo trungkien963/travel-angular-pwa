@@ -100,14 +100,16 @@ export class AddMomentService {
           let userAvatar: string | undefined = p.avatar;
           
           try {
-            const { data, error } = await db.functions.invoke('invite-member', { body: { email: p.email } });
-            if (!error && data?.userId) {
-              userId = data.userId;
-              try {
-                const { data: userData } = await db.from('users').select('full_name, avatar_url').eq('id', userId).maybeSingle();
-                if (userData?.['full_name']) userName = userData['full_name'];
-                if (userData?.['avatar_url']) userAvatar = userData['avatar_url'];
-              } catch(e) {}
+            if (p.email) {
+              const { data, error } = await db.functions.invoke('invite-member', { body: { email: p.email } });
+              if (!error && data?.userId) {
+                userId = data.userId;
+                try {
+                  const { data: userData } = await db.from('users').select('full_name, avatar_url').eq('id', userId).maybeSingle();
+                  if (userData?.['full_name']) userName = userData['full_name'];
+                  if (userData?.['avatar_url']) userAvatar = userData['avatar_url'];
+                } catch(e) {}
+              }
             }
           } catch(err) { console.warn('Invite fail', p.email, err); }
           
@@ -167,7 +169,7 @@ export class AddMomentService {
 
         const expensePayload = {
           trip_id: tripId, 
-          description: payload.caption || 'Untitled Expense', 
+          description: payload.caption || (payload.selectedCategory ? payload.selectedCategory.charAt(0).toUpperCase() + payload.selectedCategory.slice(1).toLowerCase() : 'Expense'), 
           amount: payload.expenseAmount,
           category: payload.selectedCategory, 
           payer_id: paidById,

@@ -11,6 +11,7 @@ export interface ExpenseFormData {
   receipts: any[];
   splits: Record<string, number>;
   isValid: boolean;
+  hasPendingEmailInput?: boolean;
 }
 
 @Component({
@@ -27,6 +28,7 @@ export class AddExpenseFormComponent {
   @Output() onQuickInvite = new EventEmitter<string>();
   @Output() onOpenReceiptViewer = new EventEmitter<{urls: string[], index: number}>();
   @Output() onFormChange = new EventEmitter<ExpenseFormData>();
+  @Output() onMemberRemove = new EventEmitter<string>();
 
   expenseAmount = 0;
   readonly paidById = signal('');
@@ -90,6 +92,7 @@ export class AddExpenseFormComponent {
     this.includedMembers.update(m => ({ ...m, [id]: !m[id] }));
     if (!this.includedMembers()[id]) {
        this.lockedShares.update(m => ({ ...m, [id]: null })); 
+       this.onMemberRemove.emit(id);
     }
     
     this.lockedShares.update(locks => {
@@ -136,6 +139,7 @@ export class AddExpenseFormComponent {
     if (value === 0) {
       this.includedMembers.update(m => ({ ...m, [memberId]: false }));
       this.lockedShares.update(m => ({ ...m, [memberId]: null }));
+      this.onMemberRemove.emit(memberId);
       this.updateLockedValue(memberId, '');
     }
   }
@@ -284,7 +288,8 @@ export class AddExpenseFormComponent {
       category: this.selectedCategory(),
       receipts: this.pendingReceipts(),
       splits,
-      isValid
+      isValid,
+      hasPendingEmailInput: this.newMemberEmail.trim().length > 0
     });
   }
 }

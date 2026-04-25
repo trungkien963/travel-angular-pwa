@@ -174,6 +174,16 @@ export const enDictionary = {
   'action.searching': 'Searching...',
   'action.searchingLocations': 'Searching locations...',
   'action.saving': 'SAVING...',
+  'action.saveCapture': 'SAVE CAPTURE',
+  'action.select': 'Select',
+  
+  // CATEGORIES
+  'category.food': 'Food',
+  'category.transport': 'Transport',
+  'category.hotel': 'Hotel',
+  'category.activities': 'Activities',
+  'category.shopping': 'Shopping',
+  'category.other': 'Other',
   
   // EXPENSE updates
   'expense.addReceiptOpt': 'ADD RECEIPT (OPTIONAL)',

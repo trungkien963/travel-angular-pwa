@@ -422,7 +422,7 @@ export class ExpenseModalComponent implements OnInit, OnChanges {
   }
 
   async saveExpense() {
-    if (!this.expForm.desc || !this.expForm.amount || !this.trip) return;
+    if (!this.expForm.amount || !this.trip) return;
     const db = this.supabaseService.client;
 
     const pending = this.pendingNewMembers().filter(p => this.includedMembers()[p.id]);
@@ -520,7 +520,7 @@ export class ExpenseModalComponent implements OnInit, OnChanges {
 
       const payload: any = {
         trip_id: this.trip.id,
-        description: this.expForm.desc,
+        description: this.expForm.desc || (this.expForm.category ? this.expForm.category.charAt(0).toUpperCase() + this.expForm.category.slice(1).toLowerCase() : 'Expense'),
         amount: this.expForm.amount,
         category: this.expForm.category,
         payer_id: this.expForm.payerId,
