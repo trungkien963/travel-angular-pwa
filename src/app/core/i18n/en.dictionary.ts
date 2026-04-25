@@ -155,7 +155,7 @@ export const enDictionary = {
   'detail.fullNameReq': 'FULL NAME *',
   'detail.emailReq': 'EMAIL ADDRESS (Optional)',
   'detail.placeholderName': 'e.g. John Doe',
-  'detail.placeholderEmail': 'Enter to invite to app (optional)',
+  'detail.placeholderEmail': 'e.g. john@example.com',
   'trip.addGuestHint': 'Don\'t use the app? No problem, just a name is enough.',
   'detail.linkAccount': 'Link Account',
   'detail.youOweTotal': 'Total you owe',

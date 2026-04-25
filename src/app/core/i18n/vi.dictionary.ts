@@ -155,7 +155,7 @@ export const viDictionary = {
   'detail.fullNameReq': 'HỌ TÊN *',
   'detail.emailReq': 'ĐỊA CHỈ EMAIL (Tùy chọn)',
   'detail.placeholderName': 'VD: Nguyễn Văn A',
-  'detail.placeholderEmail': 'Nhập để mời dùng app (không bắt buộc)',
+  'detail.placeholderEmail': 'VD: john@example.com',
   'trip.addGuestHint': 'Không xài app? Không sao, chỉ cần tên là đủ tính tiền.',
   'detail.linkAccount': 'Liên kết tài khoản',
   'detail.youOweTotal': 'Tổng bạn nợ',
