@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef, NgZone, ViewEncapsulation } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef, NgZone, ViewEncapsulation, effect } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TravelStore } from '../../core/store/travel.store';
@@ -69,6 +69,17 @@ export class TripDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   private ngZone = inject(NgZone);
   private tripDetailService = inject(TripDetailService);
   private tripExportService = inject(TripExportService);
+
+  constructor() {
+    effect(() => {
+      this.trip();
+      this.tripExpenses();
+      this.tripPosts();
+      this.tripActivities();
+      
+      setTimeout(() => this.updateCarouselHeight(), 100);
+    });
+  }
 
   readonly defaultCover = 'https://images.unsplash.com/photo-1473496169904-6a58eb22bf2f?q=80&w=1000';
 
@@ -283,7 +294,7 @@ export class TripDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     const activePane = panes[activeIndex] as HTMLElement;
     
     if (activePane) {
-      this.tabCarousel.nativeElement.style.height = `${activePane.offsetHeight}px`;
+      this.tabCarousel.nativeElement.style.height = `${activePane.scrollHeight}px`;
     }
   }
 
