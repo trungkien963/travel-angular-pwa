@@ -13,6 +13,7 @@ import { calculateSettleRelatedExpenses } from '../../../../../core/utils/settle
 import { Debt, CATEGORY_META } from '../../../trip-detail.component';
 import { getAvatarBg, getAvatarColor } from '../../../../../core/utils/avatar.util';
 import { formatNumber, formatDateShort } from '../../../../../core/utils/format.util';
+import { TranslationService } from '../../../../../core/i18n/translation.service';
 
 @Component({
   selector: 'app-settle-modal',
@@ -31,6 +32,7 @@ export class SettleModalComponent implements OnInit, OnChanges {
   private travelStore = inject(TravelStore);
   private supabaseService = inject(SupabaseService);
   private toastService = inject(ToastService);
+  private translationService = inject(TranslationService);
 
   settleAmount = 0;
   settleNote = '';
@@ -164,11 +166,11 @@ export class SettleModalComponent implements OnInit, OnChanges {
         });
       }
       
-      this.toastService.show('Đã ghi nhận thanh toán!', 'success');
+      this.toastService.show(this.translationService.translate('toast.settleSuccess'), 'success');
       this.onClose.emit();
     } catch(err) {
       console.error(err);
-      this.toastService.show('Lỗi ghi nhận thanh toán', 'error');
+      this.toastService.show(this.translationService.translate('error.settle'), 'error');
     } finally {
       this.isSavingSettle.set(false);
       this.travelStore.setGlobalLoading(false);

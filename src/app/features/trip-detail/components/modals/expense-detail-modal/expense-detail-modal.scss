@@ -171,5 +171,14 @@ $border: #F0F0F0;
   transition: transform 0.15s ease;
   margin-top: 16px;
   
-  &:hover { transform: scale(1.02); }
+}
+
+// ─── Missing Classes ──────────────────────────────────────────
+.receipt-attachments {
+  margin-bottom: 24px;
+}
+
+.lightbox-scroll {
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
 }

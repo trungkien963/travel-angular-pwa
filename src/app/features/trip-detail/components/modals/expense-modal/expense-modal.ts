@@ -396,11 +396,11 @@ export class ExpenseModalComponent implements OnInit, OnChanges {
     if (inputStr.includes('@')) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(inputStr)) {
-        this.toastService.show('Invalid email format.', 'error');
+        this.toastService.show(this.translationService.translate('error.invalidEmail'), 'error');
         return;
       }
       if (this.trip.members.some((m: Member) => m.email === inputStr) || this.pendingNewMembers().some((m: any) => m.email === inputStr)) {
-        this.toastService.show('Member already in trip or pending.', 'error');
+        this.toastService.show(this.translationService.translate('error.memberExistsPending'), 'error');
         return;
       }
 
@@ -429,9 +429,9 @@ export class ExpenseModalComponent implements OnInit, OnChanges {
     let idMap: Record<string, string> = {};
     if (pending.length > 0) {
       const emailListHtml = pending.map(p => `• <strong>${p.email}</strong>`).join('<br>');
-      const msgHtml = `Có <b>${pending.length}</b> người mới vừa được thêm vào chưa nhận được thư mời:<br><br>${emailListHtml}<br><br>Bạn có muốn gửi lời mời cho họ tham gia trip này?`;
+      const msgHtml = this.translationService.translate('modal.invitePending').replace('[COUNT]', pending.length.toString()).replace('[EMAILS]', emailListHtml);
       
-      const confirmResult = await this.confirmService.confirm(msgHtml, 'Mời người mới?', 'Yes, Invite', 'Huỷ bỏ');
+      const confirmResult = await this.confirmService.confirm(msgHtml, this.translationService.translate('modal.invitePendingTitle'), this.translationService.translate('action.invite'), this.translationService.translate('btn.cancel'));
       if (!confirmResult) return;
       
       this.isSavingExpense.set(true);
@@ -484,7 +484,7 @@ export class ExpenseModalComponent implements OnInit, OnChanges {
         this.lockedShares.set(newLocks);
         this.pendingNewMembers.set([]);
       } catch (err) {
-        this.toastService.show('Lỗi khi mời member', 'error');
+        this.toastService.show(this.translationService.translate('error.inviteMember'), 'error');
         this.isSavingExpense.set(false);
         return;
       }
@@ -577,7 +577,7 @@ export class ExpenseModalComponent implements OnInit, OnChanges {
       this.onClose.emit();
     } catch (err: any) {
       console.error('Save Expense Error:', err);
-      this.toastService.show(err.message || 'Failed to save expense', 'error');
+      this.toastService.show(err.message || this.translationService.translate('error.saveExpense'), 'error');
     } finally {
       this.isSavingExpense.set(false);
       this.travelStore.setGlobalLoading(false);

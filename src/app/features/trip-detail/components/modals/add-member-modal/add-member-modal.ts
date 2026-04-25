@@ -9,6 +9,7 @@ import { ToastService } from '../../../../../core/services/toast.service';
 import { SwipeToCloseDirective } from '../../../../../shared/directives/swipe-to-close.directive';
 import { Trip } from '../../../../../core/models/trip.model';
 import { Member } from '../../../../../core/models/expense.model';
+import { TranslationService } from '../../../../../core/i18n/translation.service';
 
 @Component({
   selector: 'app-add-member-modal',
@@ -25,6 +26,7 @@ export class AddMemberModalComponent {
   private supabaseService = inject(SupabaseService);
   private confirmService = inject(ConfirmService);
   private toastService = inject(ToastService);
+  private translationService = inject(TranslationService);
 
   newMemberName = '';
   newMemberEmail = '';
@@ -45,8 +47,8 @@ export class AddMemberModalComponent {
     const name = this.newMemberName.trim();
     let email = this.newMemberEmail.trim();
 
-    if (!name) { this.setInviteError('Please enter the member\'s name.'); return; }
-    if (email && !email.includes('@')) { this.setInviteError('Please enter a valid email address.'); return; }
+    if (!name) { this.setInviteError(this.translationService.translate('error.nameRequired')); return; }
+    if (email && !email.includes('@')) { this.setInviteError(this.translationService.translate('error.invalidEmail')); return; }
 
     this.isInviting.set(true);
     this.inviteStatus.set('');
@@ -77,8 +79,8 @@ export class AddMemberModalComponent {
             console.warn('Invite edge function failed:', e);
             this.travelStore.setGlobalLoading(false); // temp hide loading for modal
             const confirmed = await this.confirmService.confirm(
-              'Hệ thống gửi thư mời đang bị nghẽn! Thư mời bị chặn.<br><br>Bạn có muốn thêm người này dưới dạng <b>OFFLINE GUEST</b> (Chỉ có Tên, không có Email) để tính toán chia tiền trước không?',
-              'Lỗi Gửi Email', 'Thêm Offline Guest', 'Huỷ bỏ'
+              this.translationService.translate('error.inviteNetwork'),
+              this.translationService.translate('error.emailTitle'), this.translationService.translate('action.addOffline'), this.translationService.translate('btn.cancel')
             );
             this.travelStore.setGlobalLoading(true);
             
@@ -98,7 +100,7 @@ export class AddMemberModalComponent {
       const alreadyMember = trip.members.some(m => m.id === finalId || (email && m.email === email));
 
       if (alreadyMember) {
-        this.setInviteError('This person is already a member of the trip.');
+        this.setInviteError(this.translationService.translate('error.memberExists'));
         return;
       }
 
@@ -144,7 +146,7 @@ export class AddMemberModalComponent {
 
       // 6. Success
       this.inviteSuccess.set(true);
-      this.inviteStatus.set(`✅ ${name} has been added to the trip!`);
+      this.inviteStatus.set(`✅ ${name} ${this.translationService.translate('toast.memberAdded')}`);
       this.newMemberName = '';
       this.newMemberEmail = '';
 
@@ -155,7 +157,7 @@ export class AddMemberModalComponent {
         this.travelStore.refreshData(); // Lấy lại list hiển thị
       }, 1500);
     } catch (err: any) {
-      this.setInviteError(err.message || 'Failed to add member. Please try again.');
+      this.setInviteError(err.message || this.translationService.translate('error.addMember'));
     } finally {
       this.isInviting.set(false);
       this.travelStore.setGlobalLoading(false);

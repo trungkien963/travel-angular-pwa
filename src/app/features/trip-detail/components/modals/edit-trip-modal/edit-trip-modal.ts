@@ -7,6 +7,7 @@ import { SupabaseService } from '../../../../../core/services/supabase.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 import { SwipeToCloseDirective } from '../../../../../shared/directives/swipe-to-close.directive';
 import { Trip } from '../../../../../core/models/trip.model';
+import { TranslationService } from '../../../../../core/i18n/translation.service';
 
 @Component({
   selector: 'app-edit-trip-modal',
@@ -25,6 +26,7 @@ export class EditTripModalComponent implements OnInit {
   private toastService = inject(ToastService);
   private ngZone = inject(NgZone);
   private cdr = inject(ChangeDetectorRef);
+  private translationService = inject(TranslationService);
 
   editTripTitle = '';
   editTripLocation = '';
@@ -118,11 +120,11 @@ export class EditTripModalComponent implements OnInit {
 
   async saveEditTrip() {
     if (!this.editTripTitle.trim()) {
-      this.toastService.show('Please enter a trip title!', 'error');
+      this.toastService.show(this.translationService.translate('error.tripTitleRequired'), 'error');
       return;
     }
     if (this.editTripStartDate > this.editTripEndDate) {
-      this.toastService.show('Start date must be before end date!', 'error');
+      this.toastService.show(this.translationService.translate('error.invalidDateRange'), 'error');
       return;
     }
     
@@ -182,7 +184,7 @@ export class EditTripModalComponent implements OnInit {
           endDate: this.editTripEndDate
         });
         
-        this.toastService.show('Trip updated successfully!', 'success');
+        this.toastService.show(this.translationService.translate('toast.tripUpdated'), 'success');
         this.closeEditTrip();
         if (this.editTripCoverFile) {
           this.onCoverUpload.emit();
@@ -190,7 +192,7 @@ export class EditTripModalComponent implements OnInit {
       });
     } catch (err: any) {
       this.ngZone.run(() => {
-        this.toastService.show(err.message || 'Failed to update trip.', 'error');
+        this.toastService.show(err.message || this.translationService.translate('error.updateTrip'), 'error');
       });
     } finally {
       this.ngZone.run(() => {

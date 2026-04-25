@@ -197,7 +197,7 @@ export class TripDetailService {
 
       this.travelStore.removePost(postId);
     } catch (err: any) {
-      this.toastService.show(err.message || 'Failed to delete post.', 'error');
+      this.toastService.show(err.message || this.translationService.translate('error.deletePost'), 'error');
     } finally {
       this.travelStore.setGlobalLoading(false);
     }
@@ -217,9 +217,9 @@ export class TripDetailService {
     } else {
       try {
         await navigator.clipboard.writeText(window.location.href);
-        this.toastService.show('Link copied to clipboard!', 'success');
+        this.toastService.show(this.translationService.translate('toast.linkCopied'), 'success');
       } catch (err) {
-        this.toastService.show('Failed to copy link. Please manually copy the URL.', 'error');
+        this.toastService.show(this.translationService.translate('error.copyLink'), 'error');
       }
     }
   }
@@ -266,7 +266,7 @@ export class TripDetailService {
       await this.travelStore.deleteTrip(tripId);
       this.router.navigate(['/trips']);
     } catch (err: any) {
-      this.toastService.show(err.message || 'Failed to delete trip. Please try again.', 'error');
+      this.toastService.show(err.message || this.translationService.translate('error.deleteTrip'), 'error');
     }
   }
 
@@ -291,12 +291,12 @@ export class TripDetailService {
       this.travelStore.broadcastRefresh();
       
       if (isCurrentlyPrivate) {
-        this.toastService.show('Your amazing adventure is now live on the Discover feed! 🌍', 'success');
+        this.toastService.show(this.translationService.translate('toast.publishTrip'), 'success');
       } else {
-        this.toastService.show('Trip has been hidden from the Discover feed.', 'success');
+        this.toastService.show(this.translationService.translate('toast.unpublishTrip'), 'success');
       }
     } catch (err: any) {
-      this.toastService.show(err.message || `Failed to ${actionText} trip.`, 'error');
+      this.toastService.show(err.message || this.translationService.translate('error.publishTrip'), 'error');
     } finally {
       this.travelStore.setGlobalLoading(false);
     }

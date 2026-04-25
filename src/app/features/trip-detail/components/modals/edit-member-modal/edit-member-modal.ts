@@ -8,6 +8,7 @@ import { ToastService } from '../../../../../core/services/toast.service';
 import { SwipeToCloseDirective } from '../../../../../shared/directives/swipe-to-close.directive';
 import { Trip } from '../../../../../core/models/trip.model';
 import { Member } from '../../../../../core/models/expense.model';
+import { TranslationService } from '../../../../../core/i18n/translation.service';
 
 @Component({
   selector: 'app-edit-member-modal',
@@ -24,6 +25,7 @@ export class EditMemberModalComponent implements OnInit {
   private travelStore = inject(TravelStore);
   private supabaseService = inject(SupabaseService);
   private toastService = inject(ToastService);
+  private translationService = inject(TranslationService);
 
   editMemberName = '';
   editMemberEmail = '';
@@ -67,7 +69,7 @@ export class EditMemberModalComponent implements OnInit {
                 if (fnData?.userId) newUserId = fnData.userId;
              } catch (e: any) {
                 console.warn('Re-invite fail:', e);
-                this.toastService.show('Gửi thư nối tài khoản thất bại (Nghẽn mạng). Vui lòng thử lại sau 1 tiếng!', 'error');
+                this.toastService.show(this.translationService.translate('error.mergeNetwork'), 'error');
                 this.isSavingMember.set(false);
                 this.travelStore.setGlobalLoading(false);
                 return; // Huỷ không cho lưu thông tin mập mờ vào DB
@@ -84,7 +86,7 @@ export class EditMemberModalComponent implements OnInit {
                 p_real_email: email
              });
              await this.travelStore.refreshData(); // Lấy data mới ngay lập tức
-             this.toastService.show('Account merged successfully!', 'success');
+             this.toastService.show(this.translationService.translate('toast.accountMerged'), 'success');
              this.closeEditMember();
              return;
           }
@@ -117,7 +119,7 @@ export class EditMemberModalComponent implements OnInit {
 
       this.closeEditMember();
     } catch (err: any) {
-      this.toastService.show(err.message || 'Failed to update member.', 'error');
+      this.toastService.show(err.message || this.translationService.translate('error.updateMember'), 'error');
     } finally {
       this.isSavingMember.set(false);
       this.travelStore.setGlobalLoading(false);

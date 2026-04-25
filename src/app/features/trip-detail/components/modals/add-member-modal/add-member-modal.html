@@ -48,7 +48,7 @@
       [disabled]="isInviting()"
       id="btn-invite-member"
     >
-      {{ isInviting() ? 'Adding...' : 'Add Member' }}
+      {{ isInviting() ? ('action.adding' | translate) : ('detail.addMember' | translate) }}
     </button>
 
   </div>

@@ -67,7 +67,7 @@ export class EditPostModalComponent implements OnInit {
       this.travelStore.updatePost(this.post.id, { content: this.editPostContent });
       this.onClose.emit();
     } catch (err: any) {
-      this.toastService.show(err.message || 'Failed to edit post.', 'error');
+      this.toastService.show(err.message || this.translationService.translate('error.editPost'), 'error');
     } finally {
       this.isSavingPost.set(false);
       this.travelStore.setGlobalLoading(false);
