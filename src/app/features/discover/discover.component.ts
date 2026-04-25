@@ -9,6 +9,7 @@ import { Post, Comment } from '../../core/models/social.model';
 import { PostDetailService } from '../post-detail/services/post-detail.service';
 import { LikesModalComponent } from '../post-detail/components/likes-modal/likes-modal.component';
 import { MentionInputComponent } from '../../shared/components/mention-input/mention-input.component';
+import { PhotoViewerService } from '../../core/services/photo-viewer.service';
 import { FormsModule } from '@angular/forms';
 
 interface FeedItem {
@@ -44,6 +45,7 @@ export class DiscoverComponent implements OnInit, OnDestroy {
   private supabaseService = inject(SupabaseService);
   private postDetailService = inject(PostDetailService);
   private confirmService = inject(ConfirmService);
+  private photoViewerService = inject(PhotoViewerService);
 
   readonly currentUserId = computed(() => this.travelStore.currentUserId());
   
@@ -578,9 +580,16 @@ export class DiscoverComponent implements OnInit, OnDestroy {
       this.tapTimers.set(post.id, 0); // reset
     } else {
       this.tapTimers.set(post.id, now);
-      // Reset timer after 300ms, no single tap action
+      // Reset timer after 300ms, single tap action: Open Image Viewer
       const timeout = setTimeout(() => {
         this.tapTimers.set(post.id, 0);
+        const scrollLeft = target?.scrollLeft || 0;
+        const clientWidth = target?.clientWidth || 1;
+        const startIndex = Math.round(scrollLeft / (clientWidth - 32)) || 0;
+        
+        if (post.images && post.images.length > 0) {
+          this.photoViewerService.open(post.images, startIndex);
+        }
       }, 300);
       this.tapTimeouts.set(post.id, timeout);
     }

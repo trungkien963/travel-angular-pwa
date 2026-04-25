@@ -24,6 +24,7 @@
     "@supabase/supabase-js": "^2.103.0",
     "@tanstack/angular-query-experimental": "^5.99.0",
     "lucide-angular": "^1.0.0",
+    "photoswipe": "^5.4.4",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "xlsx": "^0.18.5"

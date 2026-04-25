@@ -1,5 +1,6 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { PhotoViewerService } from '../../../../core/services/photo-viewer.service';
 
 @Component({
   selector: 'app-post-media',
@@ -35,6 +36,8 @@ export class PostMediaComponent {
   @Input() isDual: boolean = false;
   @Output() onDoubleTap = new EventEmitter<void>();
 
+  private photoViewerService = inject(PhotoViewerService);
+
   activeIndex = 0;
   showHeartOverlay = false;
 
@@ -59,6 +62,9 @@ export class PostMediaComponent {
       this.lastTap = now;
       this.tapTimeout = setTimeout(() => {
         this.lastTap = 0;
+        if (this.images && this.images.length > 0) {
+          this.photoViewerService.open(this.images, this.activeIndex);
+        }
       }, 300);
     }
   }

@@ -7,6 +7,7 @@ import { formatRelative } from '../../../../core/utils/format.util';
 import { PostDetailService } from '../../../post-detail/services/post-detail.service';
 import { inject } from '@angular/core';
 import { ToastService } from '../../../../core/services/toast.service';
+import { PhotoViewerService } from '../../../../core/services/photo-viewer.service';
 
 import { LikesModalComponent } from '../../../post-detail/components/likes-modal/likes-modal.component';
 
@@ -20,6 +21,7 @@ import { LikesModalComponent } from '../../../post-detail/components/likes-modal
 export class TripSocialComponent {
   private postDetailService = inject(PostDetailService);
   private toastService = inject(ToastService);
+  private photoViewerService = inject(PhotoViewerService);
 
   @Input({ required: true }) tripPosts: Post[] = [];
   @Input({ required: true }) currentUserId: string = '';
@@ -70,6 +72,15 @@ export class TripSocialComponent {
       this.tapTimers.set(post.id, now);
       const timeout = setTimeout(() => {
         this.tapTimers.set(post.id, 0);
+        // Single tap action: Open Image Viewer
+        const target = event.target as HTMLElement;
+        const scrollLeft = target.scrollLeft || 0;
+        const clientWidth = target.clientWidth || 1;
+        const startIndex = Math.round(scrollLeft / (clientWidth - 32)) || 0;
+        
+        if (post.images && post.images.length > 0) {
+          this.photoViewerService.open(post.images, startIndex);
+        }
       }, 300);
       this.tapTimeouts.set(post.id, timeout);
     }

@@ -1,7 +1,7 @@
 /* You can add global styles to this file, and also import other style files */
 
 @import 'tailwindcss';
-
+@import 'photoswipe/style.css';
 /* Prevent Angular Material from overriding text color on plain (non-mat-button) buttons */
 button:not([mat-button]):not([mat-raised-button]):not([mat-flat-button]):not([mat-stroked-button]):not([mat-icon-button]):not([mat-fab]):not([mat-mini-fab]) {
   color: inherit;
@@ -89,4 +89,35 @@ html, body {
   40% { transform: rotate(0deg); }
   60% { transform: rotate(0deg); }
   100% { transform: rotate(-90deg); }
+}
+
+/* PhotoViewer Customizations */
+.pswp-bottom-download-btn {
+  position: fixed !important;
+  bottom: 32px !important;
+  right: 24px !important;
+  z-index: 100;
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pswp-bottom-download-btn:active {
+  transform: scale(0.9);
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.pswp__ui--idle .pswp-bottom-download-btn {
+  opacity: 0;
+  pointer-events: none;
 }
