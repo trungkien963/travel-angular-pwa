@@ -8,11 +8,12 @@ import { ToastService } from '../../../../../core/services/toast.service';
 import { SwipeToCloseDirective } from '../../../../../shared/directives/swipe-to-close.directive';
 import { Trip } from '../../../../../core/models/trip.model';
 import { TranslationService } from '../../../../../core/i18n/translation.service';
+import { TranslatePipe } from '../../../../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-edit-trip-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, SwipeToCloseDirective],
+  imports: [CommonModule, FormsModule, SwipeToCloseDirective, TranslatePipe],
   templateUrl: './edit-trip-modal.html',
   styleUrl: './edit-trip-modal.scss'
 })

@@ -9,11 +9,12 @@ import { ToastService } from '../../../../../core/services/toast.service';
 import { ConfirmService } from '../../../../../core/services/confirm.service';
 import { SwipeToCloseDirective } from '../../../../../shared/directives/swipe-to-close.directive';
 import { Post } from '../../../../../core/models/social.model';
+import { TranslatePipe } from '../../../../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-edit-post-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, SwipeToCloseDirective],
+  imports: [CommonModule, FormsModule, SwipeToCloseDirective, TranslatePipe],
   templateUrl: './edit-post-modal.html',
   styleUrl: './edit-post-modal.css'
 })

@@ -9,11 +9,12 @@ import { SwipeToCloseDirective } from '../../../../../shared/directives/swipe-to
 import { Trip } from '../../../../../core/models/trip.model';
 import { Member } from '../../../../../core/models/expense.model';
 import { TranslationService } from '../../../../../core/i18n/translation.service';
+import { TranslatePipe } from '../../../../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-edit-member-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, SwipeToCloseDirective],
+  imports: [CommonModule, FormsModule, SwipeToCloseDirective, TranslatePipe],
   templateUrl: './edit-member-modal.html',
   styleUrl: './edit-member-modal.css'
 })
