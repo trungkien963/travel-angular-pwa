@@ -219,15 +219,15 @@
             <!-- Image Section -->
             @if (item.postImages && item.postImages.length >= 3) {
               <!-- Editorial Grid Layout -->
-              <div class="editorial-grid" (click)="openImageViewer($event, item.postImages, 0)">
-                <div class="grid-main">
+              <div class="editorial-grid">
+                <div class="grid-main" (click)="openImageViewer($event, item.postImages, 0)">
                   <img [src]="item.postImages[0].url" alt="Memory" loading="lazy" />
                 </div>
                 <div class="grid-side">
-                  <div class="grid-sub">
+                  <div class="grid-sub" (click)="openImageViewer($event, item.postImages, 1)">
                     <img [src]="item.postImages[1].url" alt="Memory" loading="lazy" />
                   </div>
-                  <div class="grid-sub relative">
+                  <div class="grid-sub relative" (click)="openImageViewer($event, item.postImages, 2)">
                     <img [src]="item.postImages[2].url" [alt]="item.title" loading="lazy" />
                     @if (item.postImages.length > 3) {
                       <div class="more-overlay">+{{ item.postImages.length - 3 }}</div>
