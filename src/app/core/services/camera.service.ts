@@ -162,7 +162,15 @@ export class CameraService {
       }
 
       // Draw base video frame with crop
-      ctx.drawImage(videoElement, sx, sy, sw, sh, 0, 0, canvasElement.width, canvasElement.height);
+      if (this.facingMode() === 'user') {
+        ctx.save();
+        ctx.translate(canvasElement.width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(videoElement, sx, sy, sw, sh, 0, 0, canvasElement.width, canvasElement.height);
+        ctx.restore();
+      } else {
+        ctx.drawImage(videoElement, sx, sy, sw, sh, 0, 0, canvasElement.width, canvasElement.height);
+      }
       
       // Reset filter
       ctx.filter = 'none';
