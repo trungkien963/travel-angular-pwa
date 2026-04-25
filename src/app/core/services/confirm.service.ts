@@ -19,6 +19,11 @@ export class ConfirmService {
     confirmText: string = 'OK',
     cancelText: string = 'Hủy'
   ): Promise<boolean> {
+    // Prevent double-clicks / overlapping popups
+    if (this.currentConfirm() || this.isVisible()) {
+      return Promise.resolve(false);
+    }
+
     return new Promise((resolve) => {
       // Set the config
       this.currentConfirm.set({
@@ -40,12 +45,13 @@ export class ConfirmService {
     
     const config = this.currentConfirm();
     if (config) {
-      config.resolve(result);
+      // Clear config to prevent double-clicks catching it again
+      this.currentConfirm.set(null);
       
-      // Clear config after fade out animation
+      // Delay resolve to ensure UI thread paints the popup closing before heavy async tasks
       setTimeout(() => {
-        this.currentConfirm.set(null);
-      }, 300);
+        config.resolve(result);
+      }, 50);
     }
   }
 }

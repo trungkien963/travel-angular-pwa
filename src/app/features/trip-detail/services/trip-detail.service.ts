@@ -227,23 +227,35 @@ export class TripDetailService {
   async removeMember(trip: Trip, memberId: string) {
     const confirmed = await this.confirmService.confirm(this.translationService.translate('modal.confirmRemoveMember'));
     if (!confirmed) return;
-    const db = this.supabaseService.client;
+    
+    this.travelStore.setGlobalLoading(true);
+    try {
+      const db = this.supabaseService.client;
 
-    const { data: freshTrip } = await db.from('trips').select('members').eq('id', trip.id).single();
-    let dbMembers = trip.members;
-    if (freshTrip && freshTrip.members) {
-       let raw = freshTrip.members;
-       if (typeof raw === 'string') { try { raw = JSON.parse(raw); } catch (e) { raw = []; } }
-       if (Array.isArray(raw)) dbMembers = raw;
-    }
+      const { data: freshTrip } = await db.from('trips').select('members').eq('id', trip.id).single();
+      let dbMembers = trip.members;
+      if (freshTrip && freshTrip.members) {
+         let raw = freshTrip.members;
+         if (typeof raw === 'string') { try { raw = JSON.parse(raw); } catch (e) { raw = []; } }
+         if (Array.isArray(raw)) dbMembers = raw;
+      }
 
-    const updated = dbMembers.filter((m: any) => m.id !== memberId);
-    const removedMember = dbMembers.find((m: any) => m.id === memberId);
-    await db.from('trips').update({ members: updated }).eq('id', trip.id);
-    this.travelStore.updateTrip(trip.id, { members: updated });
+      const updated = dbMembers.filter((m: any) => m.id !== memberId);
+      const removedMember = dbMembers.find((m: any) => m.id === memberId);
+      
+      const { error } = await db.from('trips').update({ members: updated }).eq('id', trip.id);
+      if (error) throw error;
+      
+      this.travelStore.updateTrip(trip.id, { members: updated });
 
-    if (removedMember) {
-      this.travelStore.insertActivityLog(trip.id, 'REMOVED_MEMBER', 'MEMBER', memberId, removedMember.name);
+      if (removedMember) {
+        this.travelStore.insertActivityLog(trip.id, 'REMOVED_MEMBER', 'MEMBER', memberId, removedMember.name);
+      }
+    } catch (err: any) {
+      console.error('Failed to remove member:', err);
+      this.toastService.show(this.translationService.translate('error.default'), 'error');
+    } finally {
+      this.travelStore.setGlobalLoading(false);
     }
   }
 
