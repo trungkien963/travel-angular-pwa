@@ -7,6 +7,7 @@ import { Router } from '@angular/router';
 import { Expense } from '../../../core/models/expense.model';
 import { Post } from '../../../core/models/social.model';
 import { Trip } from '../../../core/models/trip.model';
+import { TranslationService } from '../../../core/i18n/translation.service';
 
 @Injectable({
   providedIn: 'root'
@@ -17,6 +18,7 @@ export class TripDetailService {
   private toastService = inject(ToastService);
   private confirmService = inject(ConfirmService);
   private router = inject(Router);
+  private translationService = inject(TranslationService);
 
   async loadExpenses(tripId: string) {
     const db = this.supabaseService.client;
@@ -92,7 +94,7 @@ export class TripDetailService {
   }
 
   async deleteExpenseConfirm(expId: string, tripId: string, tripExpenses: Expense[]) {
-    const confirmed = await this.confirmService.confirm('Delete this expense?');
+    const confirmed = await this.confirmService.confirm(this.translationService.translate('modal.confirmDeleteExpense'));
     if (!confirmed) return false;
     const db = this.supabaseService.client;
     const expenseToDelete = tripExpenses.find(e => e.id === expId);
@@ -172,7 +174,7 @@ export class TripDetailService {
   }
 
   async deletePost(postId: string, tripPosts: Post[]) {
-    const confirmed = await this.confirmService.confirm('Delete this post?');
+    const confirmed = await this.confirmService.confirm(this.translationService.translate('modal.confirmDeletePost'));
     if (!confirmed) return;
     const db = this.supabaseService.client;
     const post = tripPosts.find(p => p.id === postId);
@@ -223,7 +225,7 @@ export class TripDetailService {
   }
 
   async removeMember(trip: Trip, memberId: string) {
-    const confirmed = await this.confirmService.confirm('Remove this member?');
+    const confirmed = await this.confirmService.confirm(this.translationService.translate('modal.confirmRemoveMember'));
     if (!confirmed) return;
     const db = this.supabaseService.client;
 
@@ -246,7 +248,7 @@ export class TripDetailService {
   }
 
   async confirmDeleteTrip(tripId: string) {
-    const confirmed = await this.confirmService.confirm('Delete this adventure permanently? This cannot be undone.');
+    const confirmed = await this.confirmService.confirm(this.translationService.translate('modal.confirmDeleteTrip'));
     if (!confirmed) return;
     try {
       await this.travelStore.deleteTrip(tripId);
@@ -259,8 +261,8 @@ export class TripDetailService {
   async publishTrip(tripId: string, isCurrentlyPrivate: boolean) {
     const actionText = isCurrentlyPrivate ? 'publish' : 'unpublish';
     const confirmMessage = isCurrentlyPrivate 
-      ? 'Are you sure you want to publish this trip to the Discover feed?'
-      : 'Are you sure you want to hide this trip from the Discover feed?';
+      ? this.translationService.translate('modal.confirmPublishTrip')
+      : this.translationService.translate('modal.confirmUnpublishTrip');
 
     const confirmed = await this.confirmService.confirm(confirmMessage);
     if (!confirmed) return;

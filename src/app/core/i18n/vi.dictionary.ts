@@ -210,5 +210,11 @@ export const viDictionary = {
   'modal.unsavedInfo': 'Bạn đang nhập dở thông tin. Bạn có chắc muốn hủy bỏ?',
   'modal.confirmLogoutTitle': 'Xác nhận đăng xuất',
   'modal.confirmLogoutMessage': 'Bạn có chắc chắn muốn đăng xuất?',
+  'modal.confirmDeleteExpense': 'Xóa khoản chi này?',
+  'modal.confirmDeletePost': 'Xóa bài viết này?',
+  'modal.confirmRemoveMember': 'Xóa thành viên này?',
+  'modal.confirmDeleteTrip': 'Xóa vĩnh viễn chuyến đi này? Không thể hoàn tác.',
+  'modal.confirmPublishTrip': 'Bạn có chắc muốn đăng chuyến đi này lên feed Khám phá không?',
+  'modal.confirmUnpublishTrip': 'Bạn có chắc muốn ẩn chuyến đi này khỏi feed Khám phá không?',
   'action.continue': 'Tiếp tục',
 };

@@ -210,5 +210,11 @@ export const enDictionary = {
   'modal.unsavedInfo': 'You are entering information. Are you sure you want to exit?',
   'modal.confirmLogoutTitle': 'Confirm Logout',
   'modal.confirmLogoutMessage': 'Are you sure you want to log out?',
+  'modal.confirmDeleteExpense': 'Delete this expense?',
+  'modal.confirmDeletePost': 'Delete this post?',
+  'modal.confirmRemoveMember': 'Remove this member?',
+  'modal.confirmDeleteTrip': 'Delete this adventure permanently? This cannot be undone.',
+  'modal.confirmPublishTrip': 'Are you sure you want to publish this trip to the Discover feed?',
+  'modal.confirmUnpublishTrip': 'Are you sure you want to hide this trip from the Discover feed?',
   'action.continue': 'Continue',
 };
