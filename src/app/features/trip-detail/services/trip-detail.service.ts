@@ -8,6 +8,7 @@ import { Expense } from '../../../core/models/expense.model';
 import { Post } from '../../../core/models/social.model';
 import { Trip } from '../../../core/models/trip.model';
 import { TranslationService } from '../../../core/i18n/translation.service';
+import { shareOrDownloadImage } from '../../../core/utils/image.util';
 
 @Injectable({
   providedIn: 'root'
@@ -207,20 +208,22 @@ export class TripDetailService {
     }
   }
 
-  async sharePost(post: Post) {
-    if (navigator.share) {
+  async sharePost(post: Post, activeIndex: number = 0) {
+    const url = window.location.href;
+    const imageUrl = post.images && post.images.length > 0 ? post.images[activeIndex] : '';
+    
+    this.toastService.show(this.translationService.translate('toast.preparingImage') || 'Đang chuẩn bị ảnh...', 'info');
+    
+    const success = await shareOrDownloadImage(
+      imageUrl,
+      `WanderPool Moment: ${post.authorName}`,
+      `${post.content || 'Check out this moment on WanderPool!'}\n\n`,
+      url
+    );
+
+    if (!success) {
       try {
-        await navigator.share({
-          title: `WanderPool Moment: ${post.authorName}`,
-          text: `${post.content || 'Check out this moment on WanderPool!'}\n\n`,
-          url: window.location.href,
-        });
-      } catch (err) {
-        console.log('Share canceled or failed', err);
-      }
-    } else {
-      try {
-        await navigator.clipboard.writeText(window.location.href);
+        await navigator.clipboard.writeText(url);
         this.toastService.show(this.translationService.translate('toast.linkCopied'), 'success');
       } catch (err) {
         this.toastService.show(this.translationService.translate('error.copyLink'), 'error');

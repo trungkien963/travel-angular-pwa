@@ -30,6 +30,7 @@ import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { LowerCasePipe } from '@angular/common';
 import { getAvatarBg, getAvatarColor } from '../../core/utils/avatar.util';
 import { formatRelative } from '../../core/utils/format.util';
+import { shareOrDownloadImage } from '../../core/utils/image.util';
 
 @Component({
   selector: 'app-discover',
@@ -439,17 +440,18 @@ export class DiscoverComponent implements OnInit, OnDestroy {
     }
   }
 
-  onShareClick(event: Event, item: FeedItem) {
+  async onShareClick(event: Event, item: FeedItem) {
     event.stopPropagation();
     event.preventDefault();
     const url = window.location.origin + '/trip/' + (item.tripId || item.id);
-    if (navigator.share) {
-      navigator.share({
-        title: item.title,
-        text: `Check out this amazing trip to ${item.locationType} on WanderPool!\n\n`,
-        url: url
-      }).catch(console.error);
-    } else {
+    const title = item.title;
+    const text = `Check out this amazing trip to ${item.locationType} on WanderPool!\n\n`;
+    
+    const imageUrl = item.postImages && item.postImages.length > 0 ? item.postImages[0].url : item.image;
+    
+    this.toastService.show('Đang chuẩn bị ảnh...', 'info');
+    const success = await shareOrDownloadImage(imageUrl, title, text, url);
+    if (!success) {
       navigator.clipboard.writeText(url).then(() => {
         this.toastService.show('Link copied to clipboard!', 'success');
       }).catch(() => {
@@ -659,15 +661,20 @@ export class DiscoverComponent implements OnInit, OnDestroy {
     this.toastService.show('Đã báo cáo bài viết', 'success');
   }
 
-  sharePost(post: Post) {
+  async sharePost(post: Post) {
     const url = window.location.origin + '/trip/' + post.tripId;
-    if (navigator.share) {
-      navigator.share({
-        title: 'Check this moment!',
-        text: `See this amazing moment by ${post.authorName} on WanderPool!\n\n`,
-        url: url
-      }).catch(console.error);
-    } else {
+    const activeIndex = this.getPostActiveImageIndex(post.id);
+    const imageUrl = post.images && post.images.length > 0 ? post.images[activeIndex] : '';
+    
+    this.toastService.show('Đang chuẩn bị ảnh...', 'info');
+    const success = await shareOrDownloadImage(
+      imageUrl, 
+      'Check this moment!', 
+      `See this amazing moment by ${post.authorName} on WanderPool!\n\n`, 
+      url
+    );
+    
+    if (!success) {
       navigator.clipboard.writeText(url).then(() => {
         this.toastService.show('Link copied to clipboard!', 'success');
       }).catch(() => {

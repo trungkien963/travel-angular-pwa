@@ -11,6 +11,8 @@ import { ConfirmService } from '../../core/services/confirm.service';
 import { PostHeaderComponent } from './components/post-header/post-header.component';
 import { PostMediaComponent } from './components/post-media/post-media.component';
 import { PostActionsComponent } from './components/post-actions/post-actions.component';
+import { shareOrDownloadImage } from '../../core/utils/image.util';
+import { ToastService } from '../../core/services/toast.service';
 import { PostCommentsComponent } from './components/post-comments/post-comments.component';
 import { LikesModalComponent } from './components/likes-modal/likes-modal.component';
 
@@ -36,6 +38,7 @@ export class PostDetailComponent implements OnInit {
   private postService = inject(PostDetailService);
   private store = inject(TravelStore);
   private confirmService = inject(ConfirmService);
+  private toastService = inject(ToastService);
 
   postId = signal<string>('');
   
@@ -235,5 +238,30 @@ export class PostDetailComponent implements OnInit {
 
   closeLikesModal() {
     this.showLikesModal.set(false);
+  }
+
+  async sharePost() {
+    const p = this.post();
+    if (!p) return;
+    
+    const url = window.location.origin + '/trip/' + p.tripId;
+    const imageUrl = p.images && p.images.length > 0 ? p.images[0] : '';
+    
+    this.toastService.show('Đang chuẩn bị ảnh...', 'info');
+    const success = await shareOrDownloadImage(
+      imageUrl,
+      `WanderPool Moment: ${p.authorName}`,
+      `${p.content || 'Check out this moment on WanderPool!'}\n\n`,
+      url
+    );
+
+    if (!success) {
+      try {
+        await navigator.clipboard.writeText(url);
+        this.toastService.show('Link copied to clipboard!', 'success');
+      } catch (err) {
+        this.toastService.show('Failed to copy link', 'error');
+      }
+    }
   }
 }

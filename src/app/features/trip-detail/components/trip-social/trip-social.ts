@@ -33,7 +33,7 @@ export class TripSocialComponent {
   @Output() onDeletePost = new EventEmitter<string>();
   @Output() onToggleLike = new EventEmitter<string>();
   @Output() onOpenComments = new EventEmitter<Post>();
-  @Output() onSharePost = new EventEmitter<Post>();
+  @Output() onSharePost = new EventEmitter<{post: Post, index: number}>();
 
   readonly activeMenuId = signal<string | null>(null);
   readonly activeImageIndex = signal<Record<string, number>>({});

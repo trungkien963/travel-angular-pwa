@@ -355,8 +355,12 @@ export class TripDetailComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // ─── Share Post ───────────────────────────────────────────────────────────
-  async sharePost(post: Post) {
-    await this.tripDetailService.sharePost(post);
+  async sharePost(event: any) {
+    if (event && event.post) {
+      await this.tripDetailService.sharePost(event.post, event.index);
+    } else {
+      await this.tripDetailService.sharePost(event as Post);
+    }
   }
 
   // ─── Expenses ──────────────────────────────────────────────────────────────

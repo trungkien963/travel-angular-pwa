@@ -71,3 +71,86 @@ export async function compressImage(file: File, maxWidth = 1920, maxHeight = 192
     };
   });
 }
+
+export async function shareOrDownloadImage(src: string, shareTitle: string, shareText: string, shareUrl: string): Promise<boolean> {
+  if (!src) {
+    if (navigator.share) {
+      await navigator.share({ title: shareTitle, text: shareText, url: shareUrl }).catch(console.error);
+      return true;
+    }
+    return false; // Fallback to copy link
+  }
+
+  return new Promise<boolean>((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        resolve(false);
+        return;
+      }
+      
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+      
+      canvas.toBlob(async (blob) => {
+        if (!blob) {
+          resolve(false);
+          return;
+        }
+        
+        const file = new File([blob], 'wanderpool-photo.jpg', { type: 'image/jpeg' });
+        const objectUrl = URL.createObjectURL(blob);
+        
+        try {
+          if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              files: [file],
+              title: shareTitle,
+              text: shareText,
+              url: shareUrl
+            });
+            resolve(true);
+          } else if (navigator.share) {
+            await navigator.share({
+              title: shareTitle,
+              text: shareText,
+              url: shareUrl
+            });
+            resolve(true);
+          } else {
+            // Fallback to direct download
+            const link = document.createElement('a');
+            link.href = objectUrl;
+            link.download = 'wanderpool-photo.jpg';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            resolve(true);
+          }
+        } catch (err) {
+          console.error('Error sharing', err);
+          resolve(false);
+        } finally {
+          setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+        }
+      }, 'image/jpeg', 0.95);
+    };
+    
+    img.onerror = async () => {
+      // Fallback
+      if (navigator.share) {
+        await navigator.share({ title: shareTitle, text: shareText, url: shareUrl }).catch(console.error);
+        resolve(true);
+      } else {
+        resolve(false);
+      }
+    };
+    img.src = src;
+  });
+}

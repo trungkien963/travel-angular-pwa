@@ -25,7 +25,8 @@
         [authorName]="p.authorName"
         [content]="p.content"
         (onLike)="toggleLike()"
-        (onLikesClick)="openLikesList()">
+        (onLikesClick)="openLikesList()"
+        (onShare)="sharePost()">
       </app-post-actions>
 
       <!-- Comments Section & Input -->
