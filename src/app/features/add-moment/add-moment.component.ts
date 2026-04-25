@@ -192,6 +192,16 @@ export class AddMomentComponent implements OnInit, OnDestroy {
     this.openLightbox(urls, index, 'PENDING');
   }
 
+  async usePhotoAsReceipt(photo: PhotoCapture) {
+    const exists = this.pendingReceipts().find(r => r.id === photo.id);
+    if (!exists) {
+      this.pendingReceipts.update(r => [...r, { url: photo.url, file: photo.file, id: photo.id }]);
+      this.toastService.show('Đã đính kèm ảnh vào hóa đơn!', 'success');
+    } else {
+      this.toastService.show('Ảnh này đã được thêm rồi', 'info');
+    }
+  }
+
   // ─── Location state ───────────────────────────────────────────────────────
   selectedLocation: LocationResult | null = null;
 
