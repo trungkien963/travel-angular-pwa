@@ -87,40 +87,56 @@ export class PhotoViewerService {
             const src = pswp.currSlide?.data?.src;
             if (!src) return;
 
-            if (navigator.share) {
-              try {
-                const response = await fetch(src);
-                const blob = await response.blob();
-                const file = new File([blob], 'wanderpool-photo.jpg', { type: blob.type || 'image/jpeg' });
+            // Load image with CORS to draw on canvas
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              canvas.width = img.width;
+              canvas.height = img.height;
+              const ctx = canvas.getContext('2d');
+              if (!ctx) return;
+              
+              // Fill white background in case of transparent PNG
+              ctx.fillStyle = '#FFFFFF';
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+              ctx.drawImage(img, 0, 0);
+              
+              canvas.toBlob(async (blob) => {
+                if (!blob) return;
                 
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                  await navigator.share({
-                    files: [file],
-                    title: 'WanderPool Photo',
-                  });
-                } else {
-                  await navigator.share({
-                    title: 'WanderPool Photo',
-                    url: src
-                  });
+                const file = new File([blob], 'wanderpool-photo.jpg', { type: 'image/jpeg' });
+                const objectUrl = URL.createObjectURL(blob);
+                
+                try {
+                  if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                      files: [file],
+                      title: 'WanderPool Photo',
+                    });
+                  } else {
+                    // Fallback to direct download using objectUrl so `download` attribute works (same-origin)
+                    const link = document.createElement('a');
+                    link.href = objectUrl;
+                    link.download = 'wanderpool-photo.jpg';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }
+                } catch (err) {
+                  console.error('Error sharing or downloading', err);
+                } finally {
+                  setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
                 }
-              } catch (err) {
-                console.error('Error sharing', err);
-                const link = document.createElement('a');
-                link.href = src;
-                link.download = 'wanderpool-photo.jpg';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-              }
-            } else {
-              const link = document.createElement('a');
-              link.href = src;
-              link.download = 'wanderpool-photo.jpg';
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-            }
+              }, 'image/jpeg', 0.95);
+            };
+            
+            img.onerror = () => {
+              // Fallback if CORS prevents canvas drawing
+              window.open(src, '_blank');
+            };
+            
+            img.src = src;
           });
         }
       });

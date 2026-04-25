@@ -12,6 +12,7 @@ import { SwipeToCloseDirective } from '../../../../../shared/directives/swipe-to
 import { CATEGORY_META } from '../../../trip-detail.component';
 import { Expense, Member } from '../../../../../core/models/expense.model';
 import { Trip } from '../../../../../core/models/trip.model';
+import { compressImage } from '../../../../../core/utils/image.util';
 
 @Component({
   selector: 'app-expense-modal',
@@ -537,7 +538,8 @@ export class ExpenseModalComponent implements OnInit, OnChanges {
          if (rec.file) {
             const uid = this.currentUserId;
             const rPath = `receipts/${uid}/${Date.now()}_${rec.file.name.replace(/[^a-zA-Z0-9.\-]/g,'_')}`;
-            const { data: rData, error: uploadErr } = await db.storage.from('nomadsync-media').upload(rPath, rec.file, { upsert: true });
+            const compressedFile = await compressImage(rec.file);
+            const { data: rData, error: uploadErr } = await db.storage.from('nomadsync-media').upload(rPath, compressedFile, { upsert: true });
             if (rData) {
                const { data: rUrlData } = db.storage.from('nomadsync-media').getPublicUrl(rPath);
                finalReceiptUrls.push(rUrlData.publicUrl);

@@ -8,7 +8,6 @@ export interface ExpenseFormData {
   amount: number;
   paidById: string;
   category: string;
-  receipts: any[];
   splits: Record<string, number>;
   isValid: boolean;
   hasPendingEmailInput?: boolean;
@@ -26,7 +25,6 @@ export class AddExpenseFormComponent {
   @Input({ required: true }) currentUserId: string = '';
   
   @Output() onQuickInvite = new EventEmitter<string>();
-  @Output() onOpenReceiptViewer = new EventEmitter<{urls: string[], index: number}>();
   @Output() onFormChange = new EventEmitter<ExpenseFormData>();
   @Output() onMemberRemove = new EventEmitter<string>();
 
@@ -46,7 +44,6 @@ export class AddExpenseFormComponent {
     { id: 'OTHER', icon: '💳', label: 'Other' }
   ];
   readonly selectedCategory = signal('FOOD');
-  readonly pendingReceipts = signal<any[]>([]);
 
   newMemberEmail = '';
 
@@ -231,35 +228,6 @@ export class AddExpenseFormComponent {
     }
   }
 
-  onReceiptSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (input.files) {
-      const newFiles = Array.from(input.files).map(file => ({
-        url: URL.createObjectURL(file),
-        file
-      }));
-      this.pendingReceipts.update(r => [...r, ...newFiles]);
-      this.emitFormChange();
-    }
-    input.value = '';
-  }
-
-  removeReceipt(idx: number, event: Event) {
-    event.stopPropagation();
-    this.pendingReceipts.update(r => {
-      const arr = [...r];
-      const removed = arr.splice(idx, 1)[0];
-      if (removed) URL.revokeObjectURL(removed.url);
-      return arr;
-    });
-    this.emitFormChange();
-  }
-
-  openPendingReceiptViewer(index: number) {
-    const urls = this.pendingReceipts().map(r => r.url);
-    this.onOpenReceiptViewer.emit({urls, index});
-  }
-
   emitFormChange() {
     let splits: Record<string, number> = {};
     if (this.expenseAmount > 0) {
@@ -286,7 +254,6 @@ export class AddExpenseFormComponent {
       amount: this.expenseAmount,
       paidById: this.paidById(),
       category: this.selectedCategory(),
-      receipts: this.pendingReceipts(),
       splits,
       isValid,
       hasPendingEmailInput: this.newMemberEmail.trim().length > 0

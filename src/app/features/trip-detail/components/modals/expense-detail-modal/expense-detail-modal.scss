@@ -52,7 +52,7 @@ $border: #F0F0F0;
 .receipt-date {
   display: flex; align-items: center; justify-content: center; gap: 8px;
   font-size: 13px; font-weight: 600; color: $text-muted;
-  margin: 0 0 24px;
+  margin: 0;
 }
 
 .receipt-category-pill {

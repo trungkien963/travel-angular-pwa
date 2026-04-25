@@ -5,6 +5,7 @@ import { PhotoCapture } from '../../../core/services/camera.service';
 import { Trip } from '../../../core/models/trip.model';
 import { Expense } from '../../../core/models/expense.model';
 import { Post } from '../../../core/models/social.model';
+import { compressImage } from '../../../core/utils/image.util';
 
 export interface SubmitMomentPayload {
   tripId: string;
@@ -141,10 +142,11 @@ export class AddMomentService {
       // 3. Upload Photos (Parallel Upload)
       const isAnyDual = payload.photos.some(p => p.isDual);
       const photoPromises = payload.photos.map(async (p) => {
-        const path = `posts/${uid}/${p.id}_${p.file.name}`;
+        const compressedFile = await compressImage(p.file, 1920, 1920, 0.8);
+        const path = `posts/${uid}/${p.id}_${compressedFile.name}`;
         uploadedMediaPaths.push(path); // Save path for potential rollback
-        const { data, error } = await db.storage.from('nomadsync-media').upload(path, p.file, { upsert: true });
-        if (error || !data) throw new Error(`Lỗi khi tải ảnh ${p.file.name} lên máy chủ.`);
+        const { data, error } = await db.storage.from('nomadsync-media').upload(path, compressedFile, { upsert: true });
+        if (error || !data) throw new Error(`Lỗi khi tải ảnh ${compressedFile.name} lên máy chủ.`);
         
         const { data: urlData } = db.storage.from('nomadsync-media').getPublicUrl(path);
         return urlData.publicUrl;
@@ -155,10 +157,11 @@ export class AddMomentService {
       if (payload.isExpenseMode && payload.expenseAmount > 0) {
         const receiptPromises = payload.pendingReceipts.map(async (rec) => {
           if (rec.file) {
-            const rPath = `receipts/${uid}/${Date.now()}_${rec.file.name.replace(/[^a-zA-Z0-9.\-]/g,'_')}`;
+            const compressedFile = await compressImage(rec.file, 1920, 1920, 0.8);
+            const rPath = `receipts/${uid}/${Date.now()}_${compressedFile.name.replace(/[^a-zA-Z0-9.\-]/g,'_')}`;
             uploadedMediaPaths.push(rPath); // Save path for potential rollback
-            const { data: rData, error } = await db.storage.from('nomadsync-media').upload(rPath, rec.file, { upsert: true });
-            if (error || !rData) throw new Error(`Lỗi khi tải hóa đơn ${rec.file.name} lên máy chủ.`);
+            const { data: rData, error } = await db.storage.from('nomadsync-media').upload(rPath, compressedFile, { upsert: true });
+            if (error || !rData) throw new Error(`Lỗi khi tải hóa đơn ${compressedFile.name} lên máy chủ.`);
             
             const { data: rUrlData } = db.storage.from('nomadsync-media').getPublicUrl(rPath);
             return rUrlData.publicUrl;

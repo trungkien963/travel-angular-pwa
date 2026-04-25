@@ -101,12 +101,14 @@ export class AddMomentComponent implements OnInit, OnDestroy {
     if (idx === null || (ctx !== 'PENDING' && ctx !== 'PENDING_PHOTO')) return;
     
     if (ctx === 'PENDING') {
-      if (this.expenseForm) {
-        // Mocking an event to satisfy the removeReceipt method
-        this.expenseForm.removeReceipt(idx, new Event('click'));
-      }
+      this.pendingReceipts.update(r => {
+        const arr = [...r];
+        const removed = arr.splice(idx, 1)[0];
+        if (removed) URL.revokeObjectURL(removed.url);
+        return arr;
+      });
       
-      const newUrls = this.expenseForm ? this.expenseForm.pendingReceipts().map(r => r.url) : [];
+      const newUrls = this.pendingReceipts().map(r => r.url);
       if (newUrls.length === 0) {
         this.lightboxIndex.set(null);
         this.lightboxImages.set([]);
@@ -160,7 +162,35 @@ export class AddMomentComponent implements OnInit, OnDestroy {
   // Expense Form State
   expenseData: ExpenseFormData | null = null;
   readonly isInviting = signal(false);
+  
+  readonly pendingReceipts = signal<any[]>([]);
 
+  onReceiptSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files) {
+      const newFiles = Array.from(input.files).map(file => ({
+        url: URL.createObjectURL(file),
+        file
+      }));
+      this.pendingReceipts.update(r => [...r, ...newFiles]);
+    }
+    input.value = '';
+  }
+
+  removeReceipt(idx: number, event: Event) {
+    event.stopPropagation();
+    this.pendingReceipts.update(r => {
+      const arr = [...r];
+      const removed = arr.splice(idx, 1)[0];
+      if (removed) URL.revokeObjectURL(removed.url);
+      return arr;
+    });
+  }
+
+  openPendingReceiptViewer(index: number) {
+    const urls = this.pendingReceipts().map(r => r.url);
+    this.openLightbox(urls, index, 'PENDING');
+  }
 
   // ─── Location state ───────────────────────────────────────────────────────
   selectedLocation: LocationResult | null = null;
@@ -383,10 +413,6 @@ export class AddMomentComponent implements OnInit, OnDestroy {
     this.expenseData = data;
   }
 
-  onExpenseReceiptViewer(event: {urls: string[], index: number}) {
-    this.openLightbox(event.urls, event.index, 'PENDING');
-  }
-
   // ─── Direct Member Invite ──────────────────────────────────────────────────
   async quickInviteMember(inputStr: string) {
     if (!inputStr) return;
@@ -463,7 +489,7 @@ export class AddMomentComponent implements OnInit, OnDestroy {
         paidById: this.expenseData?.paidById || this.travelStore.currentUserId(),
         selectedCategory: this.expenseData?.category || 'FOOD',
         selectedLocation: this.selectedLocation,
-        pendingReceipts: this.expenseData?.receipts || [],
+        pendingReceipts: this.pendingReceipts(),
         splits: this.expenseData?.splits || {}
       });
 

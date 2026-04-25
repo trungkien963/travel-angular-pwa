@@ -729,10 +729,10 @@ $border: #F0F0F0;
 
 // ─── Input Card ───────────────────────────────────────────────────────────────
 .input-card {
-  background: $bg-white;
+  background: transparent;
   border-radius: 24px;
-  padding: 20px;
-  margin-bottom: 16px;
+  padding: 0;
+  margin-bottom: 24px;
 }
 
 .caption-input {

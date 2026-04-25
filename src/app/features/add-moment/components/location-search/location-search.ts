@@ -10,10 +10,10 @@ import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
   imports: [CommonModule, FormsModule, TranslatePipe],
   styles: [`
     .input-card {
-      background: #FFFFFF;
+      background: transparent;
       border-radius: 24px;
-      padding: 20px;
-      margin-bottom: 16px;
+      padding: 0;
+      margin-bottom: 24px;
     }
     .field-label {
       font-size: 10px;

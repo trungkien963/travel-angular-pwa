@@ -9,6 +9,7 @@ import { CalculatorInputComponent } from '../../../../../shared/components/calcu
 import { SwipeToCloseDirective } from '../../../../../shared/directives/swipe-to-close.directive';
 import { Expense } from '../../../../../core/models/expense.model';
 import { Trip } from '../../../../../core/models/trip.model';
+import { compressImage } from '../../../../../core/utils/image.util';
 import { calculateSettleRelatedExpenses } from '../../../../../core/utils/settlement.util';
 import { Debt, CATEGORY_META } from '../../../trip-detail.component';
 import { getAvatarBg, getAvatarColor } from '../../../../../core/utils/avatar.util';
@@ -130,7 +131,8 @@ export class SettleModalComponent implements OnInit, OnChanges {
          if (rec.file) {
             const uid = this.currentUserId;
             const rPath = `receipts/${uid}/${Date.now()}_${rec.file.name.replace(/[^a-zA-Z0-9.\\-]/g,'_')}`;
-            const { data: rData, error: uploadErr } = await db.storage.from('nomadsync-media').upload(rPath, rec.file, { upsert: true });
+            const compressedFile = await compressImage(rec.file);
+            const { data: rData, error: uploadErr } = await db.storage.from('nomadsync-media').upload(rPath, compressedFile, { upsert: true });
             if (rData) {
                const { data: rUrlData } = db.storage.from('nomadsync-media').getPublicUrl(rPath);
                finalReceiptUrls.push(rUrlData.publicUrl);

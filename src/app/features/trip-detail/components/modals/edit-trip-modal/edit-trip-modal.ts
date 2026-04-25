@@ -7,6 +7,7 @@ import { SupabaseService } from '../../../../../core/services/supabase.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 import { SwipeToCloseDirective } from '../../../../../shared/directives/swipe-to-close.directive';
 import { Trip } from '../../../../../core/models/trip.model';
+import { compressImage } from '../../../../../core/utils/image.util';
 import { TranslationService } from '../../../../../core/i18n/translation.service';
 import { TranslatePipe } from '../../../../../core/i18n/translate.pipe';
 
@@ -142,9 +143,10 @@ export class EditTripModalComponent implements OnInit {
         try {
           const ext = this.editTripCoverFile.name.split('.').pop();
           const path = `covers/${Date.now()}.${ext}`;
+          const compressedFile = await compressImage(this.editTripCoverFile);
           const { data, error } = await db.storage
             .from('nomadsync-media')
-            .upload(path, this.editTripCoverFile, { contentType: this.editTripCoverFile.type });
+            .upload(path, compressedFile, { contentType: compressedFile.type });
             
           if (!error && data) {
             const { data: urlData } = db.storage.from('nomadsync-media').getPublicUrl(path);

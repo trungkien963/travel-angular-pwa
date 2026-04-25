@@ -230,6 +230,67 @@
       </div>
       }
 
+      <!-- Receipt Picker (Only in Expense Mode) -->
+      @if (isExpenseMode()) {
+      <div class="input-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <p class="field-label" style="margin: 0;">{{ 'expense.addReceiptOpt' | translate }}</p>
+          @if (pendingReceipts().length > 0) {
+          <span style="font-size: 12px; color: #a1a1aa; font-weight: 500;">{{ pendingReceipts().length }}
+            {{ 'expense.selected' | translate }}</span>
+          }
+        </div>
+
+        <div class="receipt-picker"
+          style="border-radius: 12px; background: #fafafa; border: 2px dashed #e5e5e5; display: flex; flex-direction:column; padding: 16px; gap: 16px;">
+          <!-- Image Previews -->
+          @if (pendingReceipts().length > 0) {
+          <div
+            style="display:flex; gap:12px; overflow-x:auto; padding-bottom:4px; max-width: 100%; -webkit-overflow-scrolling: touch;">
+            @for (rec of pendingReceipts(); track rec.url; let i = $index) {
+            <div
+              style="position:relative; width: 80px; height: 80px; flex-shrink:0; border-radius:8px; overflow:hidden; border:1px solid #e5e5e5; cursor:pointer;"
+              (click)="openPendingReceiptViewer(i)">
+              <img [src]="rec.url" style="width:100%; height:100%; object-fit:cover;" />
+              <button (click)="removeReceipt(i, $event)"
+                style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.6); color:white; border:none; border-radius:50%; width:22px; height:22px; font-size:12px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:10;">✕</button>
+            </div>
+            }
+          </div>
+          }
+
+          <div style="display:flex; width: 100%; gap:12px;">
+            <label
+              style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 16px; background: white; border: 1px solid #e5e5e5; border-radius: 12px; gap:8px; color: #666; cursor:pointer; position: relative;">
+              <input type="file" accept="image/*" multiple
+                style="position:absolute; width:1px; height:1px; opacity:0; overflow:hidden;"
+                (change)="onReceiptSelected($event)" />
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                <polyline points="14 2 14 8 20 8" />
+                <path d="M12 18v-6" />
+                <path d="M9 15h6" />
+              </svg>
+              <span style="font-size:12px; font-weight:600;">{{ 'expense.upload' | translate }}</span>
+            </label>
+            <label
+              style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 16px; background: white; border: 1px solid #e5e5e5; border-radius: 12px; gap:8px; color: #666; cursor:pointer; position: relative;">
+              <input type="file" accept="image/*" capture="environment"
+                style="position:absolute; width:1px; height:1px; opacity:0; overflow:hidden;"
+                (change)="onReceiptSelected($event)" />
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+                <circle cx="12" cy="13" r="3" />
+              </svg>
+              <span style="font-size:12px; font-weight:600;">{{ 'expense.takePhoto' | translate }}</span>
+            </label>
+          </div>
+        </div>
+      </div>
+      }
+
       <!-- Caption Input -->
       <div class="input-card">
         <p class="field-label">{{ 'moment.whatFor' | translate }}</p>
@@ -246,7 +307,6 @@
         [members]="currentTripMembers()"
         [currentUserId]="travelStore.currentUserId()"
         (onFormChange)="onExpenseFormChange($event)"
-        (onOpenReceiptViewer)="onExpenseReceiptViewer($event)"
         (onQuickInvite)="quickInviteMember($event)"
         (onMemberRemove)="handleMemberRemove($event)">
       </app-add-expense-form>

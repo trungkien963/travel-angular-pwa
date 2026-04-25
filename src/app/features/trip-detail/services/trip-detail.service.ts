@@ -188,6 +188,10 @@ export class TripDetailService {
         await db.from('posts').update({ image_urls: null }).eq('id', postId);
       }
 
+      // Delete references first to avoid foreign key constraint errors
+      await db.from('comments').delete().eq('post_id', postId);
+      await db.from('notifications').delete().eq('post_id', postId);
+
       const { error } = await db.from('posts').delete().eq('id', postId);
       if (error) throw error;
 

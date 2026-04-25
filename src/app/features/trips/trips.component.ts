@@ -7,6 +7,7 @@ import { Trip } from '../../core/models/trip.model';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { formatDate } from '../../core/utils/format.util';
 import { LocationService, LocationResult } from '../../core/services/location.service';
+import { compressImage } from '../../core/utils/image.util';
 
 @Component({
   selector: 'app-trips',
@@ -186,9 +187,10 @@ export class TripsComponent implements OnInit {
         try {
           const ext = this.coverImageFile.name.split('.').pop();
           const path = `covers/${Date.now()}.${ext}`;
+          const compressedFile = await compressImage(this.coverImageFile);
           const { data, error } = await db.storage
             .from('nomadsync-media')
-            .upload(path, this.coverImageFile, { contentType: this.coverImageFile.type });
+            .upload(path, compressedFile, { contentType: compressedFile.type });
           if (!error && data) {
             const { data: urlData } = db.storage.from('nomadsync-media').getPublicUrl(path);
             finalCoverUrl = urlData.publicUrl;

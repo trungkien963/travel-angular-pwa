@@ -5,6 +5,7 @@ import { SupabaseService } from '../../core/services/supabase.service';
 import { TranslationService } from '../../core/i18n/translation.service';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { ConfirmService } from '../../core/services/confirm.service';
+import { compressImage } from '../../core/utils/image.util';
 
 @Component({
   selector: 'app-profile',
@@ -111,7 +112,8 @@ export class ProfileComponent implements OnInit {
         const file = this.selectedFile()!;
         const ext = file.name.split('.').pop() || 'jpg';
         const path = `avatars/${uid}-${Date.now()}.${ext}`;
-        const { error: uploadErr } = await this.supabaseService.client.storage.from('nomadsync-media').upload(path, file, { upsert: true });
+        const compressedFile = await compressImage(file);
+        const { error: uploadErr } = await this.supabaseService.client.storage.from('nomadsync-media').upload(path, compressedFile, { upsert: true });
         if (!uploadErr) {
           const { data: urlData } = this.supabaseService.client.storage.from('nomadsync-media').getPublicUrl(path);
           newAvatar = urlData.publicUrl;

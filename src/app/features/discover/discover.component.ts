@@ -627,8 +627,26 @@ export class DiscoverComponent implements OnInit, OnDestroy {
     try {
       this.travelStore.deletePost(post.id); // optimistic
       const db = this.supabaseService.client;
+      
+      const pathsToDelete = (post.images || [])
+        .filter(url => url && url.includes('/nomadsync-media/'))
+        .map(url => url.split('/nomadsync-media/')[1]);
+
+      if (pathsToDelete.length > 0) {
+        await db.from('posts').update({ image_urls: null }).eq('id', post.id);
+      }
+
+      // Delete references first to avoid foreign key constraint errors
+      await db.from('comments').delete().eq('post_id', post.id);
+      await db.from('notifications').delete().eq('post_id', post.id);
+
       const { error } = await db.from('posts').delete().eq('id', post.id);
       if (error) throw error;
+      
+      if (pathsToDelete.length > 0) {
+        await db.storage.from('nomadsync-media').remove(pathsToDelete);
+      }
+      
       this.toastService.show('Đã xóa bài viết', 'success');
     } catch(err: any) {
       console.error('Delete post error:', err);
