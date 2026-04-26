@@ -63,7 +63,7 @@
         <div class="tabs">
           @for (tab of tabs; track tab) {
             <button class="tab-btn" [class.active]="activeTab === tab" (click)="setTab(tab)" [id]="'tab-' + tab.toLowerCase()">
-              {{ tab }}
+              {{ 'tab.' + tab.toLowerCase() | translate }}
             </button>
           }
         </div>

@@ -24,9 +24,9 @@
   </div>
   <!-- Filter Pills -->
   <div class="expense-filters" style="display: flex; gap: 8px; margin-top: 16px; width: 100%;">
-    <button class="filter-pill" [class.active]="activeExpenseFilter() === 'EXPENSES'" (click)="activeExpenseFilter.set('EXPENSES')">Expenses</button>
+    <button class="filter-pill" [class.active]="activeExpenseFilter() === 'EXPENSES'" (click)="activeExpenseFilter.set('EXPENSES')">{{ 'expense.expensesFilter' | translate }}</button>
     <button class="filter-pill" [class.active]="activeExpenseFilter() === 'MINE'" (click)="activeExpenseFilter.set('MINE')">{{ 'expense.mine' | translate }}</button>
-    <button class="filter-pill" [class.active]="activeExpenseFilter() === 'SETTLEMENTS'" (click)="activeExpenseFilter.set('SETTLEMENTS')">Settlements</button>
+    <button class="filter-pill" [class.active]="activeExpenseFilter() === 'SETTLEMENTS'" (click)="activeExpenseFilter.set('SETTLEMENTS')">{{ 'expense.settlementsFilter' | translate }}</button>
   </div>
 </div>
 
