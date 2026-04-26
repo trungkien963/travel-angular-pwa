@@ -206,17 +206,18 @@ $border: #F0F0F0;
 .tab-pane {
   flex: 0 0 100%;
   width: 100%;
+  min-width: 100%;
   padding: 24px;
   box-sizing: border-box;
   scroll-snap-align: start;
   
   height: auto;
   overflow: hidden;
-  pointer-events: none;
   
-  &.active-pane {
-    overflow: visible;
-    pointer-events: auto;
+  transition: opacity 0.3s ease;
+  
+  &:not(.active-pane) {
+    pointer-events: none;
   }
 }
 

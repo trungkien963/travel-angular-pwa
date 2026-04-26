@@ -317,17 +317,24 @@ export class TripDetailComponent implements OnInit, AfterViewInit, OnDestroy {
     setTimeout(() => this.updateCarouselHeight(), 50);
   }
 
+  private scrollTimeout?: any;
+
   onTabScroll(event: Event) {
     const el = event.target as HTMLElement;
     const index = Math.round(el.scrollLeft / el.clientWidth);
     if (this.tabs[index] && this.activeTab !== this.tabs[index]) {
       this.activeTab = this.tabs[index];
-      this.updateCarouselHeight();
       
       // Smoothly scroll the tab header button into view
       const tabEl = document.getElementById('tab-' + this.activeTab.toLowerCase());
       if (tabEl) tabEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
+
+    // Debounce height update to avoid interrupting inertia scroll / scroll-snap on iOS Safari
+    clearTimeout(this.scrollTimeout);
+    this.scrollTimeout = setTimeout(() => {
+      this.updateCarouselHeight();
+    }, 100);
   }
 
   navigateToAddMoment() {
