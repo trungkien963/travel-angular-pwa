@@ -27,7 +27,57 @@ export class NotificationsComponent implements OnInit {
   private travelStore = inject(TravelStore);
 
   readonly notifications = computed(() => this.travelStore.notifications());
-  readonly hasUnread = computed(() => this.notifications().some(n => !n.isRead));
+  readonly groupedNotifications = computed(() => {
+    const raw = this.notifications();
+    const grouped: (AppNotification & { groupedCount?: number; originalIds?: string[] })[] = [];
+    const TIME_WINDOW = 12 * 60 * 60 * 1000; // 12 hours
+
+    for (const notif of raw) {
+      if (grouped.length === 0) {
+        grouped.push({ ...notif, originalIds: [notif.id] });
+        continue;
+      }
+
+      const notifTime = new Date(notif.createdAt).getTime();
+      
+      const matchIndex = grouped.findIndex(g => {
+        if (g.type !== notif.type || g.actorName !== notif.actorName) return false;
+        if (Math.abs(new Date(g.createdAt).getTime() - notifTime) > TIME_WINDOW) return false;
+        
+        if (['POST_LIKE', 'POST_NEW', 'TRIP_LIKE'].includes(notif.type)) {
+          return true; // Group regardless of target ID
+        }
+        
+        return g.postId === notif.postId && g.tripId === notif.tripId;
+      });
+
+      if (matchIndex !== -1) {
+        const match = grouped[matchIndex];
+        match.groupedCount = (match.groupedCount || 1) + 1;
+        match.originalIds?.push(notif.id);
+        if (!notif.isRead) match.isRead = false;
+      } else {
+        grouped.push({ ...notif, originalIds: [notif.id] });
+      }
+    }
+
+    return grouped.map(g => {
+      if (g.groupedCount && g.groupedCount > 1) {
+        let newMsg = g.message;
+        if (g.type === 'POST_LIKE' || g.type === 'TRIP_LIKE') {
+          newMsg = ` đã thích ${g.groupedCount} khoảnh khắc của bạn.`;
+        } else if (g.type === 'POST_NEW') {
+          newMsg = ` vừa thêm ${g.groupedCount} khoảnh khắc mới.`;
+        } else if (g.type === 'POST_COMMENT' || g.type === 'TRIP_COMMENT') {
+          newMsg = ` đã để lại ${g.groupedCount} bình luận mới.`;
+        }
+        return { ...g, message: newMsg };
+      }
+      return g;
+    });
+  });
+
+  readonly hasUnread = computed(() => this.groupedNotifications().some(n => !n.isRead));
 
   async ngOnInit() {
     // If not already synced or syncing, initialize Supabase to fetch notifications
@@ -49,9 +99,13 @@ export class NotificationsComponent implements OnInit {
   }
 
   // ─── Notification handlers ────────────────────────────────────────────────
-  async handlePress(item: AppNotification) {
+  async handlePress(item: AppNotification & { originalIds?: string[] }) {
     if (!item.isRead) {
-      this.travelStore.markNotificationAsRead(item.id);
+      if (item.originalIds) {
+        item.originalIds.forEach(id => this.travelStore.markNotificationAsRead(id));
+      } else {
+        this.travelStore.markNotificationAsRead(item.id);
+      }
     }
     // Force a fresh HTTP pull to guarantee the newly added post/expense is visible
     // immediately regardless of WebSocket delta status.
