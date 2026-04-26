@@ -12,26 +12,10 @@
 
   <div class="camera-lens-wrapper">
     <div class="camera-area-container" style="position: relative; width: 100%; max-width: 500px; aspect-ratio: 1/1;">
-      <div class="camera-area cropper-scroll-area" style="max-width: none; width: 100%; height: 100%;"
-        #cropperScrollArea>
-        <img [src]="currentCrop()!.url" #cropperImgElement (load)="onCropImgLoad($event)" class="cropper-target-img"
-          [class.is-landscape]="isCropLandscape()" />
-      </div>
-      <!-- Grid Overlay stays fixed on top -->
-      <div class="crop-grid-overlay"
-        style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; border-radius: 40px; border: 2px solid rgba(255,255,255,0.4); z-index: 50;">
-        <div class="grid-hline"
-          style="position: absolute; top: 33.33%; left: 0; right: 0; height: 1px; background: rgba(255,255,255,0.5)">
-        </div>
-        <div class="grid-hline"
-          style="position: absolute; top: 66.66%; left: 0; right: 0; height: 1px; background: rgba(255,255,255,0.5)">
-        </div>
-        <div class="grid-vline"
-          style="position: absolute; left: 33.33%; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,0.5)">
-        </div>
-        <div class="grid-vline"
-          style="position: absolute; left: 66.66%; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,0.5)">
-        </div>
+      <div class="camera-area" style="max-width: none; width: 100%; height: 100%;">
+        @if (currentCrop()) {
+          <img [src]="currentCrop()!.url" #cropperImgElement (load)="onCropImgLoad($event)" style="display: block; max-width: 100%;" />
+        }
       </div>
     </div>
   </div>

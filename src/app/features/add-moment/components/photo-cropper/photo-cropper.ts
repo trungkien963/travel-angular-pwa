@@ -1,5 +1,6 @@
-import { Component, Input, Output, EventEmitter, signal, computed, ViewChild, ElementRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, computed, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
+import Cropper from 'cropperjs';
 
 export interface CropTask {
   id: string;
@@ -21,7 +22,7 @@ export interface CroppedResult {
   templateUrl: './photo-cropper.html',
   styleUrl: './photo-cropper.scss'
 })
-export class PhotoCropperComponent {
+export class PhotoCropperComponent implements OnDestroy {
   @Input() set tasks(value: CropTask[]) {
     this.cropTotal.set(value.length);
     this.cropQueue.set(value);
@@ -35,22 +36,43 @@ export class PhotoCropperComponent {
   readonly cropTotal = signal(0);
   readonly currentCropIndex = computed(() => this.cropTotal() - this.cropQueue().length + 1);
   readonly currentCrop = computed(() => this.cropQueue()[0] || null);
-  readonly isCropLandscape = signal(false);
 
-  @ViewChild('cropperScrollArea') cropperScrollArea?: ElementRef<HTMLDivElement>;
   @ViewChild('cropperImgElement') cropperImgElement?: ElementRef<HTMLImageElement>;
 
+  private cropperInstance: Cropper | null = null;
+
+  ngOnDestroy() {
+    this.destroyCropper();
+  }
+
   onCropImgLoad(event: Event) {
-    const img = event.target as HTMLImageElement;
-    this.isCropLandscape.set(img.naturalWidth > img.naturalHeight);
-    
-    setTimeout(() => {
-        const scrollArea = this.cropperScrollArea?.nativeElement;
-        if (scrollArea) {
-           scrollArea.scrollLeft = (scrollArea.scrollWidth - scrollArea.clientWidth) / 2;
-           scrollArea.scrollTop = (scrollArea.scrollHeight - scrollArea.clientHeight) / 2;
-        }
-    }, 50);
+    this.initCropper();
+  }
+
+  private initCropper() {
+    if (!this.cropperImgElement?.nativeElement) return;
+    this.destroyCropper();
+
+    this.cropperInstance = new Cropper(this.cropperImgElement.nativeElement, {
+      viewMode: 3,
+      dragMode: 'move',
+      aspectRatio: 1,
+      cropBoxMovable: false,
+      cropBoxResizable: false,
+      autoCropArea: 1,
+      background: false,
+      guides: true,
+      center: false,
+      highlight: false,
+      toggleDragModeOnDblclick: false,
+    });
+  }
+
+  private destroyCropper() {
+    if (this.cropperInstance) {
+      this.cropperInstance.destroy();
+      this.cropperInstance = null;
+    }
   }
 
   skipCrop() {
@@ -70,44 +92,33 @@ export class PhotoCropperComponent {
 
   confirmCrop() {
     const cropState = this.currentCrop();
-    if (!cropState) return;
+    if (!cropState || !this.cropperInstance) return;
 
-    const scrollEl = this.cropperScrollArea?.nativeElement;
-    const imgEl = this.cropperImgElement?.nativeElement;
-    if (!scrollEl || !imgEl) return;
+    const canvas = this.cropperInstance.getCroppedCanvas({
+        width: 1080,
+        height: 1080,
+        imageSmoothingEnabled: true,
+        imageSmoothingQuality: 'high',
+    });
 
-    const img = new Image();
-    img.onload = () => {
-        const scale = img.naturalWidth / imgEl.offsetWidth; 
-        
-        const sx = scrollEl.scrollLeft * scale;
-        const sy = scrollEl.scrollTop * scale;
-        const size = scrollEl.clientWidth * scale;
-
-        const canvas = document.createElement('canvas');
-        canvas.width = size;
-        canvas.height = size;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-            ctx.drawImage(img, sx, sy, size, size, 0, 0, size, size);
-            canvas.toBlob(blob => {
-                 if (blob) {
-                    const croppedFile = new File([blob], `gallery_${Date.now()}.webp`, { type: 'image/webp' });
-                    const url = URL.createObjectURL(croppedFile);
-                    this.onCropped.emit({ id: cropState.id, url, file: croppedFile, isDual: false });
-                 }
-                 URL.revokeObjectURL(cropState.url);
-                 this.nextCrop();
-            }, 'image/webp', 0.9);
-        } else {
+    if (canvas) {
+        canvas.toBlob((blob: Blob | null) => {
+             if (blob) {
+                const croppedFile = new File([blob], `gallery_${Date.now()}.webp`, { type: 'image/webp' });
+                const url = URL.createObjectURL(croppedFile);
+                this.onCropped.emit({ id: cropState.id, url, file: croppedFile, isDual: false });
+             }
+             URL.revokeObjectURL(cropState.url);
              this.nextCrop();
-        }
-    };
-    img.src = cropState.url;
+        }, 'image/webp', 0.9);
+    } else {
+         this.nextCrop();
+    }
   }
 
   private nextCrop() {
     this.cropQueue.update(q => q.slice(1));
+    this.destroyCropper();
     if (this.cropQueue().length === 0) {
       this.onComplete.emit();
     }

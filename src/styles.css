@@ -2,6 +2,7 @@
 
 @import 'tailwindcss';
 @import 'photoswipe/style.css';
+@import 'cropperjs/dist/cropper.css';
 /* Prevent Angular Material from overriding text color on plain (non-mat-button) buttons */
 button:not([mat-button]):not([mat-raised-button]):not([mat-flat-button]):not([mat-stroked-button]):not([mat-icon-button]):not([mat-fab]):not([mat-mini-fab]) {
   color: inherit;
