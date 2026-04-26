@@ -6,6 +6,9 @@
       [authorName]="p.authorName"
       [authorAvatar]="p.authorAvatar"
       [formattedTime]="formatTime(p.timestamp)"
+      [isOwner]="isOwner()"
+      (onEdit)="openEditPost()"
+      (onDelete)="deletePost()"
       (onBack)="goBack()">
     </app-post-header>
 
@@ -61,4 +64,12 @@
 <!-- Likes List Bottom Sheet Modal -->
 @if (showLikesModal()) {
   <app-likes-modal [postId]="postId()" (closeModal)="closeLikesModal()"></app-likes-modal>
+}
+
+<!-- Edit Post Modal -->
+@if (editPostOpen() && post()) {
+  <app-edit-post-modal
+    [post]="post()!"
+    (onClose)="editPostOpen.set(false)"
+  ></app-edit-post-modal>
 }

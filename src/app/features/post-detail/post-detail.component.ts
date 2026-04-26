@@ -15,6 +15,8 @@ import { shareOrDownloadImage } from '../../core/utils/image.util';
 import { ToastService } from '../../core/services/toast.service';
 import { PostCommentsComponent } from './components/post-comments/post-comments.component';
 import { LikesModalComponent } from './components/likes-modal/likes-modal.component';
+import { EditPostModalComponent } from '../trip-detail/components/modals/edit-post-modal/edit-post-modal';
+import { TripDetailService } from '../trip-detail/services/trip-detail.service';
 
 @Component({
   selector: 'app-post-detail',
@@ -27,7 +29,8 @@ import { LikesModalComponent } from './components/likes-modal/likes-modal.compon
     PostMediaComponent,
     PostActionsComponent,
     PostCommentsComponent,
-    LikesModalComponent
+    LikesModalComponent,
+    EditPostModalComponent
   ],
   templateUrl: './post-detail.component.html',
   styleUrls: ['./post-detail.component.scss']
@@ -39,6 +42,7 @@ export class PostDetailComponent implements OnInit {
   private store = inject(TravelStore);
   private confirmService = inject(ConfirmService);
   private toastService = inject(ToastService);
+  private tripDetailService = inject(TripDetailService);
 
   postId = signal<string>('');
   highlightedCommentId = signal<string | null>(null);
@@ -61,6 +65,14 @@ export class PostDetailComponent implements OnInit {
       return { ...lp, hasLiked: lp.likes > 0 ? lp.hasLiked || lp.likes >= 1 : false };
     }
     return lp;
+  });
+
+  isOwner = computed(() => {
+    const p = this.post();
+    if (!p) return false;
+    const trip = this.store.trips().find(t => t.id === p.tripId);
+    if (!trip) return p.authorId === this.currentUserId();
+    return trip.ownerId === this.currentUserId() || p.authorId === this.currentUserId();
   });
 
   get mentionCandidates() {
@@ -89,6 +101,7 @@ export class PostDetailComponent implements OnInit {
   isSubmitting = signal<boolean>(false);
 
   showLikesModal = signal<boolean>(false);
+  editPostOpen = signal<boolean>(false);
 
   currentUserId = this.store.currentUserId;
 
@@ -251,6 +264,22 @@ export class PostDetailComponent implements OnInit {
     const p = this.post();
     if (p && !p.hasLiked) {
       this.toggleLike();
+    }
+  }
+
+  openEditPost() {
+    this.editPostOpen.set(true);
+  }
+
+  async deletePost() {
+    const p = this.post();
+    if (!p) return;
+    
+    await this.tripDetailService.deletePost(p.id, [p]);
+    
+    const stillExists = this.store.posts().some(post => post.id === p.id);
+    if (!stillExists) {
+      this.goBack();
     }
   }
 
