@@ -8,15 +8,18 @@
 }
 
 .cropper-scroll-area {
-  overflow: auto;
+  overflow: auto !important;
   scroll-behavior: auto;
   -ms-overflow-style: none;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
   &::-webkit-scrollbar { display: none; }
 }
 
 .cropper-target-img {
   display: block;
+  -webkit-user-drag: none;
+  user-select: none;
   &.is-landscape {
     height: 100%;
     width: auto;
