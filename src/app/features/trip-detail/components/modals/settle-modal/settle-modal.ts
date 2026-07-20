@@ -125,6 +125,14 @@ export class SettleModalComponent implements OnInit, OnChanges {
         splits['__note'] = this.settleNote.trim();
       }
 
+      // Ghost user check: ghost members don't have email and don't exist in users table
+      // Setting payer_id to a non-existent UUID violates FK constraint
+      const fromMember = this.trip.members.find(m => m.id === this.debt.fromId);
+      const isGhostPayer = fromMember && !fromMember.email;
+      if (isGhostPayer) {
+        splits['_meta_payer_id'] = this.debt.fromId;
+      }
+
       let finalReceiptUrls: string[] = [];
       const currentReceipts = this.settleReceipts();
       for (const rec of currentReceipts) {
@@ -147,7 +155,7 @@ export class SettleModalComponent implements OnInit, OnChanges {
          description: this.debt.fromName + ' ➔ ' + this.debt.toName,
          amount: this.settleAmount,
          category: 'OTHER',
-         payer_id: this.debt.fromId,
+         payer_id: isGhostPayer ? null : this.debt.fromId,
          splits,
          created_at: new Date().toISOString()
       };
@@ -163,7 +171,7 @@ export class SettleModalComponent implements OnInit, OnChanges {
         this.travelStore.upsertExpense({
            id: data['id'], tripId: data['trip_id'], desc: data['description'],
            amount: data['amount'], category: (splits['__isSettlement'] ? 'SETTLEMENT' : data['category']) as unknown as any,
-           payerId: data['payer_id'], date: expDate, 
+           payerId: data['payer_id'] || this.debt.fromId, date: expDate, 
            createdAt: data['created_at'], splits: data['splits'], receipts: data['receipt_urls']
         });
       }

@@ -38,7 +38,7 @@ export class TripDetailService {
           desc: row.description,
           amount: row.amount,
           category: row.category,
-          payerId: row.payer_id,
+          payerId: row.payer_id || parsedSplits['_meta_payer_id'] || 'Traveler',
           date: parsedSplits['__date'] || (row.created_at ? row.created_at.substring(0, 10) : new Date().toISOString().substring(0, 10)),
           createdAt: row.created_at,
           splits: parsedSplits,

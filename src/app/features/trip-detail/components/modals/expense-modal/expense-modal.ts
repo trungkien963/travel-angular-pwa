@@ -519,12 +519,20 @@ export class ExpenseModalComponent implements OnInit, OnChanges {
       if (this.editingExpense) splits['__isEdited'] = true;
       if (fixedIds.length > 0) splits['__fixed'] = fixedIds;
 
+      // Ghost user check: ghost members don't have email and don't exist in users table
+      // Setting payer_id to a non-existent UUID violates FK constraint
+      const payerMember = this.trip.members.find(m => m.id === this.expForm.payerId);
+      const isGhostPayer = payerMember && !payerMember.email;
+      if (isGhostPayer) {
+        splits['_meta_payer_id'] = this.expForm.payerId;
+      }
+
       const payload: any = {
         trip_id: this.trip.id,
         description: this.expForm.desc || (this.expForm.category ? this.expForm.category.charAt(0).toUpperCase() + this.expForm.category.slice(1).toLowerCase() : 'Expense'),
         amount: this.expForm.amount,
         category: this.expForm.category,
-        payer_id: this.expForm.payerId,
+        payer_id: isGhostPayer ? null : this.expForm.payerId,
         splits
       };
       
@@ -557,7 +565,7 @@ export class ExpenseModalComponent implements OnInit, OnChanges {
         if (data) this.travelStore.upsertExpense({
           id: data['id'], tripId: data['trip_id'], desc: data['description'],
           amount: data['amount'], category: data['category'],
-          payerId: data['payer_id'], date: data['splits']?.['__date'] || (data['created_at'] ? data['created_at'].substring(0, 10) : this.expForm.date), 
+          payerId: data['payer_id'] || data['splits']?.['_meta_payer_id'] || this.expForm.payerId, date: data['splits']?.['__date'] || (data['created_at'] ? data['created_at'].substring(0, 10) : this.expForm.date), 
           createdAt: data['created_at'], splits: data['splits'], receipts: data['receipt_urls'],
           isEdited: !!data['splits']?.['__isEdited']
         } as Expense);
@@ -569,7 +577,7 @@ export class ExpenseModalComponent implements OnInit, OnChanges {
         if (data) this.travelStore.upsertExpense({
           id: data['id'], tripId: data['trip_id'], desc: data['description'],
           amount: data['amount'], category: data['category'],
-          payerId: data['payer_id'], date: data['splits']?.['__date'] || (data['created_at'] ? data['created_at'].substring(0, 10) : this.expForm.date), 
+          payerId: data['payer_id'] || data['splits']?.['_meta_payer_id'] || this.expForm.payerId, date: data['splits']?.['__date'] || (data['created_at'] ? data['created_at'].substring(0, 10) : this.expForm.date), 
           createdAt: data['created_at'], splits: data['splits'], receipts: data['receipt_urls'],
           isEdited: !!data['splits']?.['__isEdited']
         } as Expense);

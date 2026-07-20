@@ -18,6 +18,7 @@ export class TripExpensesComponent implements OnChanges {
   @Input({ required: true }) isMember: boolean = false;
   @Input({ required: true }) yourShare: number = 0;
   @Input({ required: true }) totalTripCost: number = 0;
+  @Input({ required: false }) chartData: any[] = [];
 
   @Output() onSetTab = new EventEmitter<string>();
   @Output() onOpenExpenseModal = new EventEmitter<void>();

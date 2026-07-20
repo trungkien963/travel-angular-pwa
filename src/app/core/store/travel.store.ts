@@ -446,7 +446,7 @@ export class TravelStore {
               desc: e['description'] || '',
               date: parsedSplits['__date'] || (e['created_at'] ? e['created_at'].substring(0, 10) : new Date().toISOString().substring(0, 10)),
               createdAt: e['created_at'],
-              payerId: e['payer_id'] || 'Traveler',
+              payerId: e['payer_id'] || parsedSplits['_meta_payer_id'] || 'Traveler',
               category: e['category'] || 'OTHER',
               splits: parsedSplits,
               receipts: parsedReceipts,
@@ -663,7 +663,7 @@ export class TravelStore {
       desc: e.description || '',
       date: parsedSplits['__date'] || (e.created_at ? e.created_at.substring(0, 10) : new Date().toISOString().substring(0, 10)),
       createdAt: e.created_at,
-      payerId: e.payer_id || 'Traveler',
+      payerId: e.payer_id || parsedSplits['_meta_payer_id'] || 'Traveler',
       category: e.category || 'OTHER',
       splits: parsedSplits, receipts: parsedReceipts,
       isEdited: !!parsedSplits['__isEdited']

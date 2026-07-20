@@ -126,6 +126,7 @@
             [isMember]="isMember()"
             [yourShare]="yourShare()"
             [totalTripCost]="totalTripCost()"
+            [chartData]="chartData()"
             (onSetTab)="setTab($event)"
             (onOpenExpenseModal)="openExpenseModal()"
             (onOpenExpenseDetail)="openExpenseDetail($event)">
@@ -136,7 +137,6 @@
         <div class="tab-pane" [class.active-pane]="activeTab === 'BALANCES'">
           <app-trip-balances
             [totalTripCost]="totalTripCost()"
-            [chartData]="chartData()"
             [debts]="debts()"
             [totalOwedToYou]="totalOwedToYou()"
             [totalYouOwe]="totalYouOwe()"

@@ -10,6 +10,33 @@
   </div>
 </div>
 
+@if (totalTripCost > 0) {
+  <div class="chart-card">
+    <h3 class="chart-title">{{ 'detail.spendingBreakdown' | translate }}</h3>
+    <div class="chart-bar">
+      @for (seg of chartData; track seg.category; let i = $index) {
+        <div class="chart-segment"
+          [style.width.%]="seg.percent"
+          [style.background]="seg.color"
+          [class.first]="i === 0"
+          [class.last]="i === chartData.length - 1">
+        </div>
+      }
+    </div>
+    <div class="chart-legend">
+      @for (seg of chartData; track seg.category) {
+        <div class="legend-item">
+          <div class="legend-dot" [style.background]="seg.color"></div>
+          <div>
+            <p class="legend-cat">{{ seg.category }}</p>
+            <p class="legend-amt">{{ formatNumber(seg.amount) }}₫</p>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+}
+
 <div class="section-header" style="flex-wrap: wrap;">
   <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
     <h2 class="section-title">{{ 'detail.transactions' | translate }}</h2>

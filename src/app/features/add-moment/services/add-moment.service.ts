@@ -170,13 +170,18 @@ export class AddMomentService {
         });
         const finalReceiptUrls = await Promise.all(receiptPromises);
 
+        // Ghost user check: ghost members don't have email and don't exist in users table
+        // Setting payer_id to a non-existent UUID violates FK constraint
+        const payerMember = trip?.members?.find((m: any) => m.id === paidById);
+        const isGhostPayer = payerMember && !payerMember.email;
+
         const expensePayload = {
           trip_id: tripId, 
           description: payload.caption || (payload.selectedCategory ? payload.selectedCategory.charAt(0).toUpperCase() + payload.selectedCategory.slice(1).toLowerCase() : 'Expense'), 
           amount: payload.expenseAmount,
           category: payload.selectedCategory, 
-          payer_id: paidById,
-          splits: splits, 
+          payer_id: isGhostPayer ? null : paidById,
+          splits: { ...splits, ...(isGhostPayer ? { _meta_payer_id: paidById } : {}) }, 
           receipt_urls: finalReceiptUrls
         };
         const { data, error: expenseErr } = await db.from('expenses').insert(expensePayload).select().single();
@@ -184,7 +189,7 @@ export class AddMomentService {
         
         this.travelStore.upsertExpense({
           id: data['id'], tripId: data['trip_id'], desc: data['description'], amount: data['amount'],
-          category: data['category'], payerId: data['payer_id'], date: data['date'], splits: data['splits']
+          category: data['category'], payerId: data['payer_id'] || data['splits']?.['_meta_payer_id'] || paidById, date: data['date'], splits: data['splits']
         } as Expense);
       }
       

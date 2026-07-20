@@ -13,7 +13,6 @@ import { formatNumber } from '../../../../core/utils/format.util';
 })
 export class TripBalances implements OnChanges {
   @Input({ required: true }) totalTripCost: number = 0;
-  @Input({ required: true }) chartData: any[] = [];
   @Input({ required: true }) debts: Debt[] = [];
   @Input({ required: true }) totalOwedToYou: number = 0;
   @Input({ required: true }) totalYouOwe: number = 0;
